@@ -730,7 +730,7 @@
             <span style="font-size:12px; color:var(--txt-dim)">km</span>
           </div>
         </div>
-        <div class="tab-section">
+        <div class="tab-section" style="border-bottom:0">
           <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
           <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
           <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
@@ -741,21 +741,6 @@
           <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
           <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
           <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
-        </div>
-
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="terrainResSection">Résolution Terrain</h3>
-          <div class="row row-inline" style="margin-bottom:6px;">
-            <label for="terrain-zoom" data-i18n="terrainZoomLabel">Niveau de zoom</label>
-            <span id="terrain-zoom-display" style="font-size:13px; font-weight:700; color:var(--accent); min-width:80px; text-align:right;">11 (~52 m)</span>
-          </div>
-          <input type="range" id="terrain-zoom" min="10" max="15" step="1" value="11" style="width:100%; margin-bottom:8px;">
-          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--txt-dim); margin-bottom:8px; margin-top:-4px;">
-            <span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
-          </div>
-          <div id="terrain-zoom-warn" style="display:none; padding:8px 10px; background:color-mix(in srgb, var(--warning) 12%, transparent); border-left:3px solid var(--warning); font-size:12px; color:var(--warning); font-weight:600;">
-            <span>⚠ </span><span data-i18n="terrainZoomWarn">Volume de données élevé — le téléchargement peut être long.</span>
-          </div>
         </div>
       </div>
     </div>
@@ -890,10 +875,10 @@ const R_E = 6371000;
 const R_MERC = 6378137;
 const TERRA_URL = (z,x,y)=>`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
 
-/* Zoom utilisé pour les élévations ponctuelles (badges, LOS liaisons, sommets)
-   Configurable via le slider #terrain-zoom (10–15). Défaut 11 ≈ 52 m en France. */
-let spotZoom    = 11;
-let spotWorldPx = 256 * (1 << spotZoom);
+/* Zoom fixe utilisé pour les élévations ponctuelles (badges, LOS liaisons, sommets)
+   Résolution ~30 m à la latitude de la France — constante pour éviter les recalculs */
+const SPOT_ZOOM    = 11;
+const SPOT_WORLD_PX = 256 * (1 << SPOT_ZOOM);   // 524288
 
 /* Facteur de réfraction courant — synchronisé avec le <select> #kfac */
 let _kfac = 4 / 3;
@@ -1128,11 +1113,11 @@ async function fetchElevTile(z, tx, ty) {
   return _elevTilePending.get(key);
 }
 
-/** Renvoie l'altitude (m AMSL) d'un point géographique via les tuiles spotZoom */
+/** Renvoie l'altitude (m AMSL) d'un point géographique via les tuiles SPOT_ZOOM */
 async function fetchSpotElevation(lat, lon) {
-  const [px, py] = lonLatToPx(lon, lat, spotWorldPx);
+  const [px, py] = lonLatToPx(lon, lat, SPOT_WORLD_PX);
   const tx = Math.floor(px / 256), ty = Math.floor(py / 256);
-  const arr = await fetchElevTile(spotZoom, tx, ty);
+  const arr = await fetchElevTile(SPOT_ZOOM, tx, ty);
   return arr ? arr[Math.floor(py % 256) * 256 + Math.floor(px % 256)] : NaN;
 }
 
@@ -1463,18 +1448,18 @@ async function checkLOSAsync(lat1,lon1,h1,lat2,lon2,h2){
   const Reff = _kfac * R_E;   /* cohérent avec le facteur choisi dans l'UI */
   const N=Math.max(30,Math.min(200,Math.round(D/200)));
   const needed=new Set();
-  for(let i=1;i<N;i++){const f=i/N;const[px,py]=lonLatToPx(lon1+f*(lon2-lon1),lat1+f*(lat2-lat1),spotWorldPx);needed.add(`${spotZoom}/${Math.floor(px/256)}/${Math.floor(py/256)}`);}
+  for(let i=1;i<N;i++){const f=i/N;const[px,py]=lonLatToPx(lon1+f*(lon2-lon1),lat1+f*(lat2-lat1),SPOT_WORLD_PX);needed.add(`${SPOT_ZOOM}/${Math.floor(px/256)}/${Math.floor(py/256)}`);}
   await Promise.all([...needed].map(k=>{
     if(_elevTileCache.has(k)) return Promise.resolve();
     const[,tx,ty]=k.split('/').map(Number);
-    const[lon,lat]=pxToLonLat((tx+.5)*256,(ty+.5)*256,spotWorldPx);
+    const[lon,lat]=pxToLonLat((tx+.5)*256,(ty+.5)*256,SPOT_WORLD_PX);
     return fetchSpotElevation(lat,lon);
   }));
   for(let i=1;i<N;i++){
     const f=i/N;
     const sLat=lat1+f*(lat2-lat1), sLon=lon1+f*(lon2-lon1);
-    const[px,py]=lonLatToPx(sLon,sLat,spotWorldPx);
-    const arr=_elevTileCache.get(`${spotZoom}/${Math.floor(px/256)}/${Math.floor(py/256)}`);
+    const[px,py]=lonLatToPx(sLon,sLat,SPOT_WORLD_PX);
+    const arr=_elevTileCache.get(`${SPOT_ZOOM}/${Math.floor(px/256)}/${Math.floor(py/256)}`);
     if(!arr) continue;
     const zElev=arr[Math.floor(py%256)*256+Math.floor(px%256)];
     if(isNaN(zElev)) continue;
@@ -1685,17 +1670,6 @@ document.getElementById('op-map').addEventListener('input', (e) => { const op = 
 document.getElementById('op-cov').addEventListener('input', (e) => { if(coverageLayer) coverageLayer.setOpacity(e.target.value / 100); });
 ['show-rings', 'rings-all', 'ring-step'].forEach(id => document.getElementById(id).addEventListener('change', drawRings));
 document.getElementById('ring-step').addEventListener('input', drawRings);
-
-/* Slider résolution terrain */
-const _terrainZoomResolutions = { 10:'~104 m', 11:'~52 m', 12:'~26 m', 13:'~13 m', 14:'~7 m', 15:'~3 m' };
-document.getElementById('terrain-zoom').addEventListener('input', e => {
-  const z = parseInt(e.target.value);
-  spotZoom    = z;
-  spotWorldPx = 256 * (1 << z);
-  document.getElementById('terrain-zoom-display').textContent = `${z} (${_terrainZoomResolutions[z]})`;
-  document.getElementById('terrain-zoom-warn').style.display = z > 11 ? 'block' : 'none';
-  renderAll();
-});
 
 const tooltip = document.getElementById('cursor-tooltip'); let _elevReqId = 0, _rafId = null;
 map.on('mousemove', e => {
@@ -2532,8 +2506,6 @@ const I18N = {
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
-    terrainResSection:'Résolution Terrain', terrainZoomLabel:'Niveau de zoom',
-    terrainZoomWarn:'Volume de données élevé — le téléchargement peut être long.',
     tabUnits:'Unités', tabSensor:'Cible & Atmo', tabMap:'Carte', tabTools:'Outils',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
   },
@@ -2588,8 +2560,6 @@ const I18N = {
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
-    terrainResSection:'Terrain Resolution', terrainZoomLabel:'Zoom level',
-    terrainZoomWarn:'High data volume — download may take longer.',
     tabUnits:'Units', tabSensor:'Target & Atmo', tabMap:'Map', tabTools:'Tools',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
   }
@@ -2707,7 +2677,7 @@ async function searchPeaks() {
   const statusEl = document.getElementById('peak-status');
   statusEl.textContent = '…'; statusEl.style.display = 'block';
 
-  const worldPx = spotWorldPx;
+  const worldPx = SPOT_WORLD_PX;
   const bnds = L.latLngBounds(peakVerts);
   const [px0,py0] = lonLatToPx(bnds.getWest(), bnds.getNorth(), worldPx);
   const [px1,py1] = lonLatToPx(bnds.getEast(), bnds.getSouth(), worldPx);
@@ -2720,12 +2690,12 @@ async function searchPeaks() {
     for (let ty=ty0; ty<=ty1; ty++)
       tileKeys.push([tx, ty]);
   await Promise.all(tileKeys
-    .filter(([tx,ty]) => !_elevTileCache.has(`${spotZoom}/${tx}/${ty}`))
-    .map(([tx,ty]) => fetchElevTile(spotZoom, tx, ty))
+    .filter(([tx,ty]) => !_elevTileCache.has(`${SPOT_ZOOM}/${tx}/${ty}`))
+    .map(([tx,ty]) => fetchElevTile(SPOT_ZOOM, tx, ty))
   );
 
   const getElev = (px, py) => {
-    const a = _elevTileCache.get(`${spotZoom}/${Math.floor(px/256)}/${Math.floor(py/256)}`);
+    const a = _elevTileCache.get(`${SPOT_ZOOM}/${Math.floor(px/256)}/${Math.floor(py/256)}`);
     return a ? a[Math.floor(py%256)*256 + Math.floor(px%256)] : NaN;
   };
   const polyPx=peakVerts.map(ll=>lonLatToPx(ll.lng,ll.lat,worldPx));
