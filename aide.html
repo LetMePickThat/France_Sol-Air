@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-fr-theme="light">
+<html lang="fr" data-fr-theme="light" data-help-lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,6 @@
     --success:       #18753c;
     --warning:       #b34000;
     --focus:         #0a76f6;
-
     --bg:        #f6f6f6;
     --panel:     #ffffff;
     --line:      #dddddd;
@@ -41,6 +40,10 @@
     --accent-light: #1a1a4a;
   }
 
+  /* ---- Visibilité langue ---- */
+  html[data-help-lang="fr"] .help-en { display: none; }
+  html[data-help-lang="en"] .help-fr { display: none; }
+
   *, *::before, *::after { box-sizing: border-box; }
 
   html, body {
@@ -56,7 +59,6 @@
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
   :focus:not(:focus-visible) { outline: none; }
 
-  /* ---- Mise en page ---- */
   #layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -64,7 +66,6 @@
     min-height: 100vh;
   }
 
-  /* ---- En-tête ---- */
   #topbar {
     grid-column: 1 / -1;
     background: var(--panel);
@@ -82,12 +83,8 @@
     color: var(--txt); border-left: 3px solid var(--txt);
     padding: 2px 0 2px 8px;
   }
-  #topbar h1 {
-    margin: 0; font-size: 20px; font-weight: 700;
-    color: var(--txt); line-height: 1.2;
-  }
+  #topbar h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--txt); line-height: 1.2; }
   #topbar p { margin: 0; font-size: 12px; color: var(--txt-dim); }
-
   .topbar-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
   .btn-back {
@@ -95,7 +92,7 @@
     padding: 8px 16px; font-family: var(--sans);
     font-size: 13px; font-weight: 600;
     background: var(--accent); color: #fff;
-    border: 0; border-radius: 0; cursor: pointer;
+    border: 0; cursor: pointer;
     text-decoration: none; white-space: nowrap;
     transition: background .12s;
   }
@@ -110,7 +107,24 @@
   }
   .btn-theme:hover { color: var(--txt); border-color: var(--txt-dim); }
 
-  /* ---- Navigation latérale ---- */
+  /* Seg (toggle langue — identique à l'appli principale) */
+  .seg {
+    display: flex; gap: 0;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 2px;
+  }
+  .seg button {
+    flex: 1; background: transparent; border: 0;
+    padding: 5px 10px; font-family: var(--sans);
+    font-size: 12px; font-weight: 600;
+    color: var(--txt-dim); cursor: pointer;
+    transition: background .12s, color .12s;
+    white-space: nowrap;
+  }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .seg button:hover:not(.on) { background: var(--accent-light); color: var(--accent); }
+
   #sidebar {
     background: var(--panel);
     border-right: 1px solid var(--line);
@@ -120,179 +134,75 @@
     height: 100vh;
     overflow-y: auto;
   }
-
   #sidebar nav h2 {
     font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.1em;
     color: var(--txt-dim);
     padding: 0 20px; margin: 0 0 8px;
   }
-
   #sidebar nav a {
-    display: block;
-    padding: 6px 20px;
+    display: block; padding: 6px 20px;
     font-size: 13px; font-weight: 500;
-    color: var(--txt-dim);
-    text-decoration: none;
+    color: var(--txt-dim); text-decoration: none;
     border-left: 3px solid transparent;
     transition: color .1s, border-color .1s, background .1s;
   }
   #sidebar nav a:hover { color: var(--txt); background: var(--bg); }
   #sidebar nav a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
-
   #sidebar nav .nav-group { margin-bottom: 20px; }
+  #sidebar nav a.sub { padding-left: 32px; font-size: 12px; font-weight: 400; }
 
-  #sidebar nav a.sub {
-    padding-left: 32px;
-    font-size: 12px;
-    font-weight: 400;
-  }
+  #content { max-width: 860px; padding: 40px 48px 80px; }
 
-  /* ---- Contenu principal ---- */
-  #content {
-    max-width: 860px;
-    padding: 40px 48px 80px;
-  }
-
-  /* Sections */
-  .help-section {
-    margin-bottom: 56px;
-  }
-
+  .help-section { margin-bottom: 56px; }
   .help-section h2 {
-    font-size: 22px; font-weight: 700;
-    color: var(--txt);
+    font-size: 22px; font-weight: 700; color: var(--txt);
     border-bottom: 2px solid var(--accent);
-    padding-bottom: 8px;
-    margin: 0 0 20px;
+    padding-bottom: 8px; margin: 0 0 20px;
   }
-
-  .help-section h3 {
-    font-size: 16px; font-weight: 700;
-    color: var(--txt);
-    margin: 28px 0 10px;
-  }
-
-  .help-section h4 {
-    font-size: 14px; font-weight: 700;
-    color: var(--txt-label);
-    margin: 20px 0 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 12px;
-  }
-
-  .help-section p {
-    margin: 0 0 12px;
-    color: var(--txt);
-  }
-
-  .help-section ul, .help-section ol {
-    margin: 0 0 12px;
-    padding-left: 22px;
-  }
+  .help-section h3 { font-size: 16px; font-weight: 700; color: var(--txt); margin: 28px 0 10px; }
+  .help-section p { margin: 0 0 12px; color: var(--txt); }
+  .help-section ul, .help-section ol { margin: 0 0 12px; padding-left: 22px; }
   .help-section li { margin-bottom: 6px; }
 
-  /* Tableau de paramètres */
-  .param-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0 20px;
-    font-size: 14px;
-  }
+  .param-table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 14px; }
   .param-table th {
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 8px 12px;
-    text-align: left;
+    background: var(--accent); color: #fff; font-weight: 700;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 8px 12px; text-align: left;
   }
-  .param-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-  }
+  .param-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
   .param-table tr:last-child td { border-bottom: 0; }
   .param-table tr:nth-child(even) td { background: var(--accent-light); }
   .param-table td:first-child { font-weight: 600; white-space: nowrap; }
 
-  /* Blocs callout */
   .callout {
     border-left: 4px solid var(--accent);
     background: var(--accent-light);
-    padding: 12px 16px;
-    margin: 16px 0;
-    font-size: 14px;
+    padding: 12px 16px; margin: 16px 0; font-size: 14px;
   }
   .callout.warn { border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 10%, var(--bg)); }
   .callout.tip  { border-left-color: var(--success); background: color-mix(in srgb, var(--success) 10%, var(--bg)); }
   .callout strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
 
-  /* Badge d'interface */
   .ui-badge {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
-    font-size: 11px; font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 2px;
-    vertical-align: middle;
-    letter-spacing: 0.03em;
+    display: inline-block; background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 1px 7px;
+    border-radius: 2px; vertical-align: middle; letter-spacing: 0.03em;
   }
-  .ui-badge.grey { background: #555; }
+  .ui-badge.grey   { background: #555; }
   .ui-badge.orange { background: #c36000; }
   .ui-badge.green  { background: var(--success); }
   .ui-badge.red    { background: var(--danger); }
 
-  /* Étiquette de champ */
   .field-name {
-    font-family: "Consolas", monospace;
-    font-size: 13px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    padding: 1px 6px;
-    border-radius: 2px;
+    font-family: "Consolas", monospace; font-size: 13px;
+    background: var(--bg); border: 1px solid var(--line);
+    padding: 1px 6px; border-radius: 2px;
   }
 
-  /* Schéma d'interface ASCII */
-  .ui-schema {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    font-family: "Consolas", monospace;
-    font-size: 12px;
-    line-height: 1.6;
-    padding: 16px 20px;
-    margin: 16px 0;
-    overflow-x: auto;
-    color: var(--txt-dim);
-  }
-
-  /* Séparateur discret */
   hr.light { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
 
-  /* Icône entité */
-  .entity-icon {
-    display: inline-block;
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    background: var(--accent);
-    vertical-align: middle;
-    margin-right: 6px;
-  }
-  .entity-icon.triangle {
-    border-radius: 0;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    background: #c36000;
-  }
-  .entity-icon.square {
-    border-radius: 0;
-    background: var(--accent);
-  }
-
-  /* ---- Responsive ---- */
   @media (max-width: 720px) {
     #layout { grid-template-columns: 1fr; }
     #sidebar { display: none; }
@@ -305,22 +215,35 @@
 
 <div id="layout">
 
-  <!-- ========== En-tête ========== -->
+  <!-- ========== Topbar ========== -->
   <header id="topbar">
     <div class="brand">
       <div class="marianne">République<br>Française</div>
-      <h1>France Sol-Air — Aide</h1>
-      <p>Intervisibilité Radar · Guide utilisateur</p>
+      <h1>France Sol-Air — <span class="help-fr">Aide</span><span class="help-en">Help</span></h1>
+      <p>
+        <span class="help-fr">Intervisibilité Radar · Guide utilisateur</span>
+        <span class="help-en">Radar Intervisibility · User Guide</span>
+      </p>
     </div>
     <div class="topbar-actions">
-      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">Thème sombre</button>
-      <a class="btn-back" href="radar_v5.html">← Retour à l'application</a>
+      <div class="seg" id="help-lang-toggle">
+        <button data-l="fr" class="on">FR</button>
+        <button data-l="en">EN</button>
+      </div>
+      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">
+        <span class="help-fr">Thème sombre</span><span class="help-en">Dark theme</span>
+      </button>
+      <a class="btn-back" href="radar_v5.html">
+        <span class="help-fr">← Retour à l'application</span>
+        <span class="help-en">← Back to application</span>
+      </a>
     </div>
   </header>
 
-  <!-- ========== Navigation ========== -->
+  <!-- ========== Sidebar ========== -->
   <aside id="sidebar">
-    <nav aria-label="Sommaire">
+    <!-- FR -->
+    <nav class="help-fr" aria-label="Sommaire">
       <div class="nav-group">
         <h2>Présentation</h2>
         <a href="#intro">Introduction</a>
@@ -348,497 +271,748 @@
         <a href="#glossaire">Glossaire</a>
       </div>
     </nav>
+    <!-- EN -->
+    <nav class="help-en" aria-label="Table of contents">
+      <div class="nav-group">
+        <h2>Overview</h2>
+        <a href="#intro">Introduction</a>
+        <a href="#interface">Interface</a>
+        <a href="#demarrage">Quick Start</a>
+      </div>
+      <div class="nav-group">
+        <h2>Tabs</h2>
+        <a href="#unites">Units</a>
+        <a href="#radars" class="sub">Radars</a>
+        <a href="#lanceurs" class="sub">Launchers</a>
+        <a href="#c2" class="sub">C2 Nodes</a>
+        <a href="#cible-atmo">Target &amp; Atmo</a>
+        <a href="#carte">Map</a>
+        <a href="#outils">Tools</a>
+      </div>
+      <div class="nav-group">
+        <h2>Computation</h2>
+        <a href="#couverture">Radar coverage</a>
+        <a href="#sommets">Summit search</a>
+      </div>
+      <div class="nav-group">
+        <h2>Reference</h2>
+        <a href="#kml">KML / SPM format</a>
+        <a href="#glossaire">Glossary</a>
+      </div>
+    </nav>
   </aside>
 
-  <!-- ========== Contenu ========== -->
+  <!-- ========== Content ========== -->
   <main id="content">
 
     <!-- ============================================================ INTRODUCTION -->
     <section class="help-section" id="intro">
-      <h2>Introduction</h2>
-      <p><strong>France Sol-Air</strong> est un outil de planification de déploiement pensé pour la défense sol-air courte, moyenne et longue portée. Il a été conçu pour travailler des déploiements de systèmes seuls ou en réseau dans le cadre d'un <strong>IADS</strong>.</p>
-      <p>Il permet de :</p>
-      <ul>
-        <li>Positionner des <strong>radars</strong>, des <strong>lanceurs</strong> et des <strong>nœuds C2</strong> sur une carte interactive.</li>
-        <li>Rechercher les <strong>sommets locaux</strong> d'une zone pour identifier les emplacements d'implantation favorables.</li>
-        <li>Visualiser la <strong>couverture radar</strong> d'un déploiement pour plusieurs altitudes cibles simultanément.</li>
-        <li>Calculer l'<strong>intervisibilité radio</strong> entre les différents constituants de l'IADS en tenant compte du relief réel du terrain.</li>
-        <li>Importer et exporter des déploiements complets au format <strong>KML</strong>.</li>
-      </ul>
-      <p>L'outil base ses calculs sur les données d'élévation fournies par le MNT AWS Terrarium. La résolution obtenue, de l'ordre de 30 m, est supérieure à celle nativement permise par des données de type DTED0 (900 m) ou DTED1 (90 m).</p>
-      <div class="callout">
-        <strong>Prérequis</strong>
-        L'application est entièrement côté client (navigateur). Une connexion Internet est nécessaire pour charger les fonds de carte et les tuiles d'altitude AWS.
+
+      <div class="help-fr">
+        <h2>Introduction</h2>
+        <p><strong>France Sol-Air</strong> est un outil de planification de déploiement pensé pour la défense sol-air courte, moyenne et longue portée. Il a été conçu pour travailler des déploiements de systèmes seuls ou en réseau dans le cadre d'un <strong>IADS</strong>.</p>
+        <p>Il permet de :</p>
+        <ul>
+          <li>Positionner des <strong>radars</strong>, des <strong>lanceurs</strong> et des <strong>nœuds C2</strong> sur une carte interactive.</li>
+          <li>Rechercher les <strong>sommets locaux</strong> d'une zone pour identifier les emplacements d'implantation favorables.</li>
+          <li>Visualiser la <strong>couverture radar</strong> d'un déploiement pour plusieurs altitudes cibles simultanément.</li>
+          <li>Calculer l'<strong>intervisibilité radio</strong> entre les différents constituants de l'IADS en tenant compte du relief réel du terrain.</li>
+          <li>Importer et exporter des déploiements complets au format <strong>KML</strong>.</li>
+        </ul>
+        <p>L'outil base ses calculs sur les données d'élévation fournies par le MNT AWS Terrarium. La résolution obtenue, de l'ordre de 30 m, est supérieure à celle nativement permise par des données de type DTED0 (900 m) ou DTED1 (90 m).</p>
+        <div class="callout">
+          <strong>Prérequis</strong>
+          L'application fonctionne entièrement dans le navigateur. Une connexion Internet est nécessaire pour charger les fonds de carte et les tuiles d'altitude AWS.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Introduction</h2>
+        <p><strong>France Sol-Air</strong> is a deployment planning tool designed for short, medium and long-range ground-based air defence. It supports both standalone system deployments and networked IADS configurations.</p>
+        <p>It allows you to:</p>
+        <ul>
+          <li>Position <strong>radars</strong>, <strong>launchers</strong> and <strong>C2 nodes</strong> on an interactive map.</li>
+          <li>Search for <strong>local summits</strong> within an area to identify favourable siting positions.</li>
+          <li>Visualise the <strong>radar coverage</strong> of a deployment for multiple target altitudes simultaneously.</li>
+          <li>Compute <strong>radio intervisibility</strong> between IADS components, taking real terrain into account.</li>
+          <li>Import and export complete deployments in <strong>KML</strong> format.</li>
+        </ul>
+        <p>All computations use elevation data from the AWS Terrarium DEM. The resulting resolution of approximately 30 m exceeds what is natively available from DTED0 (900 m) or DTED1 (90 m) data.</p>
+        <div class="callout">
+          <strong>Requirements</strong>
+          The application runs entirely in the browser. An internet connection is required to load base maps and AWS elevation tiles.
+        </div>
+      </div>
+
     </section>
 
     <!-- ============================================================ INTERFACE -->
     <section class="help-section" id="interface">
-      <h2>Interface</h2>
-      <p>L'écran est partagé en deux zones : un <strong>panneau de commandes</strong> à gauche et une <strong>carte interactive</strong> à droite. Toutes les saisies et configurations se font dans le panneau de gauche ; les résultats sont visualisés sur la carte.</p>
-      <img src="images/Aide_image_IHM.png" alt="Schéma de l'interface France Sol-Air" style="width:100%; border:1px solid var(--line); display:block; margin:16px 0;">
 
-      <h3>Choix du fond de carte</h3>
-      <p>En haut du panneau de commandes, trois boutons permettent de choisir le fond cartographique affiché derrière les unités et la couverture :</p>
-      <ul>
-        <li><span class="ui-badge">Plan clair</span> — fond routier OpenStreetMap, idéal en plein jour pour identifier les voies d'accès et les agglomérations.</li>
-        <li><span class="ui-badge grey">Plan sombre</span> — fond sombre CARTO, recommandé pour réduire la fatigue visuelle lors d'une utilisation prolongée ou nocturne.</li>
-        <li><span class="ui-badge grey">Élévation</span> — carte hypsométrique colorée par altitude, utile pour appréhender rapidement le relief d'une zone avant d'y placer des unités. Les couleurs progressent du bleu (zones basses) vers le blanc (sommets).</li>
-      </ul>
+      <div class="help-fr">
+        <h2>Interface</h2>
+        <p>L'écran est partagé en deux zones : un <strong>panneau de commandes</strong> à gauche et une <strong>carte interactive</strong> à droite. Toutes les saisies et configurations se font dans le panneau de gauche ; les résultats sont visualisés sur la carte.</p>
+        <img src="images/Aide_image_IHM.png" alt="Schéma de l'interface France Sol-Air" style="width:100%; border:1px solid var(--line); display:block; margin:16px 0;">
 
-      <h3>Les onglets de navigation</h3>
-      <p>Sous les boutons de fond de carte, quatre onglets donnent accès aux différentes fonctions de l'outil :</p>
-      <ul>
-        <li><span class="ui-badge">CARTE</span> — réglages d'affichage (opacité, format de coordonnées, anneaux de distance), mode de calcul Rapide / Haute Précision, et outil de recherche de sommets locaux.</li>
-        <li><span class="ui-badge">UNITÉS</span> — création et configuration des radars, lanceurs et nœuds C2 déployés sur la carte.</li>
-        <li><span class="ui-badge">CIBLE &amp; ATMO</span> — définition des altitudes cibles pour le calcul de couverture et choix du modèle atmosphérique (facteur de réfraction).</li>
-        <li><span class="ui-badge">OUTILS</span> — import et export du déploiement au format KML.</li>
-      </ul>
+        <h3>Choix du fond de carte</h3>
+        <p>En haut du panneau de commandes, trois boutons permettent de choisir le fond cartographique affiché derrière les unités et la couverture :</p>
+        <ul>
+          <li><span class="ui-badge">Plan clair</span> — fond routier OpenStreetMap, idéal en plein jour pour identifier les voies d'accès et les agglomérations.</li>
+          <li><span class="ui-badge grey">Plan sombre</span> — fond sombre CARTO, recommandé pour réduire la fatigue visuelle lors d'une utilisation prolongée ou nocturne.</li>
+          <li><span class="ui-badge grey">Élévation</span> — carte hypsométrique colorée par altitude, utile pour appréhender rapidement le relief d'une zone avant d'y placer des unités. Les couleurs progressent du bleu (zones basses) vers le blanc (sommets).</li>
+        </ul>
 
-      <h3>Commandes de calcul et préférences</h3>
-      <p>En bas du panneau de commandes se trouvent les contrôles permanents, accessibles depuis n'importe quel onglet :</p>
-      <ul>
-        <li><span class="ui-badge">Calculer la couverture</span> — lance le calcul d'intervisibilité et affiche la couverture radar sur la carte. Le temps de calcul dépend du nombre de radars, de la portée et du mode choisi (Rapide / Haute Précision).</li>
-        <li>Bandeau <span class="ui-badge orange">⚠ Résultats périmés</span> — s'affiche automatiquement dès qu'un paramètre est modifié après un calcul. La couverture affichée ne correspond plus à la situation actuelle : il faut relancer le calcul.</li>
-        <li><span class="ui-badge red">Supprimer la couverture</span> — efface l'affichage de couverture de la carte sans modifier les paramètres des unités.</li>
-        <li>Boutons <strong>FR / EN</strong> — bascule l'ensemble de l'interface entre le français et l'anglais.</li>
-        <li>Boutons <strong>Clair / Sombre</strong> — bascule le thème visuel de l'application.</li>
-        <li>Bouton <span class="ui-badge grey">?</span> — ouvre cette page d'aide dans un nouvel onglet du navigateur.</li>
-      </ul>
+        <h3>Les onglets de navigation</h3>
+        <p>Sous les boutons de fond de carte, quatre onglets donnent accès aux différentes fonctions de l'outil :</p>
+        <ul>
+          <li><span class="ui-badge">CARTE</span> — réglages d'affichage (opacité, format de coordonnées, anneaux de distance), mode de calcul Rapide / Haute Précision, et outil de recherche de sommets locaux.</li>
+          <li><span class="ui-badge">UNITÉS</span> — création et configuration des radars, lanceurs et nœuds C2 déployés sur la carte.</li>
+          <li><span class="ui-badge">CIBLE &amp; ATMO</span> — définition des altitudes cibles pour le calcul de couverture et choix du modèle atmosphérique (facteur de réfraction).</li>
+          <li><span class="ui-badge">OUTILS</span> — import et export du déploiement au format KML.</li>
+        </ul>
 
-      <h3>La carte interactive</h3>
-      <p>La zone cartographique à droite est entièrement interactive :</p>
-      <ul>
-        <li><strong>Zoom</strong> — molette de la souris ou boutons <strong>＋</strong> / <strong>−</strong> en haut à gauche de la carte.</li>
-        <li><strong>Déplacement</strong> — cliquer-glisser sur la carte pour naviguer.</li>
-        <li><strong>Repositionner une unité</strong> — glisser-déposer le marqueur directement sur la carte. Les coordonnées dans le formulaire se mettent à jour automatiquement.</li>
-        <li><strong>Désélectionner une unité</strong> — cliquer sur une zone vide de la carte pour fermer le formulaire actif.</li>
-        <li><strong>Coordonnées et altitude en temps réel</strong> — déplacer le curseur sur la carte affiche en permanence les coordonnées géographiques et l'altitude estimée du point survolé, dans l'angle inférieur gauche de la carte.</li>
-        <li><strong>Échelle</strong> — une barre d'échelle graphique est affichée dans l'angle inférieur droit.</li>
-      </ul>
+        <h3>Commandes de calcul et préférences</h3>
+        <p>En bas du panneau de commandes se trouvent les contrôles permanents, accessibles depuis n'importe quel onglet :</p>
+        <ul>
+          <li><span class="ui-badge">Calculer la couverture</span> — lance le calcul d'intervisibilité et affiche la couverture radar sur la carte. Le temps de calcul dépend du nombre de radars, de la portée et du mode choisi (Rapide / Haute Précision).</li>
+          <li>Bandeau <span class="ui-badge orange">⚠ Résultats périmés</span> — s'affiche automatiquement dès qu'un paramètre est modifié après un calcul. La couverture affichée ne correspond plus à la situation actuelle : il faut relancer le calcul.</li>
+          <li><span class="ui-badge red">Supprimer la couverture</span> — efface l'affichage de couverture de la carte sans modifier les paramètres des unités.</li>
+          <li>Boutons <strong>FR / EN</strong> — bascule l'ensemble de l'interface entre le français et l'anglais.</li>
+          <li>Boutons <strong>Clair / Sombre</strong> — bascule le thème visuel de l'application.</li>
+          <li>Bouton <span class="ui-badge grey">?</span> — ouvre cette page d'aide dans un nouvel onglet du navigateur.</li>
+        </ul>
 
-      <div class="callout tip">
-        <strong>Astuce</strong>
-        Sur les petits écrans, le panneau de commandes se compacte automatiquement pour libérer de l'espace. Si les formulaires paraissent trop resserrés, réduire le zoom du navigateur (Ctrl −) permet d'afficher davantage de contenu.
+        <h3>La carte interactive</h3>
+        <p>La zone cartographique à droite est entièrement interactive :</p>
+        <ul>
+          <li><strong>Zoom</strong> — molette de la souris ou boutons <strong>＋</strong> / <strong>−</strong> en haut à gauche de la carte.</li>
+          <li><strong>Déplacement</strong> — cliquer-glisser sur la carte pour naviguer.</li>
+          <li><strong>Repositionner une unité</strong> — glisser-déposer le marqueur directement sur la carte. Les coordonnées dans le formulaire se mettent à jour automatiquement.</li>
+          <li><strong>Désélectionner une unité</strong> — cliquer sur une zone vide de la carte pour fermer le formulaire actif.</li>
+          <li><strong>Coordonnées et altitude en temps réel</strong> — déplacer le curseur sur la carte affiche en permanence les coordonnées géographiques et l'altitude estimée du point survolé, dans l'angle inférieur gauche de la carte.</li>
+          <li><strong>Échelle</strong> — une barre d'échelle graphique est affichée dans l'angle inférieur droit.</li>
+        </ul>
+        <div class="callout tip">
+          <strong>Astuce</strong>
+          Sur les petits écrans, le panneau de commandes se compacte automatiquement pour libérer de l'espace. Si les formulaires paraissent trop resserrés, réduire le zoom du navigateur (Ctrl −) permet d'afficher davantage de contenu.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Interface</h2>
+        <p>The screen is split into two areas: a <strong>control panel</strong> on the left and an <strong>interactive map</strong> on the right. All inputs and settings are made in the left panel; results are displayed on the map.</p>
+        <img src="images/Aide_image_IHM.png" alt="France Sol-Air interface diagram" style="width:100%; border:1px solid var(--line); display:block; margin:16px 0;">
+
+        <h3>Base map selection</h3>
+        <p>At the top of the control panel, three buttons let you choose the background map displayed behind units and coverage:</p>
+        <ul>
+          <li><span class="ui-badge">Map (light)</span> — OpenStreetMap road map, ideal in daytime for identifying access routes and built-up areas.</li>
+          <li><span class="ui-badge grey">Map (dark)</span> — CARTO dark background, recommended to reduce eye strain during extended or night-time use.</li>
+          <li><span class="ui-badge grey">Elevation</span> — hypsometric map coloured by altitude, useful for quickly assessing the terrain of an area before positioning units. Colours range from blue (low ground) to white (peaks).</li>
+        </ul>
+
+        <h3>Navigation tabs</h3>
+        <p>Below the base map buttons, four tabs provide access to the tool's functions:</p>
+        <ul>
+          <li><span class="ui-badge">MAP</span> — display settings (opacity, coordinate format, range rings), Fast / High Precision computation mode, and local summit search.</li>
+          <li><span class="ui-badge">UNITS</span> — create and configure radars, launchers and C2 nodes deployed on the map.</li>
+          <li><span class="ui-badge">TARGET &amp; ATMO</span> — define target altitudes for coverage computation and choose the atmospheric model (refraction factor).</li>
+          <li><span class="ui-badge">TOOLS</span> — import and export the deployment in KML format.</li>
+        </ul>
+
+        <h3>Computation controls and preferences</h3>
+        <p>At the bottom of the control panel are the permanent controls, accessible from any tab:</p>
+        <ul>
+          <li><span class="ui-badge">Compute coverage</span> — starts the intervisibility computation and displays radar coverage on the map. Computation time depends on the number of radars, their range and the chosen mode (Fast / High Precision).</li>
+          <li>Banner <span class="ui-badge orange">⚠ Stale results</span> — appears automatically whenever a parameter is changed after a computation. The displayed coverage no longer reflects the current situation: rerun the computation to update.</li>
+          <li><span class="ui-badge red">Clear coverage</span> — removes the coverage display from the map without changing unit parameters.</li>
+          <li>Buttons <strong>FR / EN</strong> — switches the entire application interface between French and English.</li>
+          <li>Buttons <strong>Light / Dark</strong> — toggles the application's visual theme.</li>
+          <li>Button <span class="ui-badge grey">?</span> — opens this help page in a new browser tab.</li>
+        </ul>
+
+        <h3>The interactive map</h3>
+        <p>The map area on the right is fully interactive:</p>
+        <ul>
+          <li><strong>Zoom</strong> — mouse wheel or <strong>＋</strong> / <strong>−</strong> buttons in the top-left corner of the map.</li>
+          <li><strong>Pan</strong> — click and drag on the map to navigate.</li>
+          <li><strong>Reposition a unit</strong> — drag and drop its marker directly on the map. The coordinates in the form update automatically.</li>
+          <li><strong>Deselect a unit</strong> — click on an empty area of the map to close the active form.</li>
+          <li><strong>Live coordinates and elevation</strong> — moving the cursor over the map continuously shows the geographic coordinates and estimated elevation of the hovered point, in the bottom-left corner of the map.</li>
+          <li><strong>Scale bar</strong> — a graphical scale bar is shown in the bottom-right corner.</li>
+        </ul>
+        <div class="callout tip">
+          <strong>Tip</strong>
+          On smaller screens the control panel compacts automatically to free up space. If the forms appear too cramped, reducing the browser zoom level (Ctrl −) allows more content to be displayed.
+        </div>
+      </div>
+
     </section>
 
     <!-- ============================================================ DÉMARRAGE -->
     <section class="help-section" id="demarrage">
-      <h2>Démarrage rapide</h2>
-      <ol>
-        <li>Choisissez un fond de carte (<strong>Plan clair</strong>, <strong>Plan sombre</strong> ou <strong>Élévation</strong>).</li>
-        <li>Allez dans l'onglet <span class="ui-badge">UNITÉS</span> puis <span class="ui-badge">Radars</span>.</li>
-        <li>Cliquez <span class="ui-badge green">+ Ajouter un radar</span> — un marqueur apparaît au centre de la vue.</li>
-        <li>Configurez la portée, la hauteur d'antenne et le secteur angulaire du radar dans le formulaire.</li>
-        <li>Glissez le marqueur vers la position souhaitée sur la carte.</li>
-        <li>Dans l'onglet <span class="ui-badge">CIBLE &amp; ATMO</span>, vérifiez les altitudes cibles (0, 5, 40, 500 m par défaut).</li>
-        <li>Cliquez <span class="ui-badge">Calculer la couverture</span>.</li>
-      </ol>
-      <div class="callout tip">
-        <strong>Conseil</strong>
-        Les marques de distance (anneaux concentriques) sont activées par défaut pour tous les radars. Utilisez l'onglet <strong>CARTE</strong> pour ajuster l'espacement ou les désactiver.
+
+      <div class="help-fr">
+        <h2>Démarrage rapide</h2>
+        <ol>
+          <li>Choisissez un fond de carte (<strong>Plan clair</strong>, <strong>Plan sombre</strong> ou <strong>Élévation</strong>).</li>
+          <li>Allez dans l'onglet <span class="ui-badge">UNITÉS</span> puis <span class="ui-badge">Radars</span>.</li>
+          <li>Cliquez <span class="ui-badge green">+ Ajouter un radar</span> — un marqueur apparaît au centre de la vue.</li>
+          <li>Configurez la portée, la hauteur d'antenne et le secteur angulaire du radar dans le formulaire.</li>
+          <li>Glissez le marqueur vers la position souhaitée sur la carte.</li>
+          <li>Dans l'onglet <span class="ui-badge">CIBLE &amp; ATMO</span>, vérifiez les altitudes cibles (0, 5, 40, 500 m par défaut).</li>
+          <li>Cliquez <span class="ui-badge">Calculer la couverture</span>.</li>
+        </ol>
+        <div class="callout tip">
+          <strong>Conseil</strong>
+          Les marques de distance (anneaux concentriques) sont activées par défaut pour tous les radars. Utilisez l'onglet <strong>CARTE</strong> pour ajuster l'espacement ou les désactiver.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Quick Start</h2>
+        <ol>
+          <li>Choose a base map (<strong>Map (light)</strong>, <strong>Map (dark)</strong> or <strong>Elevation</strong>).</li>
+          <li>Go to the <span class="ui-badge">UNITS</span> tab, then select <span class="ui-badge">Radars</span>.</li>
+          <li>Click <span class="ui-badge green">+ Add radar</span> — a marker appears at the centre of the current view.</li>
+          <li>Configure the range, antenna height and angular sector of the radar in the form.</li>
+          <li>Drag the marker to the desired position on the map.</li>
+          <li>In the <span class="ui-badge">TARGET &amp; ATMO</span> tab, verify the target altitudes (0, 5, 40, 500 m by default).</li>
+          <li>Click <span class="ui-badge">Compute coverage</span>.</li>
+        </ol>
+        <div class="callout tip">
+          <strong>Tip</strong>
+          Range rings (concentric circles) are enabled by default for all radars. Use the <strong>MAP</strong> tab to adjust the spacing or disable them.
+        </div>
+      </div>
+
     </section>
 
     <hr class="light">
 
     <!-- ============================================================ UNITÉS -->
     <section class="help-section" id="unites">
-      <h2>Onglet — Unités</h2>
-      <p>Cet onglet regroupe les trois types d'entités GBAD. Chacun dispose de son propre panneau accessible via le sélecteur <span class="ui-badge">Radars</span> <span class="ui-badge grey">Lanceurs</span> <span class="ui-badge grey">C2</span>.</p>
-      <p>Chaque unité est représentée par une <strong>carte dépliable</strong>. La carte de l'unité active est mise en évidence. Un clic sur l'en-tête de la carte la développe ou la réduit. L'icône épingle <strong>📌</strong> maintient une carte ouverte en permanence.</p>
 
-      <div class="callout">
-        <strong>Compteur d'entités</strong>
-        Le nombre d'entités par type est affiché sur le bouton du sélecteur (ex. : <code>Radars ·3</code>).
+      <div class="help-fr">
+        <h2>Onglet — Unités</h2>
+        <p>Cet onglet regroupe les trois types d'entités GBAD. Chacun dispose de son propre panneau accessible via le sélecteur <span class="ui-badge">Radars</span> <span class="ui-badge grey">Lanceurs</span> <span class="ui-badge grey">C2</span>.</p>
+        <p>Chaque unité est représentée par une <strong>fiche dépliable</strong>. La fiche de l'unité active est mise en évidence. Un clic sur son titre la développe ou la réduit. L'icône épingle <strong>📌</strong> maintient une fiche ouverte en permanence.</p>
+        <div class="callout">
+          <strong>Compteur d'entités</strong>
+          Le nombre d'entités par type est affiché sur le bouton du sélecteur (ex. : <code>Radars ·3</code>).
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Tab — Units</h2>
+        <p>This tab groups the three GBAD entity types. Each has its own panel accessible via the selector <span class="ui-badge">Radars</span> <span class="ui-badge grey">Launchers</span> <span class="ui-badge grey">C2</span>.</p>
+        <p>Each unit is shown as a <strong>collapsible card</strong>. The active unit's card is highlighted. Clicking its title expands or collapses it. The pin icon <strong>📌</strong> keeps a card permanently open.</p>
+        <div class="callout">
+          <strong>Entity counter</strong>
+          The number of entities per type is shown on the selector button (e.g. <code>Radars ·3</code>).
+        </div>
+      </div>
+
     </section>
 
     <!-- ---- RADARS ---- -->
     <section class="help-section" id="radars">
-      <h2>Radars</h2>
-      <p>Les radars sont les éléments principaux du calcul de couverture. Ils sont représentés par un <strong>cercle bleu</strong> sur la carte.</p>
 
-      <h3>Paramètres</h3>
-      <table class="param-table">
-        <thead>
-          <tr><th>Champ</th><th>Description</th><th>Unité</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Nom</td>
-            <td>Identifiant libre de l'équipement. Apparaît sur le tooltip de la carte.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Position</td>
-            <td>Coordonnées géographiques. Accepte le format <strong>DMS</strong> (ex. : <code>48° 51' 23.8" N</code>) ou <strong>décimal</strong> (ex. : <code>48.856388</code>). Peut aussi être défini par glisser-déposer sur la carte.</td>
-            <td>Lat / Lon</td>
-          </tr>
-          <tr>
-            <td>Hauteur radar</td>
-            <td>Hauteur de la phase rayonnante (antenne) au-dessus du sol.</td>
-            <td>m (AGL)</td>
-          </tr>
-          <tr>
-            <td>H. mat comm.</td>
-            <td>Hauteur du mât de communication. Utilisée pour le calcul des liaisons C2 radio/fibre.</td>
-            <td>m (AGL)</td>
-          </tr>
-          <tr>
-            <td>Portée maximale</td>
-            <td>Portée instrumentale du radar. Définit la limite externe des anneaux de distance et de la zone de calcul de couverture.</td>
-            <td>km</td>
-          </tr>
-          <tr>
-            <td>Sites min / max</td>
-            <td>Angles d'élévation minimum et maximum du faisceau radar (secteur de site). Négatif = sous l'horizontale.</td>
-            <td>degrés (°)</td>
-          </tr>
-          <tr>
-            <td>Azimut min / max</td>
-            <td>Secteur azimutal de couverture (0–360 °). Si min = max ou span = 360°, la couverture est omnidirectionnelle.</td>
-            <td>degrés (°)</td>
-          </tr>
-          <tr>
-            <td>C2 parent</td>
-            <td>Nœud C2 hiérarchiquement supérieur. Crée une liaison visuelle sur la carte. Déclenche le calcul de distance et de LOS.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Dist. max C2</td>
-            <td>Distance maximale autorisée entre ce radar et son C2 parent. Affichée sous forme de cercle en pointillés sur la carte. 0 = sans contrainte.</td>
-            <td>km</td>
-          </tr>
-          <tr>
-            <td>Liaison</td>
-            <td><strong>Fibre</strong> : liaison filaire (LOS non requise). <strong>Radio</strong> : liaison hertzienne (LOS requise entre mâts).</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Actif</td>
-            <td>Un radar inactif est affiché en grisé sur la carte et exclu du calcul de couverture.</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Badge d'altitude</h3>
-      <p>Sous les coordonnées, le badge affiche l'altitude du terrain (AMSL) et la position effective de l'antenne, calculées depuis les tuiles AWS Terrarium au zoom 11 (~30 m de résolution).</p>
-
-      <div class="callout warn">
-        <strong>Attention</strong>
-        Si le badge indique « Alt. inconnue », les tuiles d'altitude n'ont pas encore été chargées pour cette zone. Effectuez un zoom sur la position du radar pour déclencher le chargement.
+      <div class="help-fr">
+        <h2>Radars</h2>
+        <p>Les radars sont les éléments principaux du calcul de couverture. Ils sont représentés par un <strong>cercle bleu</strong> sur la carte.</p>
+        <h3>Paramètres</h3>
+        <table class="param-table">
+          <thead><tr><th>Champ</th><th>Description</th><th>Unité</th></tr></thead>
+          <tbody>
+            <tr><td>Nom</td><td>Identifiant libre de l'équipement. Apparaît sur l'infobulle de la carte.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Coordonnées géographiques. Accepte le format <strong>DMS</strong> (ex. : <code>48° 51' 23.8" N</code>) ou <strong>décimal</strong> (ex. : <code>48.856388</code>). Peut aussi être défini par glisser-déposer sur la carte.</td><td>Lat / Lon</td></tr>
+            <tr><td>Hauteur radar</td><td>Hauteur de la phase rayonnante (antenne) au-dessus du sol.</td><td>m (AGL)</td></tr>
+            <tr><td>H. mat comm.</td><td>Hauteur du mât de communication. Utilisée pour le calcul des liaisons C2 radio ou fibre.</td><td>m (AGL)</td></tr>
+            <tr><td>Portée maximale</td><td>Portée instrumentale du radar. Définit la limite externe des anneaux de distance et de la zone de calcul de couverture.</td><td>km</td></tr>
+            <tr><td>Sites min / max</td><td>Angles d'élévation minimum et maximum du faisceau radar. Négatif = sous l'horizontale.</td><td>degrés (°)</td></tr>
+            <tr><td>Azimut min / max</td><td>Secteur azimutal de couverture (0–360 °). Si min = max ou si l'écart est de 360°, la couverture est omnidirectionnelle.</td><td>degrés (°)</td></tr>
+            <tr><td>C2 parent</td><td>Nœud C2 hiérarchiquement supérieur. Crée une liaison visuelle sur la carte et déclenche le calcul de distance et de LOS.</td><td>—</td></tr>
+            <tr><td>Dist. max C2</td><td>Distance maximale autorisée entre ce radar et son C2 parent. Affichée sous forme de cercle en pointillés. 0 = sans contrainte.</td><td>km</td></tr>
+            <tr><td>Liaison</td><td><strong>Fibre</strong> : liaison filaire (LOS non requise). <strong>Radio</strong> : liaison hertzienne (LOS requise entre mâts).</td><td>—</td></tr>
+            <tr><td>Actif</td><td>Un radar inactif est affiché en grisé sur la carte et exclu du calcul de couverture.</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <h3>Indicateur d'altitude</h3>
+        <p>Sous les coordonnées, un indicateur affiche l'altitude du terrain (AMSL) et la position effective de l'antenne, calculées depuis les tuiles AWS Terrarium (~30 m de résolution).</p>
+        <div class="callout warn">
+          <strong>Attention</strong>
+          Si l'indicateur affiche « Alt. inconnue », les tuiles d'altitude n'ont pas encore été chargées pour cette zone. Zoomez sur la position du radar pour déclencher le chargement.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Radars</h2>
+        <p>Radars are the primary elements used in coverage computation. They are shown as a <strong>blue circle</strong> on the map.</p>
+        <h3>Parameters</h3>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Description</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td>Name</td><td>Free-form equipment identifier. Displayed in the map tooltip.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Geographic coordinates. Accepts <strong>DMS</strong> format (e.g. <code>48° 51' 23.8" N</code>) or <strong>decimal</strong> (e.g. <code>48.856388</code>). Can also be set by dragging the marker on the map.</td><td>Lat / Lon</td></tr>
+            <tr><td>Radar height</td><td>Height of the radiating element (antenna) above ground.</td><td>m (AGL)</td></tr>
+            <tr><td>Comm. mast ht.</td><td>Height of the communication mast. Used for C2 radio/fibre link calculations.</td><td>m (AGL)</td></tr>
+            <tr><td>Max range</td><td>Instrumental range of the radar. Sets the outer limit of range rings and the coverage computation zone.</td><td>km</td></tr>
+            <tr><td>Elev. min / max</td><td>Minimum and maximum elevation angles of the radar beam. Negative = below horizontal.</td><td>degrees (°)</td></tr>
+            <tr><td>Azimuth min / max</td><td>Azimuthal coverage sector (0–360°). If min = max or the span is 360°, coverage is omnidirectional.</td><td>degrees (°)</td></tr>
+            <tr><td>Parent C2</td><td>Hierarchically superior C2 node. Creates a link line on the map and triggers range and LOS calculations.</td><td>—</td></tr>
+            <tr><td>Max C2 dist.</td><td>Maximum allowed distance between this radar and its parent C2. Shown as a dashed circle. 0 = no constraint.</td><td>km</td></tr>
+            <tr><td>Link</td><td><strong>Fibre</strong>: wired link (LOS not required). <strong>Radio</strong>: radio link (LOS required between masts).</td><td>—</td></tr>
+            <tr><td>Active</td><td>An inactive radar is greyed out on the map and excluded from coverage computation.</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <h3>Altitude indicator</h3>
+        <p>Below the coordinates, an indicator shows the terrain elevation (AMSL) and the effective antenna position, computed from AWS Terrarium tiles (~30 m resolution).</p>
+        <div class="callout warn">
+          <strong>Warning</strong>
+          If the indicator shows "Unknown alt.", the elevation tiles for this area have not yet loaded. Zoom in on the radar's position to trigger loading.
+        </div>
+      </div>
+
     </section>
 
     <!-- ---- LANCEURS ---- -->
     <section class="help-section" id="lanceurs">
-      <h2>Lanceurs</h2>
-      <p>Les lanceurs de missiles sont représentés par un <strong>triangle orange</strong> sur la carte. Ils participent à la visualisation du déploiement mais ne contribuent pas directement au calcul de couverture radar.</p>
 
-      <table class="param-table">
-        <thead>
-          <tr><th>Champ</th><th>Description</th><th>Unité</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Nom</td>
-            <td>Identifiant libre.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Position</td>
-            <td>Coordonnées géographiques. Même format que pour les radars.</td>
-            <td>Lat / Lon</td>
-          </tr>
-          <tr>
-            <td>H. mat comm.</td>
-            <td>Hauteur du mât de communication, utilisée pour le calcul LOS vers le C2 parent.</td>
-            <td>m (AGL)</td>
-          </tr>
-          <tr>
-            <td>C2 parent</td>
-            <td>Nœud C2 hiérarchiquement supérieur.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Dist. max C2</td>
-            <td>Contrainte de distance maximale vers le C2. 0 = sans contrainte.</td>
-            <td>km</td>
-          </tr>
-          <tr>
-            <td>Liaison</td>
-            <td>Fibre ou Radio (même logique que pour les radars).</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="help-fr">
+        <h2>Lanceurs</h2>
+        <p>Les lanceurs de missiles sont représentés par un <strong>triangle orange</strong> sur la carte. Ils participent à la visualisation du déploiement mais ne contribuent pas directement au calcul de couverture radar.</p>
+        <table class="param-table">
+          <thead><tr><th>Champ</th><th>Description</th><th>Unité</th></tr></thead>
+          <tbody>
+            <tr><td>Nom</td><td>Identifiant libre.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Coordonnées géographiques. Même format que pour les radars.</td><td>Lat / Lon</td></tr>
+            <tr><td>H. mat comm.</td><td>Hauteur du mât de communication, utilisée pour le calcul LOS vers le C2 parent.</td><td>m (AGL)</td></tr>
+            <tr><td>C2 parent</td><td>Nœud C2 hiérarchiquement supérieur.</td><td>—</td></tr>
+            <tr><td>Dist. max C2</td><td>Contrainte de distance maximale vers le C2. 0 = sans contrainte.</td><td>km</td></tr>
+            <tr><td>Liaison</td><td>Fibre ou Radio (même logique que pour les radars).</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="help-en">
+        <h2>Launchers</h2>
+        <p>Missile launchers are shown as an <strong>orange triangle</strong> on the map. They contribute to the deployment visualisation but do not directly affect radar coverage computation.</p>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Description</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td>Name</td><td>Free-form identifier.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Geographic coordinates. Same format as for radars.</td><td>Lat / Lon</td></tr>
+            <tr><td>Comm. mast ht.</td><td>Height of the communication mast, used for LOS calculation to the parent C2.</td><td>m (AGL)</td></tr>
+            <tr><td>Parent C2</td><td>Hierarchically superior C2 node.</td><td>—</td></tr>
+            <tr><td>Max C2 dist.</td><td>Maximum distance constraint to the C2. 0 = no constraint.</td><td>km</td></tr>
+            <tr><td>Link</td><td>Fibre or Radio (same logic as for radars).</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
     </section>
 
     <!-- ---- C2 ---- -->
     <section class="help-section" id="c2">
-      <h2>Nœuds C2</h2>
-      <p>Les nœuds de commandement et contrôle (C2) sont représentés par un <strong>carré bleu</strong> sur la carte. Ils structurent la hiérarchie de commandement et permettent de valider les liaisons de communication du réseau.</p>
 
-      <table class="param-table">
-        <thead>
-          <tr><th>Champ</th><th>Description</th><th>Unité</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Nom</td>
-            <td>Identifiant libre.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Position</td>
-            <td>Coordonnées géographiques.</td>
-            <td>Lat / Lon</td>
-          </tr>
-          <tr>
-            <td>H. antenne</td>
-            <td>Hauteur de l'antenne de commandement au-dessus du sol.</td>
-            <td>m (AGL)</td>
-          </tr>
-          <tr>
-            <td>C2 parent</td>
-            <td>C2 hiérarchiquement supérieur. La détection de cycle est assurée — un nœud ne peut pas être son propre ancêtre.</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Dist. max C2</td>
-            <td>Contrainte de distance vers le C2 parent.</td>
-            <td>km</td>
-          </tr>
-          <tr>
-            <td>Liaison</td>
-            <td>Fibre ou Radio.</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Liaisons C2 sur la carte</h3>
-      <p>Lorsqu'une unité est associée à un C2 parent, une <strong>ligne de liaison</strong> est tracée sur la carte :</p>
-      <ul>
-        <li><span style="color:#18753c; font-weight:700;">Vert</span> — liaison valide (LOS vérifiée si radio, ou fibre).</li>
-        <li><span style="color:#ce0500; font-weight:700;">Rouge</span> — liaison invalide (LOS bloquée pour une liaison radio) ou distance dépassée.</li>
-        <li>Un cercle en pointillés indique la contrainte de distance maximale.</li>
-      </ul>
-
-      <div class="callout">
-        <strong>Hiérarchie</strong>
-        Les nœuds C2 peuvent eux-mêmes avoir un C2 parent, ce qui permet de représenter des architectures multi-niveaux. La détection de cycles empêche toute référence circulaire.
+      <div class="help-fr">
+        <h2>Nœuds C2</h2>
+        <p>Les nœuds de commandement et contrôle (C2) sont représentés par un <strong>carré bleu</strong> sur la carte. Ils structurent la hiérarchie de commandement et permettent de valider les liaisons de communication du réseau.</p>
+        <table class="param-table">
+          <thead><tr><th>Champ</th><th>Description</th><th>Unité</th></tr></thead>
+          <tbody>
+            <tr><td>Nom</td><td>Identifiant libre.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Coordonnées géographiques.</td><td>Lat / Lon</td></tr>
+            <tr><td>H. antenne</td><td>Hauteur de l'antenne de commandement au-dessus du sol.</td><td>m (AGL)</td></tr>
+            <tr><td>C2 parent</td><td>C2 hiérarchiquement supérieur. La détection de cycle est assurée — un nœud ne peut pas être son propre ancêtre.</td><td>—</td></tr>
+            <tr><td>Dist. max C2</td><td>Contrainte de distance vers le C2 parent.</td><td>km</td></tr>
+            <tr><td>Liaison</td><td>Fibre ou Radio.</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <h3>Liaisons C2 sur la carte</h3>
+        <p>Lorsqu'une unité est associée à un C2 parent, une <strong>ligne de liaison</strong> est tracée sur la carte :</p>
+        <ul>
+          <li><span style="color:#18753c; font-weight:700;">Vert</span> — liaison valide (LOS vérifiée si radio, ou fibre).</li>
+          <li><span style="color:#ce0500; font-weight:700;">Rouge</span> — liaison invalide (LOS bloquée pour une liaison radio) ou distance dépassée.</li>
+          <li>Un cercle en pointillés indique la contrainte de distance maximale.</li>
+        </ul>
+        <div class="callout">
+          <strong>Hiérarchie multi-niveaux</strong>
+          Les nœuds C2 peuvent eux-mêmes avoir un C2 parent, ce qui permet de représenter des architectures de commandement multi-niveaux. La détection de cycles empêche toute référence circulaire.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>C2 Nodes</h2>
+        <p>Command and Control (C2) nodes are shown as a <strong>blue square</strong> on the map. They structure the command hierarchy and allow communication links across the network to be validated.</p>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Description</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td>Name</td><td>Free-form identifier.</td><td>—</td></tr>
+            <tr><td>Position</td><td>Geographic coordinates.</td><td>Lat / Lon</td></tr>
+            <tr><td>Antenna ht.</td><td>Height of the command antenna above ground.</td><td>m (AGL)</td></tr>
+            <tr><td>Parent C2</td><td>Hierarchically superior C2. Cycle detection is enforced — a node cannot be its own ancestor.</td><td>—</td></tr>
+            <tr><td>Max C2 dist.</td><td>Distance constraint to parent C2.</td><td>km</td></tr>
+            <tr><td>Link</td><td>Fibre or Radio.</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <h3>C2 links on the map</h3>
+        <p>When a unit is associated with a parent C2, a <strong>link line</strong> is drawn on the map:</p>
+        <ul>
+          <li><span style="color:#18753c; font-weight:700;">Green</span> — valid link (LOS verified if radio, or fibre).</li>
+          <li><span style="color:#ce0500; font-weight:700;">Red</span> — invalid link (LOS blocked for a radio link) or distance exceeded.</li>
+          <li>A dashed circle indicates the maximum distance constraint.</li>
+        </ul>
+        <div class="callout">
+          <strong>Multi-level hierarchy</strong>
+          C2 nodes can themselves have a parent C2, allowing multi-level command architectures to be represented. Cycle detection prevents any circular reference.
+        </div>
+      </div>
+
     </section>
 
     <hr class="light">
 
     <!-- ============================================================ CIBLE & ATMO -->
     <section class="help-section" id="cible-atmo">
-      <h2>Onglet — Cible &amp; Atmo</h2>
 
-      <h3>Référence d'altitude</h3>
-      <p>Définit la convention d'altitude utilisée pour les altitudes cibles :</p>
-      <ul>
-        <li><strong>Sol (AGL)</strong> — altitude au-dessus du sol local. Une cible à 0 m AGL correspond à la surface du terrain.</li>
-        <li><strong>Mer (AMSL)</strong> — altitude au-dessus du niveau de la mer. Indépendante du relief local.</li>
-      </ul>
-
-      <h3>Altitudes cibles</h3>
-      <p>Liste des altitudes pour lesquelles la couverture est calculée. Les valeurs par défaut sont 0, 5, 40 et 500 m. Chaque altitude génère une couleur distincte sur la carte, du rouge (basse altitude) au bleu (haute altitude). Il est possible d'ajouter, de modifier ou de supprimer des valeurs.</p>
-
-      <div class="callout warn">
-        <strong>Performance</strong>
-        Chaque altitude cible multiplie le volume de calcul. Pour un calcul rapide, commencez par une seule altitude.
+      <div class="help-fr">
+        <h2>Onglet — Cible &amp; Atmo</h2>
+        <h3>Référence d'altitude</h3>
+        <p>Définit la convention d'altitude utilisée pour les altitudes cibles :</p>
+        <ul>
+          <li><strong>Sol (AGL)</strong> — altitude au-dessus du sol local. Une cible à 0 m AGL correspond à la surface du terrain.</li>
+          <li><strong>Mer (AMSL)</strong> — altitude au-dessus du niveau de la mer. Indépendante du relief local.</li>
+        </ul>
+        <h3>Altitudes cibles</h3>
+        <p>Liste des altitudes pour lesquelles la couverture est calculée. Les valeurs par défaut sont 0, 5, 40 et 500 m. Chaque altitude génère une couleur distincte sur la carte, du rouge (basse altitude) au bleu (haute altitude). Il est possible d'ajouter, de modifier ou de supprimer des valeurs.</p>
+        <div class="callout warn">
+          <strong>Performance</strong>
+          Chaque altitude cible supplémentaire multiplie le volume de calcul. Pour un premier calcul rapide, commencez par une seule altitude.
+        </div>
+        <h3>Facteur de réfraction k</h3>
+        <p>Modélise la courbure effective du rayon radar par rapport à la courbure terrestre. Un k plus élevé augmente la portée effective en courbant davantage le trajet vers le sol.</p>
+        <table class="param-table">
+          <thead><tr><th>Valeur de k</th><th>Modèle atmosphérique</th><th>Usage typique</th></tr></thead>
+          <tbody>
+            <tr><td>4/3 (1,33)</td><td>Standard — <em>valeur par défaut</em></td><td>Atmosphère standard, conditions tempérées</td></tr>
+            <tr><td>1,0</td><td>Géométrique</td><td>Propagation en ligne droite pure (calcul conservatif)</td></tr>
+            <tr><td>1,15</td><td>Air sec</td><td>Atmosphère chaude et sèche, été continental</td></tr>
+            <tr><td>1,6</td><td>Surréfraction</td><td>Inversion de température, zones côtières, nuit</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <h3>Facteur de réfraction k</h3>
-      <p>Modélise la courbure effective du rayon radar par rapport à la courbure terrestre. Un k plus élevé augmente la portée effective.</p>
+      <div class="help-en">
+        <h2>Tab — Target &amp; Atmo</h2>
+        <h3>Altitude reference</h3>
+        <p>Defines the altitude convention used for target altitudes:</p>
+        <ul>
+          <li><strong>Ground (AGL)</strong> — altitude above local ground level. A target at 0 m AGL corresponds to the terrain surface.</li>
+          <li><strong>Sea level (AMSL)</strong> — altitude above mean sea level. Independent of local terrain.</li>
+        </ul>
+        <h3>Target altitudes</h3>
+        <p>List of altitudes for which coverage is computed. Default values are 0, 5, 40 and 500 m. Each altitude is assigned a distinct colour on the map, ranging from red (low altitude) to blue (high altitude). Values can be added, edited or deleted.</p>
+        <div class="callout warn">
+          <strong>Performance</strong>
+          Each additional target altitude multiplies the computation volume. For a quick first run, start with a single altitude.
+        </div>
+        <h3>Refraction factor k</h3>
+        <p>Models the effective curvature of the radar beam relative to Earth's curvature. A higher k increases the effective range by bending the propagation path further towards the ground.</p>
+        <table class="param-table">
+          <thead><tr><th>k value</th><th>Atmospheric model</th><th>Typical use</th></tr></thead>
+          <tbody>
+            <tr><td>4/3 (1.33)</td><td>Standard — <em>default value</em></td><td>Standard atmosphere, temperate conditions</td></tr>
+            <tr><td>1.0</td><td>Geometric</td><td>Pure straight-line propagation (conservative)</td></tr>
+            <tr><td>1.15</td><td>Dry air</td><td>Hot, dry atmosphere, continental summer</td></tr>
+            <tr><td>1.6</td><td>Super-refraction</td><td>Temperature inversion, coastal areas, night</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-      <table class="param-table">
-        <thead>
-          <tr><th>Valeur de k</th><th>Modèle atmosphérique</th><th>Usage typique</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>4/3 (1,33)</td><td>Standard — <em>valeur par défaut</em></td><td>Atmosphère standard, conditions tempérées</td></tr>
-          <tr><td>1,0</td><td>Géométrique</td><td>Propagation en ligne droite pure (calcul conservatif)</td></tr>
-          <tr><td>1,15</td><td>Air sec</td><td>Atmosphère chaude et sèche, été continental</td></tr>
-          <tr><td>1,6</td><td>Surréfraction</td><td>Inversion de température, zones côtières, nuit</td></tr>
-        </tbody>
-      </table>
     </section>
 
     <hr class="light">
 
     <!-- ============================================================ CARTE -->
     <section class="help-section" id="carte">
-      <h2>Onglet — Carte</h2>
 
-      <h3>Affichage &amp; Coordonnées</h3>
-      <table class="param-table">
-        <thead>
-          <tr><th>Contrôle</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Opacité carte</td>
-            <td>Transparence du fond de carte (0 = invisible, 100 = plein).</td>
-          </tr>
-          <tr>
-            <td>Opacité couverture</td>
-            <td>Transparence de l'overlay de couverture (50 % par défaut).</td>
-          </tr>
-          <tr>
-            <td>Format des coordonnées</td>
-            <td><strong>DMS</strong> : degrés minutes secondes (ex. : 48° 51′ 23,8″ N). <strong>DD</strong> : décimales (ex. : 48,856388).</td>
-          </tr>
-          <tr>
-            <td>Marques dist.</td>
-            <td>Active ou désactive les anneaux de distance concentriques autour des radars.</td>
-          </tr>
-          <tr>
-            <td>Tous</td>
-            <td>Cochée (défaut) : affiche les anneaux pour tous les radars. Décochée : affiche uniquement ceux du radar actif.</td>
-          </tr>
-          <tr>
-            <td>Pas (km)</td>
-            <td>Espacement entre les anneaux de distance. La limite extérieure correspond à la portée maximale du radar.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="help-fr">
+        <h2>Onglet — Carte</h2>
+        <h3>Affichage &amp; Coordonnées</h3>
+        <table class="param-table">
+          <thead><tr><th>Contrôle</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Opacité carte</td><td>Transparence du fond de carte (0 = invisible, 100 = plein).</td></tr>
+            <tr><td>Opacité couverture</td><td>Transparence de l'affichage de couverture (50 % par défaut).</td></tr>
+            <tr><td>Format des coordonnées</td><td><strong>DMS</strong> : degrés minutes secondes (ex. : 48° 51′ 23,8″ N). <strong>DD</strong> : décimales (ex. : 48,856388).</td></tr>
+            <tr><td>Marques dist.</td><td>Active ou désactive les anneaux de distance concentriques autour des radars.</td></tr>
+            <tr><td>Tous</td><td>Cochée (défaut) : affiche les anneaux pour tous les radars. Décochée : affiche uniquement ceux du radar actif.</td></tr>
+            <tr><td>Pas (km)</td><td>Espacement entre les anneaux de distance. La limite extérieure correspond à la portée maximale du radar.</td></tr>
+          </tbody>
+        </table>
+        <h3>Calcul</h3>
+        <p>Ce sélecteur contrôle la résolution du Modèle Numérique de Terrain utilisé lors du calcul de couverture :</p>
+        <ul>
+          <li><strong>Rapide</strong> — zoom terrain plafonné à 11 (résolution ~52 m en France). Calcul plus rapide, adapté aux grandes zones ou aux études préliminaires.</li>
+          <li><strong>Haute Précision</strong> — zoom terrain plafonné à 12 (résolution ~26 m en France, proche de la résolution native SRTM). Recommandé pour les analyses finales et les courtes portées.</li>
+        </ul>
+        <p>La résolution effective estimée pour le déploiement actuel est affichée sous le sélecteur.</p>
+      </div>
+
+      <div class="help-en">
+        <h2>Tab — Map</h2>
+        <h3>Display &amp; Coordinates</h3>
+        <table class="param-table">
+          <thead><tr><th>Control</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Map opacity</td><td>Transparency of the base map (0 = invisible, 100 = full).</td></tr>
+            <tr><td>Coverage opacity</td><td>Transparency of the coverage display (50% by default).</td></tr>
+            <tr><td>Coordinate format</td><td><strong>DMS</strong>: degrees minutes seconds (e.g. 48° 51′ 23.8″ N). <strong>DD</strong>: decimal degrees (e.g. 48.856388).</td></tr>
+            <tr><td>Range marks</td><td>Enables or disables concentric range rings around radars.</td></tr>
+            <tr><td>All</td><td>Checked (default): shows rings for all radars. Unchecked: shows only the active radar's rings.</td></tr>
+            <tr><td>Step (km)</td><td>Spacing between range rings. The outermost ring corresponds to the radar's maximum range.</td></tr>
+          </tbody>
+        </table>
+        <h3>Computation</h3>
+        <p>This selector controls the resolution of the Digital Elevation Model used during coverage computation:</p>
+        <ul>
+          <li><strong>Fast</strong> — terrain zoom capped at 11 (~52 m resolution in France). Faster computation, suited to large areas or preliminary studies.</li>
+          <li><strong>High Precision</strong> — terrain zoom capped at 12 (~26 m resolution in France, close to native SRTM resolution). Recommended for final analyses and short ranges.</li>
+        </ul>
+        <p>The estimated effective resolution for the current deployment is displayed below the selector.</p>
+      </div>
+
     </section>
 
     <!-- ============================================================ SOMMETS -->
     <section class="help-section" id="sommets">
-      <h2>Recherche de Sommets Locaux</h2>
-      <p>Cet outil identifie les points hauts du relief à l'intérieur d'une zone dessinée par l'utilisateur. Il est utile pour localiser rapidement des emplacements d'implantation favorables (dominance topographique).</p>
 
-      <h3>Procédure</h3>
-      <ol>
-        <li>Cliquez <span class="ui-badge">Zone de recherche</span> pour activer le mode tracé de polygone.</li>
-        <li>Cliquez sur la carte pour placer les sommets du polygone (minimum 3 points). Les points sont repositionnables par glisser-déposer. Un clic molette sur un point le supprime.</li>
-        <li>Fermez le polygone en cliquant à proximité du premier point ou laissez-le ouvert (la zone se ferme automatiquement).</li>
-        <li>Définissez le <strong>nombre maximum de sommets</strong> à retourner (défaut : 20, max : 200).</li>
-        <li>Cliquez <span class="ui-badge">Lancer la recherche</span>.</li>
-      </ol>
-      <p>Les sommets identifiés apparaissent sous forme de marqueurs numérotés (★) sur la carte, triés par altitude décroissante.</p>
-
-      <div class="callout tip">
-        <strong>Conseil</strong>
-        Le résultat affiche le nombre de tuiles d'altitude téléchargées et la durée du calcul. Pour les grandes zones, le chargement peut prendre quelques secondes.
+      <div class="help-fr">
+        <h2>Recherche de Sommets Locaux</h2>
+        <p>Cet outil identifie les points hauts du relief à l'intérieur d'une zone dessinée par l'utilisateur. Il est utile pour localiser rapidement des emplacements d'implantation favorables (dominance topographique).</p>
+        <h3>Procédure</h3>
+        <ol>
+          <li>Cliquez <span class="ui-badge">Zone de recherche</span> pour activer le mode tracé de polygone.</li>
+          <li>Cliquez sur la carte pour placer les sommets du polygone (minimum 3 points). Les points sont repositionnables par glisser-déposer. Un clic molette sur un point le supprime.</li>
+          <li>Fermez le polygone en cliquant à proximité du premier point ou laissez-le ouvert (la zone se ferme automatiquement au lancement).</li>
+          <li>Définissez le <strong>nombre maximum de sommets</strong> à retourner (défaut : 20, max : 200).</li>
+          <li>Cliquez <span class="ui-badge">Lancer la recherche</span>.</li>
+        </ol>
+        <p>Les sommets identifiés apparaissent sous forme de marqueurs numérotés (★) sur la carte, triés par altitude décroissante.</p>
+        <div class="callout tip">
+          <strong>Conseil</strong>
+          Pour les grandes zones, le chargement des tuiles d'altitude peut prendre quelques secondes. La barre de progression indique l'avancement.
+        </div>
+        <p>Cliquez <span class="ui-badge grey">Effacer</span> pour retirer les marqueurs de sommets et le polygone de la carte.</p>
       </div>
 
-      <p>Cliquez <span class="ui-badge grey">Effacer</span> pour retirer les marqueurs de sommets et le polygone de la carte.</p>
+      <div class="help-en">
+        <h2>Local Summit Search</h2>
+        <p>This tool identifies high points within a user-drawn area. It is useful for quickly locating favourable siting positions (topographic dominance).</p>
+        <h3>Procedure</h3>
+        <ol>
+          <li>Click <span class="ui-badge">Search zone</span> to activate polygon drawing mode.</li>
+          <li>Click on the map to place polygon vertices (minimum 3 points). Points can be repositioned by dragging. A middle-click on a point deletes it.</li>
+          <li>Close the polygon by clicking near the first point, or leave it open (the zone closes automatically when the search is launched).</li>
+          <li>Set the <strong>maximum number of summits</strong> to return (default: 20, max: 200).</li>
+          <li>Click <span class="ui-badge">Find summits</span>.</li>
+        </ol>
+        <p>Identified summits appear as numbered markers (★) on the map, sorted by decreasing elevation.</p>
+        <div class="callout tip">
+          <strong>Tip</strong>
+          For large areas, loading elevation tiles may take a few seconds. The progress indicator shows the current status.
+        </div>
+        <p>Click <span class="ui-badge grey">Clear</span> to remove the summit markers and polygon from the map.</p>
+      </div>
+
     </section>
 
     <hr class="light">
 
-    <!-- ============================================================ OUTILS -->
+    <!-- ============================================================ OUTILS / KML -->
     <section class="help-section" id="outils">
-      <h2>Onglet — Outils</h2>
+      <div class="help-fr"><h2>Onglet — Outils</h2></div>
+      <div class="help-en"><h2>Tab — Tools</h2></div>
     </section>
 
-    <!-- ============================================================ KML -->
     <section class="help-section" id="kml">
-      <h2>Import / Export KML</h2>
 
-      <h3>Export</h3>
-      <p>Le bouton <span class="ui-badge">⬇ Exporter KML</span> génère un fichier <code>.kml</code> contenant l'intégralité du scénario : positions, paramètres de chaque unité, hiérarchie C2, altitudes cibles et facteur de réfraction.</p>
-      <p>Le fichier utilise le namespace <code>spm:</code> pour stocker les paramètres propres à France Sol-Air dans les balises <code>&lt;ExtendedData&gt;</code>. Il est compatible avec Google Earth (les unités s'affichent avec leurs icônes et un ballon descriptif).</p>
-
-      <h3>Import</h3>
-      <p>Le bouton <span class="ui-badge">⬆ Importer KML</span> ouvre un sélecteur de fichier. Après confirmation, le scénario actuel est <strong>remplacé entièrement</strong> par le contenu du fichier KML importé.</p>
-      <p>La carte se recentre automatiquement sur les entités importées et l'onglet <strong>Unités</strong> s'ouvre.</p>
-
-      <div class="callout warn">
-        <strong>Attention</strong>
-        L'import remplace immédiatement la situation en cours sans confirmation. Exportez d'abord votre scénario si vous souhaitez le conserver.
+      <div class="help-fr">
+        <h2>Import / Export KML</h2>
+        <h3>Export</h3>
+        <p>Le bouton <span class="ui-badge">⬇ Exporter KML</span> génère un fichier <code>.kml</code> contenant l'intégralité du scénario : positions, paramètres de chaque unité, hiérarchie C2, altitudes cibles et facteur de réfraction.</p>
+        <p>Le fichier utilise le namespace <code>spm:</code> pour stocker les paramètres propres à France Sol-Air dans les balises <code>&lt;ExtendedData&gt;</code>. Il est compatible avec Google Earth (les unités s'affichent avec leurs icônes et une fiche descriptive).</p>
+        <h3>Import</h3>
+        <p>Le bouton <span class="ui-badge">⬆ Importer KML</span> ouvre un sélecteur de fichier. Le scénario actuel est <strong>remplacé entièrement</strong> par le contenu du fichier KML importé.</p>
+        <p>La carte se recentre automatiquement sur les entités importées et l'onglet <strong>Unités</strong> s'ouvre.</p>
+        <div class="callout warn">
+          <strong>Attention</strong>
+          L'import remplace immédiatement la situation en cours sans confirmation. Exportez d'abord votre scénario si vous souhaitez le conserver.
+        </div>
+        <h3>Compatibilité</h3>
+        <p>Seuls les fichiers KML générés par France Sol-Air (namespace <code>spm:</code>) permettent un import fidèle de tous les paramètres. Les fichiers KML tiers (Google Earth, QGIS…) peuvent être importés mais les paramètres spécifiques (portée, secteur, réfraction…) ne seront pas récupérés.</p>
       </div>
 
-      <h3>Compatibilité</h3>
-      <p>Seuls les fichiers KML générés par France Sol-Air (namespace <code>spm:</code>) permettent un import fidèle de tous les paramètres. Les fichiers KML tiers (Google Earth, QGIS…) peuvent être importés mais les paramètres spécifiques (portée, secteur, réfraction…) ne seront pas récupérés.</p>
+      <div class="help-en">
+        <h2>KML Import / Export</h2>
+        <h3>Export</h3>
+        <p>The <span class="ui-badge">⬇ Export KML</span> button generates a <code>.kml</code> file containing the complete scenario: positions, all unit parameters, C2 hierarchy, target altitudes and refraction factor.</p>
+        <p>The file uses the <code>spm:</code> namespace to store France Sol-Air-specific parameters in <code>&lt;ExtendedData&gt;</code> tags. It is compatible with Google Earth (units are displayed with their icons and a descriptive balloon).</p>
+        <h3>Import</h3>
+        <p>The <span class="ui-badge">⬆ Import KML</span> button opens a file selector. The current scenario is <strong>replaced entirely</strong> by the contents of the imported KML file.</p>
+        <p>The map recentres automatically on the imported entities and the <strong>Units</strong> tab opens.</p>
+        <div class="callout warn">
+          <strong>Warning</strong>
+          The import immediately replaces the current situation without any confirmation prompt. Export your scenario first if you wish to keep it.
+        </div>
+        <h3>Compatibility</h3>
+        <p>Only KML files generated by France Sol-Air (with the <code>spm:</code> namespace) allow a faithful import of all parameters. Third-party KML files (Google Earth, QGIS…) can be imported but specific parameters (range, sector, refraction…) will not be recovered.</p>
+      </div>
+
     </section>
 
     <hr class="light">
 
     <!-- ============================================================ COUVERTURE -->
     <section class="help-section" id="couverture">
-      <h2>Calcul de couverture radar</h2>
-      <p>Le calcul est entièrement côté client. Il s'effectue par <strong>lancer de rayons</strong> (raycast) depuis chaque radar vers chaque point de la grille de calcul.</p>
 
-      <h3>Principe</h3>
-      <ol>
-        <li>Un MNT (Modèle Numérique de Terrain) est construit à partir des tuiles AWS Terrarium pour la zone englobant tous les radars actifs.</li>
-        <li>Pour chaque radar actif, des rayons sont émis dans le secteur azimutal et d'élévation définis.</li>
-        <li>Chaque rayon est comparé au profil de terrain interposé. Si le chemin est libre, le point est couvert à l'altitude cible considérée.</li>
-        <li>Le modèle de réfraction applique un facteur k à la courbure effective de la Terre, ce qui modifie la portée horizon.</li>
-        <li>Les résultats sont rendus sur un canvas HTML5 superposé à la carte Leaflet.</li>
-      </ol>
-
-      <h3>Légende des couleurs</h3>
-      <p>Chaque altitude cible reçoit une couleur propre :</p>
-      <ul>
-        <li>La première altitude (la plus basse) est affichée en <strong>rouge foncé</strong>.</li>
-        <li>Les altitudes suivantes progressent vers le <strong>bleu</strong> (haute altitude).</li>
-        <li>Les zones couvertes par plusieurs altitudes se superposent avec transparence.</li>
-      </ul>
-
-      <h3>Résultats affichés</h3>
-      <p>Après le calcul, le panneau résultats indique :</p>
-      <ul>
-        <li>Le <strong>nombre de radars</strong> calculés.</li>
-        <li>La <strong>résolution du MNT</strong> utilisé (en mètres et zoom).</li>
-        <li>La <strong>surface totale couverte</strong> estimée (en km²).</li>
-      </ul>
-
-      <div class="callout">
-        <strong>Résultats périmés</strong>
-        Dès qu'un paramètre est modifié après un calcul, l'overlay est grisé et le bandeau orange « Résultats périmés » apparaît. Cliquez <strong>Calculer la couverture</strong> pour mettre à jour.
+      <div class="help-fr">
+        <h2>Calcul de couverture radar</h2>
+        <p>Le calcul est entièrement réalisé dans le navigateur, par <strong>lancer de rayons</strong> (raycast) depuis chaque radar actif vers chaque point de la grille de calcul.</p>
+        <h3>Principe</h3>
+        <ol>
+          <li>Un MNT est construit à partir des tuiles AWS Terrarium pour la zone englobant tous les radars actifs.</li>
+          <li>Pour chaque radar actif, des rayons sont émis dans le secteur azimutal et d'élévation définis.</li>
+          <li>Chaque rayon est comparé au profil de terrain interposé. Si le chemin est libre, le point est considéré couvert à l'altitude cible.</li>
+          <li>Le modèle de réfraction applique le facteur k à la courbure effective de la Terre, modifiant la portée horizon.</li>
+          <li>Les résultats sont affichés sous forme d'un calque coloré superposé à la carte.</li>
+        </ol>
+        <h3>Légende des couleurs</h3>
+        <p>Chaque altitude cible reçoit une couleur propre :</p>
+        <ul>
+          <li>La première altitude (la plus basse) est affichée en <strong>rouge foncé</strong>.</li>
+          <li>Les altitudes suivantes progressent vers le <strong>bleu</strong> (haute altitude).</li>
+          <li>Les zones couvertes par plusieurs altitudes se superposent avec transparence.</li>
+        </ul>
+        <h3>Résultats affichés</h3>
+        <p>Après le calcul, le panneau de résultats indique :</p>
+        <ul>
+          <li>Le <strong>nombre de radars</strong> calculés.</li>
+          <li>La <strong>résolution du MNT</strong> utilisé (en mètres et niveau de zoom).</li>
+          <li>La <strong>surface totale couverte</strong> estimée (en km²).</li>
+        </ul>
+        <div class="callout">
+          <strong>Résultats périmés</strong>
+          Dès qu'un paramètre est modifié après un calcul, le calque est grisé et le bandeau orange « Résultats périmés » apparaît. Cliquez <strong>Calculer la couverture</strong> pour mettre à jour.
+        </div>
       </div>
+
+      <div class="help-en">
+        <h2>Radar Coverage Computation</h2>
+        <p>The computation runs entirely in the browser using <strong>ray casting</strong> from each active radar to every point on the computation grid.</p>
+        <h3>Principle</h3>
+        <ol>
+          <li>A DEM is built from AWS Terrarium tiles covering the bounding box of all active radars.</li>
+          <li>For each active radar, rays are emitted across the defined azimuth and elevation sector.</li>
+          <li>Each ray is compared against the interposed terrain profile. If the path is clear, the point is considered covered at the target altitude.</li>
+          <li>The refraction model applies the k factor to the effective Earth curvature, altering the horizon range.</li>
+          <li>Results are displayed as a coloured layer overlaid on the map.</li>
+        </ol>
+        <h3>Colour legend</h3>
+        <p>Each target altitude receives its own colour:</p>
+        <ul>
+          <li>The first altitude (lowest) is shown in <strong>dark red</strong>.</li>
+          <li>Subsequent altitudes progress towards <strong>blue</strong> (high altitude).</li>
+          <li>Areas covered by multiple altitudes are overlaid with transparency.</li>
+        </ul>
+        <h3>Displayed results</h3>
+        <p>After computation, the results panel shows:</p>
+        <ul>
+          <li>The <strong>number of radars</strong> computed.</li>
+          <li>The <strong>DEM resolution</strong> used (in metres and zoom level).</li>
+          <li>The estimated <strong>total covered area</strong> (in km²).</li>
+        </ul>
+        <div class="callout">
+          <strong>Stale results</strong>
+          As soon as a parameter is changed after a computation, the coverage layer is greyed out and the orange "Stale results" banner appears. Click <strong>Compute coverage</strong> to update.
+        </div>
+      </div>
+
     </section>
 
     <hr class="light">
 
     <!-- ============================================================ GLOSSAIRE -->
     <section class="help-section" id="glossaire">
-      <h2>Glossaire</h2>
 
-      <table class="param-table">
-        <thead>
-          <tr><th>Terme</th><th>Définition</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>AGL</td><td><em>Above Ground Level</em> — altitude au-dessus du sol local, indépendamment du niveau de la mer.</td></tr>
-          <tr><td>AMSL</td><td><em>Above Mean Sea Level</em> — altitude au-dessus du niveau moyen de la mer, indépendamment du relief sous-jacent.</td></tr>
-          <tr><td>AWS</td><td><em>Amazon Web Services</em> — fournisseur des tuiles d'altitude Terrarium utilisées par France Sol-Air pour les calculs de relief.</td></tr>
-          <tr><td>Azimut</td><td>Angle horizontal mesuré dans le sens des aiguilles d'une montre depuis le Nord géographique (0–360 °). Définit l'orientation d'un secteur de couverture radar.</td></tr>
-          <tr><td>C2</td><td><em>Command and Control</em> — poste de commandement et de contrôle chargé de coordonner les radars et lanceurs d'un réseau GBAD.</td></tr>
-          <tr><td>DD</td><td><em>Decimal Degrees</em> — format décimal des coordonnées géographiques (ex. : 48,856388° N). Alternative au format DMS.</td></tr>
-          <tr><td>DEM / MNT</td><td><em>Digital Elevation Model / Modèle Numérique de Terrain</em> — représentation numérique du relief sous forme de grille d'altitudes.</td></tr>
-          <tr><td>DMS</td><td><em>Degrees Minutes Seconds</em> — format sexagésimal des coordonnées géographiques (ex. : 48° 51′ 23,8″ N). Alternative au format DD.</td></tr>
-          <tr><td>DTED</td><td><em>Digital Terrain Elevation Data</em> — standard OTAN pour les données d'élévation. DTED0 : résolution 900 m. DTED1 : résolution 90 m. France Sol-Air utilise des données Terrarium (~30 m), de résolution supérieure.</td></tr>
-          <tr><td>GBAD</td><td><em>Ground Based Air Defense</em> — défense aérienne sol-air, regroupant radars de surveillance, systèmes de missiles et postes de commandement.</td></tr>
-          <tr><td>IADS</td><td><em>Integrated Air Defense System</em> — réseau intégré de défense aérienne. Désigne l'ensemble des capteurs, armes et postes C2 interconnectés pour assurer la défense d'un espace aérien.</td></tr>
-          <tr><td>Intervisibilité</td><td>Condition dans laquelle deux points peuvent se "voir" mutuellement sans obstacle interposé (relief, bâtiment…). En radar, elle conditionne la capacité à détecter un objectif ou à établir une liaison de communication.</td></tr>
-          <tr><td>KML</td><td><em>Keyhole Markup Language</em> — format de données géospatiales basé sur XML, compatible avec Google Earth, QGIS et la majorité des SIG.</td></tr>
-          <tr><td>LOS</td><td><em>Line Of Sight</em> — ligne de visée directe entre deux points. Une liaison radio nécessite une LOS dégagée entre les deux antennes.</td></tr>
-          <tr><td>Portée horizon</td><td>Distance maximale à laquelle un radar peut détecter une cible au ras du sol, limitée par la courbure terrestre et le modèle de réfraction atmosphérique. Un facteur k &gt; 1 augmente cette portée.</td></tr>
-          <tr><td>Raycast</td><td>Technique de calcul consistant à émettre des rayons depuis un point source et à détecter les intersections avec le terrain. Utilisée par France Sol-Air pour calculer l'empreinte de couverture radar.</td></tr>
-          <tr><td>Réfraction (k)</td><td>Facteur correctif modélisant la courbure des ondes radio dans l'atmosphère. k = 4/3 est la valeur standard ; k = 1,6 modélise une surréfraction qui augmente la portée.</td></tr>
-          <tr><td>Site</td><td>Angle d'élévation dans le plan vertical (positif vers le haut, négatif vers le bas). Définit la limite basse et haute du faisceau radar.</td></tr>
-          <tr><td>SPM</td><td>Namespace propriétaire (<code>spm:</code>) utilisé dans les fichiers KML exportés par France Sol-Air pour stocker les paramètres spécifiques de chaque unité (portée, secteur, réfraction…).</td></tr>
-          <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — mission spatiale NASA (2000) ayant produit un MNT mondial à résolution ~30 m. Source des données d'élévation utilisées par AWS Terrarium.</td></tr>
-          <tr><td>Surréfraction</td><td>Phénomène atmosphérique (inversion de température, forte humidité) courbant les ondes radio au-delà de la normale, augmentant la portée horizon. Modélisé par k = 1,6 dans France Sol-Air.</td></tr>
-          <tr><td>Terrarium</td><td>Format de tuile d'élévation distribué par AWS, encodant l'altitude dans les canaux RGB d'une image PNG. Résolution ~30 m (SRTM). Utilisé pour tous les calculs d'élévation de France Sol-Air.</td></tr>
-        </tbody>
-      </table>
+      <div class="help-fr">
+        <h2>Glossaire</h2>
+        <table class="param-table">
+          <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+          <tbody>
+            <tr><td>AGL</td><td><em>Above Ground Level</em> — altitude au-dessus du sol local, indépendamment du niveau de la mer.</td></tr>
+            <tr><td>AMSL</td><td><em>Above Mean Sea Level</em> — altitude au-dessus du niveau moyen de la mer, indépendamment du relief sous-jacent.</td></tr>
+            <tr><td>AWS</td><td><em>Amazon Web Services</em> — fournisseur des tuiles d'altitude Terrarium utilisées par France Sol-Air pour les calculs de relief.</td></tr>
+            <tr><td>Azimut</td><td>Angle horizontal mesuré dans le sens des aiguilles d'une montre depuis le Nord géographique (0–360 °). Définit l'orientation d'un secteur de couverture radar.</td></tr>
+            <tr><td>C2</td><td><em>Command and Control</em> — poste de commandement et de contrôle chargé de coordonner les radars et lanceurs d'un réseau GBAD.</td></tr>
+            <tr><td>DD</td><td><em>Decimal Degrees</em> — format décimal des coordonnées géographiques (ex. : 48,856388° N). Alternative au format DMS.</td></tr>
+            <tr><td>DEM / MNT</td><td><em>Digital Elevation Model / Modèle Numérique de Terrain</em> — représentation numérique du relief sous forme de grille d'altitudes.</td></tr>
+            <tr><td>DMS</td><td><em>Degrees Minutes Seconds</em> — format sexagésimal des coordonnées géographiques (ex. : 48° 51′ 23,8″ N). Alternative au format DD.</td></tr>
+            <tr><td>DTED</td><td><em>Digital Terrain Elevation Data</em> — standard OTAN pour les données d'élévation. DTED0 : résolution 900 m. DTED1 : résolution 90 m. France Sol-Air utilise des données Terrarium (~30 m), de résolution supérieure.</td></tr>
+            <tr><td>GBAD</td><td><em>Ground Based Air Defense</em> — défense aérienne sol-air, regroupant radars de surveillance, systèmes de missiles et postes de commandement.</td></tr>
+            <tr><td>IADS</td><td><em>Integrated Air Defense System</em> — réseau intégré de défense aérienne. Désigne l'ensemble des capteurs, armes et postes C2 interconnectés pour assurer la défense d'un espace aérien.</td></tr>
+            <tr><td>Intervisibilité</td><td>Condition dans laquelle deux points peuvent se "voir" mutuellement sans obstacle interposé (relief, bâtiment…). En radar, elle conditionne la capacité à détecter un objectif ou à établir une liaison de communication.</td></tr>
+            <tr><td>KML</td><td><em>Keyhole Markup Language</em> — format de données géospatiales basé sur XML, compatible avec Google Earth, QGIS et la majorité des SIG.</td></tr>
+            <tr><td>LOS</td><td><em>Line Of Sight</em> — ligne de visée directe entre deux points. Une liaison radio nécessite une LOS dégagée entre les deux antennes.</td></tr>
+            <tr><td>Portée horizon</td><td>Distance maximale à laquelle un radar peut détecter une cible au ras du sol, limitée par la courbure terrestre et le modèle de réfraction atmosphérique. Un facteur k &gt; 1 augmente cette portée.</td></tr>
+            <tr><td>Raycast</td><td>Technique de calcul consistant à émettre des rayons depuis un point source et à détecter les intersections avec le terrain. Utilisée par France Sol-Air pour calculer l'empreinte de couverture radar.</td></tr>
+            <tr><td>Réfraction (k)</td><td>Facteur correctif modélisant la courbure des ondes radio dans l'atmosphère. k = 4/3 est la valeur standard ; k = 1,6 modélise une surréfraction qui augmente la portée.</td></tr>
+            <tr><td>Site</td><td>Angle d'élévation dans le plan vertical (positif vers le haut, négatif vers le bas). Définit la limite basse et haute du faisceau radar.</td></tr>
+            <tr><td>SPM</td><td>Namespace propriétaire (<code>spm:</code>) utilisé dans les fichiers KML exportés par France Sol-Air pour stocker les paramètres spécifiques de chaque unité (portée, secteur, réfraction…).</td></tr>
+            <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — mission spatiale NASA (2000) ayant produit un MNT mondial à résolution ~30 m. Source des données d'élévation utilisées par AWS Terrarium.</td></tr>
+            <tr><td>Surréfraction</td><td>Phénomène atmosphérique (inversion de température, forte humidité) courbant les ondes radio au-delà de la normale, augmentant la portée horizon. Modélisé par k = 1,6 dans France Sol-Air.</td></tr>
+            <tr><td>Terrarium</td><td>Format de tuile d'élévation distribué par AWS, encodant l'altitude dans les canaux RGB d'une image PNG. Résolution ~30 m (SRTM). Utilisé pour tous les calculs d'élévation de France Sol-Air.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="help-en">
+        <h2>Glossary</h2>
+        <table class="param-table">
+          <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+          <tbody>
+            <tr><td>AGL</td><td><em>Above Ground Level</em> — altitude above local ground, regardless of sea level.</td></tr>
+            <tr><td>AMSL</td><td><em>Above Mean Sea Level</em> — altitude above mean sea level, regardless of the terrain below.</td></tr>
+            <tr><td>AWS</td><td><em>Amazon Web Services</em> — provider of the Terrarium elevation tiles used by France Sol-Air for terrain calculations.</td></tr>
+            <tr><td>Azimuth</td><td>Horizontal angle measured clockwise from geographic North (0–360°). Defines the orientation of a radar coverage sector.</td></tr>
+            <tr><td>C2</td><td><em>Command and Control</em> — command and control post responsible for coordinating radars and launchers in a GBAD network.</td></tr>
+            <tr><td>DD</td><td><em>Decimal Degrees</em> — decimal format for geographic coordinates (e.g. 48.856388° N). Alternative to DMS format.</td></tr>
+            <tr><td>DEM</td><td><em>Digital Elevation Model</em> — numerical representation of terrain relief as a grid of altitudes.</td></tr>
+            <tr><td>DMS</td><td><em>Degrees Minutes Seconds</em> — sexagesimal format for geographic coordinates (e.g. 48° 51′ 23.8″ N). Alternative to DD format.</td></tr>
+            <tr><td>DTED</td><td><em>Digital Terrain Elevation Data</em> — NATO standard for elevation data. DTED0: 900 m resolution. DTED1: 90 m resolution. France Sol-Air uses Terrarium data (~30 m), which offers higher resolution.</td></tr>
+            <tr><td>GBAD</td><td><em>Ground Based Air Defense</em> — ground-based air defence, encompassing surveillance radars, missile systems and command posts.</td></tr>
+            <tr><td>Horizon range</td><td>Maximum distance at which a radar can detect a low-flying target, limited by Earth's curvature and the atmospheric refraction model. A k factor &gt; 1 increases this range.</td></tr>
+            <tr><td>IADS</td><td><em>Integrated Air Defense System</em> — integrated air defence network. Refers to the complete set of sensors, weapons and C2 posts interconnected to defend an airspace.</td></tr>
+            <tr><td>Intervisibility</td><td>Condition in which two points can "see" each other with no obstruction (terrain, building…). In radar terms, it determines the ability to detect a target or establish a communication link.</td></tr>
+            <tr><td>KML</td><td><em>Keyhole Markup Language</em> — XML-based geospatial data format, compatible with Google Earth, QGIS and most GIS applications.</td></tr>
+            <tr><td>LOS</td><td><em>Line Of Sight</em> — direct line of sight between two points. A radio link requires a clear LOS between the two antennas.</td></tr>
+            <tr><td>Raycast</td><td>Computation technique that emits rays from a source point and detects intersections with terrain. Used by France Sol-Air to calculate the radar coverage footprint.</td></tr>
+            <tr><td>Refraction (k)</td><td>Correction factor modelling the curvature of radio waves in the atmosphere. k = 4/3 is the standard value; k = 1.6 models super-refraction, which increases range.</td></tr>
+            <tr><td>Site / Elevation angle</td><td>Angle in the vertical plane (positive upward, negative downward). Defines the lower and upper limits of the radar beam.</td></tr>
+            <tr><td>SPM</td><td>Proprietary namespace (<code>spm:</code>) used in KML files exported by France Sol-Air to store unit-specific parameters (range, sector, refraction…).</td></tr>
+            <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — NASA space mission (2000) that produced a global DEM at ~30 m resolution. Source of the elevation data used by AWS Terrarium.</td></tr>
+            <tr><td>Super-refraction</td><td>Atmospheric phenomenon (temperature inversion, high humidity) that bends radio waves beyond normal, increasing horizon range. Modelled by k = 1.6 in France Sol-Air.</td></tr>
+            <tr><td>Terrarium</td><td>Elevation tile format distributed by AWS, encoding altitude in the RGB channels of a PNG image. Resolution ~30 m (SRTM). Used for all elevation computations in France Sol-Air.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
     </section>
 
-  </main><!-- /content -->
-</div><!-- /layout -->
+  </main>
+</div>
 
 <script>
 /* ---- Thème ---- */
@@ -846,18 +1020,27 @@ function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-fr-theme') === 'dark';
   html.setAttribute('data-fr-theme', isDark ? 'light' : 'dark');
-  document.getElementById('btn-theme').textContent = isDark ? 'Thème sombre' : 'Thème clair';
 }
+
+/* ---- Toggle langue ---- */
+document.querySelectorAll('#help-lang-toggle button').forEach(b =>
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#help-lang-toggle button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.documentElement.setAttribute('data-help-lang', b.dataset.l);
+  })
+);
 
 /* ---- Surlignage nav latérale au scroll ---- */
 const sections = document.querySelectorAll('.help-section');
-const navLinks  = document.querySelectorAll('#sidebar nav a');
 
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const id = entry.target.id;
-      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      document.querySelectorAll('#sidebar nav a').forEach(a =>
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id)
+      );
     }
   });
 }, { rootMargin: '-20% 0px -70% 0px' });
