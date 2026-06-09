@@ -633,13 +633,7 @@
   .sim-btn.sim-btn-primary { border-color: var(--accent); color: var(--accent); font-weight: 700; }
   .sim-btn.sim-btn-primary:hover:not(:disabled) { background: var(--accent-light); }
 
-  .sim-marker-dot {
-    width: 18px; height: 18px;
-    background: #ce0500;
-    border: 2.5px solid #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2.5px rgba(206,5,0,.45), 0 2px 6px rgba(0,0,0,.45);
-  }
+
 
   #sim-progress {
     width: 100%;
@@ -911,6 +905,7 @@
             <button id="sim-pause" class="sim-btn" style="flex:1" disabled data-i18n="simPause">⏸ Pause</button>
             <button id="sim-stop"  class="sim-btn" style="flex:0 0 40px">⏹</button>
           </div>
+          <div id="sim-det-status" style="display:none;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line)"></div>
           <div>
             <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
             <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt-dim);margin-top:2px">
@@ -1180,6 +1175,7 @@ let coverageExists = false;
 let coverageStale  = false;  
 
 function markCoverageStale() {
+  invalidateDetection();
   if (!coverageExists || coverageStale) return;
   coverageStale = true;
   if (coverageLayer) coverageLayer.setOpacity(0.15);
@@ -2758,6 +2754,9 @@ const I18N = {
     engClear:'Effacer la trajectoire',
     simSection:'Simulation', simPlay:'▶ Jouer', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation en cours — édition suspendue',
+    detAnalyzing: pct => `Analyse détection… ${pct} %`,
+    detResultNone:'⚠ Non détectée sur toute la trajectoire',
+    detResult:(tFirst,rName,pct)=>`✓ 1ère détection T+${tFirst} (${rName}) — ${pct} % couvert`,
   },
   en: {
     appTitle:'Radar Intervisibility', cartoLight:'Map (light)', cartoDark:'Map (dark)', elevBtn:'Elevation',
@@ -2820,6 +2819,9 @@ const I18N = {
     engClear:'Clear trajectory',
     simSection:'Simulation', simPlay:'▶ Play', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation running — editing suspended',
+    detAnalyzing: pct => `Detection analysis… ${pct} %`,
+    detResultNone:'⚠ Not detected along full trajectory',
+    detResult:(tFirst,rName,pct)=>`✓ 1st detection T+${tFirst} (${rName}) — ${pct} % route covered`,
   }
 };
 let lang = 'fr';
@@ -3080,7 +3082,7 @@ document.querySelectorAll('#unit-time-seg button').forEach(b => b.addEventListen
    ========================================================================= */
 
 function threatWpIcon(label, isAct) {
-  const bg = isAct ? '#ce0500' : '#e05252';
+  const bg = isAct ? '#333' : '#666';
   return L.divIcon({
     html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;color:#fff;font-size:10px;font-weight:700;font-family:var(--sans);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.5);">${label}</div>`,
     className: '', iconSize: [22, 22], iconAnchor: [11, 11], tooltipAnchor: [12, 0]
@@ -3092,7 +3094,7 @@ function threatRefreshPolyline() {
   if (threatWaypoints.length >= 2) {
     threatPolyline = L.polyline(
       threatWaypoints.map(wp => [wp.lat, wp.lon]),
-      { color: '#ce0500', weight: 2.5, dashArray: '8 4', opacity: 0.9 }
+      { color: '#555', weight: 2.5, dashArray: '8 4', opacity: 0.8 }
     ).addTo(map);
   }
 }
@@ -3167,7 +3169,7 @@ function renderThreatUI() {
         wp.lon = e.target.getLatLng().lng;
         threatRefreshPolyline();
       });
-      wp.marker.on('dragend', () => { renderThreatUI(); });
+      wp.marker.on('dragend', () => { invalidateDetection(); renderThreatUI(); });
       wp.marker.on('mousedown', e => {
         if (e.originalEvent.button === 1) {
           L.DomEvent.stopPropagation(e);
@@ -3200,6 +3202,7 @@ function toggleThreatWpPin(id, event) {
 function updateThreatWp(id, field, val) {
   const wp = threatWaypoints.find(x => x.id === id);
   if (!wp) return;
+  invalidateDetection();
   if (field === 'alt') {
     wp.alt = altFromU(parseFloat(val) || 0);
   } else if (field === 'speed') {
@@ -3218,6 +3221,7 @@ function updateThreatWp(id, field, val) {
 function removeThreatWp(id) {
   const idx = threatWaypoints.findIndex(x => x.id === id);
   if (idx < 0) return;
+  invalidateDetection();
   if (threatWaypoints[idx].marker) map.removeLayer(threatWaypoints[idx].marker);
   threatWaypoints.splice(idx, 1);
   if (activeThreatWpId === id) activeThreatWpId = threatWaypoints.length ? threatWaypoints[0].id : null;
@@ -3227,6 +3231,7 @@ function removeThreatWp(id) {
 
 function threatHandleClick(e) {
   const id = nextThreatWpId++;
+  invalidateDetection();
   threatWaypoints.push({ id, lat: e.latlng.lat, lon: e.latlng.lng, alt: 1000, speed: 900, marker: null, pinned: false });
   activeThreatWpId = id;
   switchToTab('engagement');
@@ -3276,9 +3281,33 @@ let simRafId    = null;
 let simMarker   = null;
 let _simTofCache = [];
 
-function simMarkerIcon() {
+/* ---- Detection state ---- */
+let simLastDetState = 'INIT'; // sentinel : évite setIcon inutile à chaque frame
+let _detSamples     = null;   // null = analyse non faite/périmée, Array = analysé
+let _detLines       = [];     // L.polyline colorées de détection
+let _detStale       = true;
+let _detVersion     = 0;      // incrémenté à chaque invalidation pour annuler l'analyse en cours
+let _detAnalyzing   = false;
+
+/* ---- Géoazimut (cap vrai, 0°=N, sens horaire) ---- */
+function geoAzimuth(lat1, lon1, lat2, lon2) {
+  const r = Math.PI / 180;
+  const φ1 = lat1 * r, φ2 = lat2 * r, Δλ = (lon2 - lon1) * r;
+  return (Math.atan2(Math.sin(Δλ) * Math.cos(φ2),
+    Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)) * 180 / Math.PI + 360) % 360;
+}
+
+/* ---- Icône menace colorée selon état de détection ---- */
+function makeSimMarkerIcon(state) {
+  // state : null = pas d'analyse, false = non détecté, true = détecté
+  const color = state === true  ? '#18753c'
+              : state === false ? '#ce0500'
+              : '#444';
+  const glow  = state === true  ? 'rgba(24,117,60,.45)'
+              : state === false ? 'rgba(206,5,0,.45)'
+              : 'rgba(60,60,60,.35)';
   return L.divIcon({
-    html: '<div class="sim-marker-dot"></div>',
+    html: `<div style="width:18px;height:18px;background:${color};border:2.5px solid #fff;border-radius:50%;box-shadow:0 0 0 2.5px ${glow},0 2px 6px rgba(0,0,0,.45)"></div>`,
     className: '', iconSize: [18, 18], iconAnchor: [9, 9]
   });
 }
@@ -3298,20 +3327,194 @@ function simPosAtTime(t) {
   return { lat: threatWaypoints[n-1].lat, lon: threatWaypoints[n-1].lon };
 }
 
+/* Recherche binaire de l'état de détection au temps t */
+function detStateAtTime(t) {
+  if (!_detSamples || !_detSamples.length) return null;
+  let lo = 0, hi = _detSamples.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (_detSamples[mid].t <= t) lo = mid; else hi = mid - 1;
+  }
+  return _detSamples[lo].detected; // boolean
+}
+
 function simUpdateMarker() {
   const pos = simPosAtTime(simCurrentT);
   if (!pos) return;
+  const detState = detStateAtTime(simCurrentT); // true | false | null
   if (!simMarker) {
     simMarker = L.marker([pos.lat, pos.lon], {
-      icon: simMarkerIcon(), interactive: false, zIndexOffset: 3000
+      icon: makeSimMarkerIcon(detState), interactive: false, zIndexOffset: 3000
     }).addTo(map);
+    simLastDetState = detState;
   } else {
     simMarker.setLatLng([pos.lat, pos.lon]);
+    if (detState !== simLastDetState) {
+      simMarker.setIcon(makeSimMarkerIcon(detState));
+      simLastDetState = detState;
+    }
   }
 }
 
 function simHideMarker() {
   if (simMarker) { map.removeLayer(simMarker); simMarker = null; }
+  simLastDetState = 'INIT';
+}
+
+/* ---- Overlay de détection ---- */
+function clearDetectionOverlay() {
+  _detLines.forEach(l => map.removeLayer(l));
+  _detLines = [];
+}
+
+function invalidateDetection() {
+  _detVersion++;
+  _detStale  = true;
+  _detSamples = null;
+  clearDetectionOverlay();
+  const el = document.getElementById('sim-det-status');
+  if (el) el.style.display = 'none';
+}
+
+function renderDetectionOverlay() {
+  clearDetectionOverlay();
+  if (!_detSamples || _detSamples.length < 2) return;
+
+  let curDet = _detSamples[0].detected;
+  let curRun = [[_detSamples[0].lat, _detSamples[0].lon]];
+
+  const flushRun = bridgePt => {
+    if (bridgePt) curRun.push(bridgePt);
+    if (curRun.length >= 2) {
+      const color = curDet ? '#18753c' : '#ce0500';
+      _detLines.push(L.polyline(curRun, { color, weight: 4, opacity: 0.9 }).addTo(map));
+    }
+  };
+
+  for (let i = 1; i < _detSamples.length; i++) {
+    const s = _detSamples[i];
+    if (s.detected !== curDet) {
+      flushRun([s.lat, s.lon]);
+      curDet = s.detected;
+      curRun = [[_detSamples[i-1].lat, _detSamples[i-1].lon], [s.lat, s.lon]];
+    } else {
+      curRun.push([s.lat, s.lon]);
+    }
+  }
+  flushRun(null);
+}
+
+function showDetSummary() {
+  const el = document.getElementById('sim-det-status');
+  if (!el || !_detSamples) return;
+  const firstDet = _detSamples.find(s => s.detected);
+  if (!firstDet) {
+    el.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--warning);color:var(--warning)';
+    el.textContent = t('detResultNone');
+    return;
+  }
+  const detPct = Math.round(_detSamples.filter(s => s.detected).length / _detSamples.length * 100);
+  const radar  = radars.find(r => r.id === firstDet.radarId);
+  el.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--success);color:var(--success)';
+  el.textContent = t('detResult', fmtTime(firstDet.t), radar ? radar.name : '?', detPct);
+}
+
+/* ---- Échantillonnage de la trajectoire ---- */
+function sampleThreatPath(stepM = 250) {
+  if (threatWaypoints.length === 0) return [];
+  if (threatWaypoints.length === 1) {
+    const wp = threatWaypoints[0];
+    return [{ lat: wp.lat, lon: wp.lon, alt: wp.alt || 0, t: 0 }];
+  }
+  const tofTimes = computeThreatTOF();
+  const samples  = [];
+  for (let i = 0; i < threatWaypoints.length - 1; i++) {
+    const a = threatWaypoints[i], b = threatWaypoints[i+1];
+    const segM = haversineKm(a.lat, a.lon, b.lat, b.lon) * 1000;
+    const nSub = Math.max(1, Math.round(segM / stepM));
+    for (let j = 0; j < nSub; j++) {
+      const f = j / nSub;
+      samples.push({
+        lat: a.lat + (b.lat - a.lat) * f,
+        lon: a.lon + (b.lon - a.lon) * f,
+        alt: (a.alt || 0) + ((b.alt || 0) - (a.alt || 0)) * f,
+        t:   tofTimes[i] + f * (tofTimes[i+1] - tofTimes[i])
+      });
+    }
+  }
+  const last = threatWaypoints[threatWaypoints.length - 1];
+  samples.push({ lat: last.lat, lon: last.lon, alt: last.alt || 0, t: tofTimes[tofTimes.length - 1] });
+  return samples;
+}
+
+/* ---- Analyse de détection (async) ---- */
+async function runDetectionAnalysis(onProgress) {
+  const myVer = _detVersion;
+  const samples = sampleThreatPath(250);
+
+  if (!samples.length || !radars.length) {
+    if (myVer !== _detVersion) return;
+    _detSamples = samples.map(s => ({ ...s, detected: false, radarId: null }));
+    _detStale = false;
+    renderDetectionOverlay();
+    showDetSummary();
+    return;
+  }
+
+  /* Pré-récupération des altitudes terrain des radars */
+  const radarElevs = await Promise.all(radars.map(r =>
+    r.terrAlt !== null && !isNaN(r.terrAlt)
+      ? Promise.resolve(r.terrAlt)
+      : fetchSpotElevation(r.lat, r.lon)
+  ));
+  if (myVer !== _detVersion) return;
+
+  const total  = samples.length;
+  const result = [];
+
+  for (let i = 0; i < total; i++) {
+    if (i % 8 === 0) {
+      if (myVer !== _detVersion) return; /* invalidé pendant l'analyse */
+      onProgress(Math.round(i / total * 100));
+      await new Promise(res => setTimeout(res, 0));
+    }
+
+    const s = samples[i];
+    let detected = false, radarId = null;
+
+    for (let ri = 0; ri < radars.length && !detected; ri++) {
+      const r  = radars[ri];
+      const zR = radarElevs[ri];
+      if (isNaN(zR)) continue;
+
+      /* 1. Distance */
+      const distM = haversineKm(r.lat, r.lon, s.lat, s.lon) * 1000;
+      if (distM > r.rmax * 1000 || distM < 1) continue;
+
+      /* 2. Secteur azimut */
+      const az = geoAzimuth(r.lat, r.lon, s.lat, s.lon);
+      if (!idxSector(az, r.azmin, r.azmax)) continue;
+
+      /* 3. Secteur élévation */
+      const hR   = zR + (r.hant || 0);          // antenne radar AMSL
+      const hT   = s.alt;                        // cible AMSL
+      const elDeg = Math.atan2(hT - hR, distM) * 180 / Math.PI;
+      if (elDeg < r.elmin || elDeg > r.elmax) continue;
+
+      /* 4. LOS terrain */
+      const los = await checkLOSAsync(r.lat, r.lon, hR, s.lat, s.lon, hT);
+      if (myVer !== _detVersion) return;
+      if (los.clear) { detected = true; radarId = r.id; }
+    }
+
+    result.push({ ...s, detected, radarId });
+  }
+
+  if (myVer !== _detVersion) return;
+  _detSamples = result;
+  _detStale   = false;
+  renderDetectionOverlay();
+  showDetSummary();
 }
 
 function simUpdateUI() {
@@ -3340,13 +3543,28 @@ function setSimLocked(locked) {
   });
 }
 
-function simPlay() {
-  if (!threatWaypoints.length) return;
+async function simPlay() {
+  if (_detAnalyzing || !threatWaypoints.length) return;
   _simTofCache = computeThreatTOF();
   simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
   if (simTotalT <= 0) return;
   /* Redémarrer depuis le début si fin atteinte ou état arrêté */
   if (simState === 'stopped' || simCurrentT >= simTotalT) simCurrentT = 0;
+
+  /* Analyse de détection si nécessaire */
+  if (_detStale || _detSamples === null) {
+    _detAnalyzing = true;
+    document.getElementById('sim-play').disabled = true;
+    const statusEl = document.getElementById('sim-det-status');
+    statusEl.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line);color:var(--txt-dim)';
+    statusEl.textContent = t('detAnalyzing', 0);
+    await runDetectionAnalysis(pct => { statusEl.textContent = t('detAnalyzing', pct); });
+    _detAnalyzing = false;
+    /* Si la trajectoire a changé pendant l'analyse, abandonner */
+    if (_detStale) { simRefreshButtons(); return; }
+    document.getElementById('sim-play').disabled = false;
+  }
+
   simState = 'playing';
   setSimLocked(true);
   simLastTs = 0;
