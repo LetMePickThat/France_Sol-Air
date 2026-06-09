@@ -434,7 +434,6 @@
     line-height: 1.5;
     transition: background .1s;
   }
-  #go::before { content: ""; margin-right: 8px; }
   #go:hover { background: var(--accent-hover); }
   #go:active { background: var(--accent-active); }
   #go:disabled {
@@ -714,10 +713,10 @@
       <div class="tab-scroll">
         <div class="tab-section">
           <h3 data-i18n="kmlSection">Import / Export KML</h3>
-          <button class="btn-add" onclick="exportKML()" data-i18n="kmlExport">⬇ Exporter KML</button>
+          <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
           <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
           <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
-          <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none" onchange="importKMLFile(this)">
+          <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
           <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
           <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
         </div>
@@ -729,7 +728,7 @@
          ============================================================ -->
     <div id="panel-footer">
       <button id="go" data-i18n="computeBtn">Calculer la couverture</button>
-      <div id="stale-banner" style="display:none; padding:8px 10px;" role="alert" aria-live="assertive" style="background:color-mix(in srgb, var(--warning) 12%, transparent); border-left:3px solid var(--warning); font-size:12px; color:var(--warning); font-weight:600; gap:6px; align-items:center;">
+      <div id="stale-banner" role="alert" aria-live="assertive" style="padding:8px 10px; background:color-mix(in srgb, var(--warning) 12%, transparent); border-left:3px solid var(--warning); font-size:12px; color:var(--warning); font-weight:600; gap:6px; align-items:center;">
         <span>⚠</span><span data-i18n="staleBanner">Résultats périmés — Recalculer pour mettre à jour</span>
       </div>
       <button id="btn-clear-coverage" class="btn-add" style="display:none; border-color:var(--danger); color:var(--danger);" data-i18n="clearCoverage">Supprimer la couverture</button>
@@ -959,13 +958,13 @@ function clearCoverage() {
 }
 let ringsLayer = null;
 
-document.querySelectorAll('#basemap button').forEach(b=>b.onclick=()=>{
+document.querySelectorAll('#basemap button').forEach(b=>b.addEventListener('click', ()=>{
   if(b.dataset.v===baseMap) return;
   document.querySelectorAll('#basemap button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); baseMap=b.dataset.v;
   map.removeLayer(osmLayer); map.removeLayer(darkLayer); map.removeLayer(elevLayer);
   if(baseMap==='carto') osmLayer.addTo(map); else if(baseMap==='dark') darkLayer.addTo(map); else if(baseMap==='elev') elevLayer.addTo(map);
-  if(coverageLayer) coverageLayer.bringToFront(); drawRings(); 
-});
+  if(coverageLayer) coverageLayer.bringToFront(); drawRings();
+}));
 
 function makeArc(lat0, lon0, rangem, azmin, azmax) {
   const d = rangem / R_E; const lat0r = lat0 * Math.PI / 180;
@@ -1258,12 +1257,12 @@ function updateRadar(id, field, val) {
   else { const deg = parseCoord(val); if(!isNaN(deg)) { r[field] = deg; r.terrAlt = null; markCoverageStale(); } }
   renderRadarsUI();
 }
-document.getElementById('btn-add-radar').onclick = () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false }); selectEntity('radar', id); };
+document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false }); selectEntity('radar', id); });
 map.on('click', e => {
   if (peakDrawing) { peakHandleClick(e); return; }
   deselectAll();
 });
-document.querySelectorAll('#ref button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); });
+document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); }));
 document.getElementById('coord-format').addEventListener('change', e => { coordFormat = e.target.value; renderAll(true); });
 
 /* =========================================================================
@@ -1351,6 +1350,7 @@ function removeLauncher(id) {
 function updateLauncher(id, field, val) {
   if (_renderingLaunchersUI) return;
   const l = launchers.find(x => x.id === id); if (!l) return;
+  /* markCoverageStale() intentionally omitted: launchers don't enter the radar FOV computation. */
   if (field === 'name') { l.name = val; if (l.marker) l.marker.setTooltipContent(val); }
   else if (field === 'parentC2Id') { l.parentC2Id = val ? parseInt(val) : null; }
   else if (field === 'maxDistC2') { l.maxDistC2 = parseFloat(val)||0; }
@@ -1360,11 +1360,11 @@ function updateLauncher(id, field, val) {
   renderLaunchersUI();
 }
 
-document.getElementById('btn-add-launcher').onclick = () => {
+document.getElementById('btn-add-launcher').addEventListener('click', () => {
   const center = map.getCenter(); const id = nextLauncherId++;
   launchers.push({id, name: `${t('launcherDefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', hant: 10, pinned: false});
   selectEntity('launcher', id);
-};
+});
 
 function deselectAll() {
   activeEntityType = null; activeRadarId = null; activeLauncherId = null; activeC2Id = null;
@@ -1593,23 +1593,39 @@ function removeC2(id) {
   renderAll();
 }
 
+function hasC2Cycle(nodeId, proposedParentId) {
+  let cur = proposedParentId;
+  while (cur !== null && cur !== undefined) {
+    if (cur === nodeId) return true;
+    const parent = c2nodes.find(x => x.id === cur);
+    cur = parent ? parent.parentC2Id : null;
+  }
+  return false;
+}
+
 function updateC2(id, field, val) {
   if (_renderingC2UI) return;
   const c = c2nodes.find(x => x.id === id); if (!c) return;
   if (field === 'name') { c.name = val; if (c.marker) c.marker.setTooltipContent(val); renderAll(true); return; }
   else if (field === 'hant')       { c.hant = parseFloat(val)||0; }
-  else if (field === 'parentC2Id') { c.parentC2Id = val ? parseInt(val) : null; updateEntityLines(); return; }
+  else if (field === 'parentC2Id') {
+    const newParent = val ? parseInt(val) : null;
+    if (newParent !== null && hasC2Cycle(id, newParent)) { renderC2UI(); return; }
+    c.parentC2Id = newParent;
+    updateEntityLines();
+    return;
+  }
   else if (field === 'maxDistC2')  { c.maxDistC2 = parseFloat(val)||0; updateEntityLines(); return; }
   else if (field === 'linkType')   { c.linkType = val; }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { c[field] = deg; c.terrAlt = null; } }
   renderC2UI();
 }
 
-document.getElementById('btn-add-c2').onclick = () => {
+document.getElementById('btn-add-c2').addEventListener('click', () => {
   const center = map.getCenter(); const id = nextC2Id++;
   c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false});
   selectEntity('c2', id);
-};
+});
 document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
 document.getElementById('op-cov').addEventListener('input', (e) => { if(coverageLayer) coverageLayer.setOpacity(e.target.value / 100); });
 ['show-rings', 'rings-all', 'ring-step'].forEach(id => document.getElementById(id).addEventListener('change', drawRings));
@@ -2516,16 +2532,16 @@ function applyLang() {
   document.querySelectorAll('[data-i18n-opt]').forEach(el => { el.textContent = t(el.dataset.i18nOpt); });
   renderAltList(); renderAll(true); updateEntityCounts();
 }
-document.querySelectorAll('#lang-toggle button').forEach(b => b.onclick = () => {
+document.querySelectorAll('#lang-toggle button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#lang-toggle button').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); lang = b.dataset.l; applyLang();
-});
+}));
 
-document.querySelectorAll('#theme-toggle button').forEach(b => b.onclick = () => {
+document.querySelectorAll('#theme-toggle button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#theme-toggle button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
   document.documentElement.setAttribute('data-fr-theme', b.dataset.t);
-});
+}));
 
 /* =========================================================================
    Recherche Sommets Locaux
@@ -2686,7 +2702,7 @@ function clearPeaks() {
   document.getElementById('peak-status').style.display='none';
 }
 
-document.getElementById('btn-draw-zone').onclick = () => {
+document.getElementById('btn-draw-zone').addEventListener('click', () => {
   if (peakDrawing) {
     peakDrawing = false;
     const btn = document.getElementById('btn-draw-zone');
@@ -2699,7 +2715,7 @@ document.getElementById('btn-draw-zone').onclick = () => {
     btn.classList.add('on'); btn.textContent = t('peakDrawActive');
     document.getElementById('peak-hint').style.display = 'block';
   }
-};
+});
 document.getElementById('btn-search-peaks').addEventListener('click', searchPeaks);
 document.getElementById('btn-clear-peaks').addEventListener('click', clearPeaks);
 document.getElementById('btn-clear-coverage').addEventListener('click', clearCoverage);
@@ -2707,6 +2723,9 @@ document.getElementById('kfac').addEventListener('change', e => {
   _kfac = +e.target.value;
   markCoverageStale();
 });
+
+document.getElementById('btn-export-kml').addEventListener('click', exportKML);
+document.getElementById('kml-file-input').addEventListener('change', function() { importKMLFile(this); });
 
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
 document.getElementById('go').addEventListener('click',compute);
