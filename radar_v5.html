@@ -2969,12 +2969,12 @@ function renderThreatUI() {
       }).addTo(map);
       wp.marker.bindTooltip(`WP ${n}`, { permanent: false, direction: 'right', className: 'radar-tooltip', offset: [8, 0] });
       wp.marker.on('click', e => { L.DomEvent.stopPropagation(e); selectThreatWp(wp.id); });
-      wp.marker.on('drag',  e => {
+      wp.marker.on('drag', e => {
         wp.lat = e.target.getLatLng().lat;
         wp.lon = e.target.getLatLng().lng;
         threatRefreshPolyline();
-        renderThreatUI();
       });
+      wp.marker.on('dragend', () => { renderThreatUI(); });
       wp.marker.on('mousedown', e => {
         if (e.originalEvent.button === 1) {
           L.DomEvent.stopPropagation(e);
