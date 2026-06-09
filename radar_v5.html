@@ -153,7 +153,10 @@
     color: var(--txt-dim);
     cursor: pointer;
     transition: color .12s, border-color .12s, background .12s;
-    white-space: nowrap;
+    white-space: normal;
+    text-align: center;
+    min-width: 0;
+    line-height: 1.2;
     user-select: none;
   }
   .tab-btn:hover { background: var(--badge-bg); color: var(--txt); }
@@ -622,6 +625,8 @@
               aria-selected="false" aria-controls="tab-sensor"    data-i18n="tabSensor">CIBLE &amp; ATMO</button>
       <button class="tab-btn"        role="tab" data-tab="tools"
               aria-selected="false" aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
+      <button class="tab-btn"        role="tab" data-tab="engagement"
+              aria-selected="false" aria-controls="tab-engagement" data-i18n="tabEngagement">ENGAGEMENT</button>
     </nav>
 
     <!-- ============================================================
@@ -773,6 +778,22 @@
     </div>
 
     <!-- ============================================================
+         ONGLET 5 — ENGAGEMENT (Trajectoire menace)
+         ============================================================ -->
+    <div id="tab-engagement" class="tab-panel" role="tabpanel">
+      <div class="entity-pane active" id="pane-threat">
+        <div class="entity-list-scroll">
+          <div id="threat-wp-list"></div>
+        </div>
+        <div class="entity-pane-footer">
+          <button class="btn-add" id="btn-draw-threat" data-i18n="engThreatBtn">✈ Trajectoire menace</button>
+          <div class="hint" id="threat-hint" style="display:none; color:var(--warning); margin-top:6px;" data-i18n="engThreatHint">…</div>
+          <button class="btn-add" id="btn-clear-threat" style="margin-top:6px; border-color:var(--line); color:var(--txt-dim);" data-i18n="engClear">Effacer la trajectoire</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
          FOOTER PERMANENT — Calculer + Résultats + Langue/Thème
          ============================================================ -->
     <div id="panel-footer">
@@ -880,6 +901,7 @@ function renderAll(skipLines = false) {
   renderC2UI();
   _batchingRenders = false;
   if (!skipLines) updateEntityLines();
+  renderThreatUI();
 }
 const R_E = 6371000;
 const R_MERC = 6378137;
@@ -1312,7 +1334,8 @@ function updateRadar(id, field, val) {
 }
 document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false }); selectEntity('radar', id); });
 map.on('click', e => {
-  if (peakDrawing) { peakHandleClick(e); return; }
+  if (peakDrawing)   { peakHandleClick(e);   return; }
+  if (threatDrawing) { threatHandleClick(e); return; }
   deselectAll();
 });
 document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); }));
@@ -2563,8 +2586,12 @@ const I18N = {
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
     demResEstimate:(r,z)=>`Résolution estimée : ~${r} m (zoom ${z})`,
-    tabUnits:'Unités', tabSensor:'Cible & Atmo', tabMap:'Carte', tabTools:'Outils',
+    tabUnits:'Unités', tabSensor:'Cible & Atmo', tabMap:'Carte', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
+    engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Annuler',
+    engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
+    engWpAlt:'Altitude', engWpSpeed:'Vitesse',
+    engClear:'Effacer la trajectoire',
   },
   en: {
     appTitle:'Radar Intervisibility', cartoLight:'Map (light)', cartoDark:'Map (dark)', elevBtn:'Elevation',
@@ -2619,8 +2646,12 @@ const I18N = {
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
     demResEstimate:(r,z)=>`Estimated resolution: ~${r} m (zoom ${z})`,
-    tabUnits:'Units', tabSensor:'Target & Atmo', tabMap:'Map', tabTools:'Tools',
+    tabUnits:'Units', tabSensor:'Target & Atmo', tabMap:'Map', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
+    engThreatBtn:'✈ Threat trajectory', engThreatActive:'Cancel',
+    engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
+    engWpAlt:'Altitude', engWpSpeed:'Speed',
+    engClear:'Clear trajectory',
   }
 };
 let lang = 'fr';
@@ -2646,10 +2677,17 @@ document.querySelectorAll('#theme-toggle button').forEach(b => b.addEventListene
    Recherche Sommets Locaux
    ========================================================================= */
 let peakDrawing     = false;
-let peakVerts       = [];   
-let peakVertMarkers = [];   
-let peakPoly        = null; 
-let peakMarkers     = [];   
+let peakVerts       = [];
+let peakVertMarkers = [];
+let peakPoly        = null;
+let peakMarkers     = [];
+
+/* Engagement — Trajectoire menace */
+let threatDrawing    = false;
+let threatWaypoints  = [];
+let nextThreatWpId   = 1;
+let activeThreatWpId = null;
+let threatPolyline   = null;
 
 function peakVertIcon() {
   return L.divIcon({
@@ -2848,6 +2886,175 @@ document.querySelectorAll('#dem-quality-seg button').forEach(b =>
     markCoverageStale();
   })
 );
+
+/* =========================================================================
+   ENGAGEMENT — Trajectoire menace
+   ========================================================================= */
+
+function threatWpIcon(label, isAct) {
+  const bg = isAct ? '#ce0500' : '#e05252';
+  return L.divIcon({
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;color:#fff;font-size:10px;font-weight:700;font-family:var(--sans);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.5);">${label}</div>`,
+    className: '', iconSize: [22, 22], iconAnchor: [11, 11], tooltipAnchor: [12, 0]
+  });
+}
+
+function threatRefreshPolyline() {
+  if (threatPolyline) { map.removeLayer(threatPolyline); threatPolyline = null; }
+  if (threatWaypoints.length >= 2) {
+    threatPolyline = L.polyline(
+      threatWaypoints.map(wp => [wp.lat, wp.lon]),
+      { color: '#ce0500', weight: 2.5, dashArray: '8 4', opacity: 0.9 }
+    ).addTo(map);
+  }
+}
+
+function renderThreatUI() {
+  const container = document.getElementById('threat-wp-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  threatWaypoints.forEach((wp, idx) => {
+    const n     = idx + 1;
+    const isAct = wp.id === activeThreatWpId;
+    const div   = document.createElement('div');
+    div.className = `radar-item${isAct ? ' active' : ''}${wp.pinned ? ' pinned' : ''}`;
+    div.dataset.eid = wp.id;
+
+    div.innerHTML = `
+      <div class="radar-item-header">
+        <button class="radar-item-toggle" onclick="selectThreatWp(${wp.id})" aria-expanded="${isAct || !!wp.pinned}">
+          WP ${n}${isAct ? ` <span class="active-badge">${t('pActive')}</span>` : ''}
+        </button>
+        <div class="radar-item-header-actions">
+          <button class="btn-pin" onclick="toggleThreatWpPin(${wp.id},event)" title="${t('pinTitle')}">📌</button>
+          <button class="btn-del" onclick="event.stopPropagation();removeThreatWp(${wp.id})" title="${t('pDelete')}">✖</button>
+        </div>
+      </div>
+      <div class="radar-item-body">
+        <div class="radar-params"><label>${t('pPos')}</label>
+          <div class="multi-input">
+            <input type="text" value="${escapeHtml(formatCoord(wp.lat,true))}"  onchange="updateThreatWp(${wp.id},'lat',this.value)">
+            <input type="text" value="${escapeHtml(formatCoord(wp.lon,false))}" onchange="updateThreatWp(${wp.id},'lon',this.value)">
+          </div>
+        </div>
+        <div class="radar-params"><label>${t('engWpAlt')}</label>
+          <div class="multi-input">
+            <input type="number" step="100" min="0" value="${wp.alt}" onchange="updateThreatWp(${wp.id},'alt',this.value)" style="flex:1">
+            <span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">m</span>
+          </div>
+        </div>
+        <div class="radar-params"><label>${t('engWpSpeed')}</label>
+          <div class="multi-input">
+            <input type="number" step="10" min="0" value="${wp.speed}" onchange="updateThreatWp(${wp.id},'speed',this.value)" style="flex:1">
+            <span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">km/h</span>
+          </div>
+        </div>
+      </div>`;
+
+    container.appendChild(div);
+
+    if (!wp.marker) {
+      wp.marker = L.marker([wp.lat, wp.lon], {
+        icon: threatWpIcon(n, isAct), draggable: true, zIndexOffset: 500
+      }).addTo(map);
+      wp.marker.bindTooltip(`WP ${n}`, { permanent: false, direction: 'right', className: 'radar-tooltip', offset: [8, 0] });
+      wp.marker.on('click', e => { L.DomEvent.stopPropagation(e); selectThreatWp(wp.id); });
+      wp.marker.on('drag',  e => {
+        wp.lat = e.target.getLatLng().lat;
+        wp.lon = e.target.getLatLng().lng;
+        threatRefreshPolyline();
+        renderThreatUI();
+      });
+      wp.marker.on('mousedown', e => {
+        if (e.originalEvent.button === 1) {
+          L.DomEvent.stopPropagation(e);
+          removeThreatWp(wp.id);
+        }
+      });
+    } else {
+      wp.marker.setLatLng([wp.lat, wp.lon]);
+      wp.marker.setIcon(threatWpIcon(n, isAct));
+      wp.marker.setTooltipContent(`WP ${n}`);
+      if (wp.marker.dragging) { wp.marker.dragging.disable(); wp.marker.dragging.enable(); }
+    }
+  });
+}
+
+function selectThreatWp(id) {
+  activeThreatWpId = (activeThreatWpId === id) ? null : id;
+  renderThreatUI();
+}
+
+function toggleThreatWpPin(id, event) {
+  event.stopPropagation();
+  const wp = threatWaypoints.find(x => x.id === id);
+  if (wp) { wp.pinned = !wp.pinned; renderThreatUI(); }
+}
+
+function updateThreatWp(id, field, val) {
+  const wp = threatWaypoints.find(x => x.id === id);
+  if (!wp) return;
+  if (field === 'alt' || field === 'speed') {
+    wp[field] = parseFloat(val) || 0;
+  } else {
+    const deg = parseCoord(val);
+    if (!isNaN(deg)) {
+      wp[field] = deg;
+      if (wp.marker) wp.marker.setLatLng([wp.lat, wp.lon]);
+      threatRefreshPolyline();
+    }
+  }
+  renderThreatUI();
+}
+
+function removeThreatWp(id) {
+  const idx = threatWaypoints.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  if (threatWaypoints[idx].marker) map.removeLayer(threatWaypoints[idx].marker);
+  threatWaypoints.splice(idx, 1);
+  if (activeThreatWpId === id) activeThreatWpId = threatWaypoints.length ? threatWaypoints[0].id : null;
+  threatRefreshPolyline();
+  renderThreatUI();
+}
+
+function threatHandleClick(e) {
+  const id = nextThreatWpId++;
+  threatWaypoints.push({ id, lat: e.latlng.lat, lon: e.latlng.lng, alt: 1000, speed: 900, marker: null, pinned: false });
+  activeThreatWpId = id;
+  switchToTab('engagement');
+  threatRefreshPolyline();
+  renderThreatUI();
+}
+
+function clearThreat() {
+  threatWaypoints.forEach(wp => { if (wp.marker) map.removeLayer(wp.marker); });
+  threatWaypoints = [];
+  activeThreatWpId = null;
+  if (threatPolyline) { map.removeLayer(threatPolyline); threatPolyline = null; }
+  threatDrawing = false;
+  const btn = document.getElementById('btn-draw-threat');
+  if (btn) { btn.classList.remove('on'); btn.textContent = t('engThreatBtn'); }
+  const hint = document.getElementById('threat-hint');
+  if (hint) hint.style.display = 'none';
+  renderThreatUI();
+}
+
+document.getElementById('btn-draw-threat').addEventListener('click', () => {
+  if (threatDrawing) {
+    threatDrawing = false;
+    const btn = document.getElementById('btn-draw-threat');
+    btn.classList.remove('on'); btn.textContent = t('engThreatBtn');
+    document.getElementById('threat-hint').style.display = 'none';
+  } else {
+    threatDrawing = true;
+    const btn = document.getElementById('btn-draw-threat');
+    btn.classList.add('on'); btn.textContent = t('engThreatActive');
+    document.getElementById('threat-hint').style.display = 'block';
+  }
+});
+
+document.getElementById('btn-clear-threat').addEventListener('click', clearThreat);
 
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
 updateDemResEstimate();
