@@ -939,7 +939,6 @@ function altFmt(m)   { const v = altV(m); return unitAlt === 'ft' ? v.toFixed(0)
 function distV(km)   { return unitDist === 'nm' ? km / 1.852 : unitDist === 'm' ? km * 1000 : km; }
 function distU()     { return unitDist; }
 function distStep()  { return unitDist === 'm' ? 100 : 1; }
-function distFmt(km) { const v = distV(km); return unitDist === 'm' ? v.toFixed(0) : v.toFixed(2); }
 function distFromU(v){ return unitDist === 'nm' ? v * 1.852 : unitDist === 'm' ? v / 1000 : v; }
 
 function fmtTime(sec) {
@@ -2625,7 +2624,6 @@ const I18N = {
     errNoRadar:'Ajoutez au moins un radar.', errNoAlt:'Renseignez au moins une altitude cible.', errDEM:'Échec du chargement des tuiles de relief.',
     resNetwork:'Réseau', resNetworkVal:(n)=>`${n} radar(s) calculé(s)`, resDEM:'Résolution DEM',
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Couverture Totale', resCovVal:(k)=>`~${k} km²`,
-    badgeTerrain:(z,h)=>`Terrain: ${z}m AMSL (Antenne: ${h}m AGL)`, badgeAntenna:(a,z)=>`Antenne: ${a}m AMSL (Sol: ${z}m)`,
     noData:'Hors données',
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
     launcherHAnt:'H. mat comm.',
@@ -2686,7 +2684,6 @@ const I18N = {
     errNoRadar:'Please add at least one radar.', errNoAlt:'Please enter at least one target altitude.', errDEM:'Failed to load terrain tiles.',
     resNetwork:'Network', resNetworkVal:(n)=>`${n} radar(s) computed`, resDEM:'DEM resolution',
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Total Coverage', resCovVal:(k)=>`~${k} km²`,
-    badgeTerrain:(z,h)=>`Terrain: ${z}m AMSL (Antenna: ${h}m AGL)`, badgeAntenna:(a,z)=>`Antenne: ${a}m AMSL (Ground: ${z}m)`,
     noData:'No data',
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
     launcherHAnt:'Mast ht',
@@ -2771,7 +2768,7 @@ function peakIcon(elev, hue) {
         <polygon points="11,1 21,19 1,19" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
         <polygon points="11,1 15,9 7,9" fill="white" opacity=".65"/>
       </svg>
-      <span style="font-size:10px;font-weight:700;font-family:var(--sans);color:${fill};text-shadow:0 1px 2px rgba(0,0,0,.4);line-height:1.1;display:block">${elev}m</span>
+      <span style="font-size:10px;font-weight:700;font-family:var(--sans);color:${fill};text-shadow:0 1px 2px rgba(0,0,0,.4);line-height:1.1;display:block">${Math.round(altV(elev))}${altU()}</span>
     </div>`,
     className:'', iconSize:[36,28], iconAnchor:[18,16]
   });
