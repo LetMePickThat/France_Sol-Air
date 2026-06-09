@@ -1046,6 +1046,12 @@ function fmtTime(sec) {
        : m > 0 ? `${m}m ${String(s).padStart(2,'0')}s` : `${s}s`;
 }
 
+/* Helpers saisie de durée (hms = affichage uniquement, saisie en secondes) */
+function timeInputU()    { return unitTime === 'min' ? 'min' : 's'; }
+function timeInputV(sec) { return unitTime === 'min' ? sec / 60 : sec; }
+function timeInputFrom(v){ return unitTime === 'min' ? v * 60 : v; }
+function timeInputStep() { return unitTime === 'min' ? 0.5 : 1; }
+
 /**
  * Reconstruit les 3 listes d'entités (radars, lanceurs, C2) puis appelle
  * updateEntityLines() une seule fois. skipLines=true permet d'éviter le
@@ -1788,6 +1794,10 @@ function renderC2UI() {
           <input type="number" step="${altStep()}" min="0" value="${+altV(c.hant||0).toFixed(1)}" onchange="updateC2(${c.id},'hant',this.value)" style="flex:1">
           <span class="unit-tag">${altU()}</span>
         </div></div>
+        <div class="radar-params"><label>${t('c2EngDelay')}</label><div class="multi-input">
+          <input type="number" step="${timeInputStep()}" min="0" value="${+timeInputV(c.engDelay||0).toFixed(unitTime==='min'?1:0)}" onchange="updateC2(${c.id},'engDelay',this.value)" style="flex:1">
+          <span class="unit-tag">${timeInputU()}</span>
+        </div></div>
         <div class="radar-params"><label>${t('rC2Parent')}</label><div class="multi-input"><select onchange="updateC2(${c.id},'parentC2Id',this.value)" style="flex:1"><option value="" ${!c.parentC2Id?'selected':''}>${t('rC2None')}</option>${c2nodes.filter(x=>x.id!==c.id).map(x=>`<option value="${x.id}" ${c.parentC2Id===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('')}</select></div></div>
         <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(c.maxDistC2||0).toFixed(2)}" onchange="updateC2(${c.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateC2(${c.id},'linkType','fiber')" class="${(c.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateC2(${c.id},'linkType','radio')" class="${c.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
@@ -1848,13 +1858,14 @@ function updateC2(id, field, val) {
   }
   else if (field === 'maxDistC2')  { c.maxDistC2 = distFromU(parseFloat(val)||0); updateEntityLines(); return; }
   else if (field === 'linkType')   { c.linkType = val; }
+  else if (field === 'engDelay')   { c.engDelay = timeInputFrom(parseFloat(val) || 0); }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { c[field] = deg; c.terrAlt = null; } }
   renderC2UI();
 }
 
 document.getElementById('btn-add-c2').addEventListener('click', () => {
   const center = map.getCenter(); const id = nextC2Id++;
-  c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false});
+  c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', engDelay: 0, pinned: false});
   selectEntity('c2', id);
 });
 document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
@@ -2280,6 +2291,7 @@ function kmlC2Balloon(c, isEn) {
   <table>
     <tr><th colspan="2">${isEn ? 'C2 node parameters' : 'Paramètres nœud C2'}</th></tr>
     <tr><td>${isEn ? 'Antenna height' : 'Haut. antenne'}</td><td>${c.hant ?? 0} m AGL</td></tr>
+    <tr><td>${isEn ? 'Engagement delay' : 'Délai engagement'}</td><td>${c.engDelay ?? 0} s</td></tr>
   </table>
   ${kmlC2Table(c.parentC2Id, c.maxDistC2, c.linkType, isEn, c2nodes)}
   <table>
@@ -2371,6 +2383,7 @@ ${extDataBlock(fields)}
       'spm:parentC2Id': c.parentC2Id ?? '',
       'spm:maxDistC2': c.maxDistC2 ?? 0,
       'spm:linkType': c.linkType ?? 'fiber',
+      'spm:engDelay': c.engDelay ?? 0,
     }, kmlC2Balloon(c, isEn))
   ).join('');
 
@@ -2616,6 +2629,7 @@ function importKMLString(xmlStr) {
       parentC2Id: getInt(pm, 'spm:parentC2Id'),
       maxDistC2:  getNum(pm, 'spm:maxDistC2', 0),
       linkType:   getStr(pm, 'spm:linkType', 'fiber'),
+      engDelay:   getNum(pm, 'spm:engDelay', 0),
       _origId:    getInt(pm, 'spm:id'),
       marker: null, terrAlt: null, pinned: false,
     });
@@ -2725,7 +2739,7 @@ const I18N = {
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
     launcherHAnt:'H. mat comm.',
     c2Network:'Nœuds C2', addC2:'+ Ajouter un nœud C2', c2Hint:'Glisser-déposer pour repositionner. Clic carte = désélection.', c2DefaultName:'C2',
-    c2HAnt:'H. antenne',
+    c2HAnt:'H. antenne', c2EngDelay:'Délai engagement',
     rC2Parent:'C2 parent', rC2None:'Aucun', rC2MaxDist:'Dist. max C2', rLinkType:'Liaison', linkFiber:'Fibre', linkRadio:'Radio',
     pinTitle:'Épingler ouvert',
     altPlaceholder:'Altitude…',
@@ -2790,7 +2804,7 @@ const I18N = {
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
     launcherHAnt:'Mast ht',
     c2Network:'C2 nodes', addC2:'+ Add C2 node', c2Hint:'Drag and drop the unit to reposition.', c2DefaultName:'C2',
-    c2HAnt:'Antenna ht',
+    c2HAnt:'Antenna ht', c2EngDelay:'Engagement delay',
     rC2Parent:'Parent C2', rC2None:'None', rC2MaxDist:'Max dist. C2', rLinkType:'Link', linkFiber:'Fiber', linkRadio:'Radio',
     pinTitle:'Pin open',
     altPlaceholder:'Altitude…',
@@ -3074,7 +3088,7 @@ document.querySelectorAll('#unit-dist-seg button').forEach(b => b.addEventListen
 document.querySelectorAll('#unit-time-seg button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#unit-time-seg button').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); unitTime = b.dataset.u;
-  renderThreatUI();
+  renderThreatUI(); renderC2UI();
 }));
 
 /* =========================================================================
