@@ -635,11 +635,57 @@
 
 
 
+  /* === Barre de progression sim === */
+  #sim-progress-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+  }
+  #sim-progress-bg {
+    position: absolute;
+    left: 0; right: 0;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    pointer-events: none;
+  }
+  #sim-progress-ticks {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    pointer-events: none;
+  }
   #sim-progress {
+    position: relative;
     width: 100%;
-    accent-color: var(--accent);
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
     cursor: pointer;
     display: block;
+    z-index: 1;
+  }
+  #sim-progress::-webkit-slider-runnable-track { height: 6px; background: transparent; }
+  #sim-progress::-moz-range-track { height: 6px; background: transparent; }
+  #sim-progress::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    margin-top: -5px;
+    cursor: pointer;
+  }
+  #sim-progress::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    cursor: pointer;
   }
 
   #sim-lock-banner {
@@ -693,12 +739,10 @@
 
     <!-- ========== Barre d'onglets (fr-tabs DSFR) ========== -->
     <nav id="panel-tabs-nav" role="tablist" aria-label="Navigation par sections">
-      <button class="tab-btn active" role="tab" data-tab="map"
-              aria-selected="true"  aria-controls="tab-map"       data-i18n="tabMap">CARTE</button>
-      <button class="tab-btn"        role="tab" data-tab="entities"
-              aria-selected="false" aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
-      <button class="tab-btn"        role="tab" data-tab="sensor"
-              aria-selected="false" aria-controls="tab-sensor"    data-i18n="tabSensor">ALT. &amp; ATMO</button>
+      <button class="tab-btn active" role="tab" data-tab="entities"
+              aria-selected="true"  aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
+      <button class="tab-btn"        role="tab" data-tab="coverage"
+              aria-selected="false" aria-controls="tab-coverage"  data-i18n="tabCoverage">COUVERTURE</button>
       <button class="tab-btn"        role="tab" data-tab="tools"
               aria-selected="false" aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
       <button class="tab-btn"        role="tab" data-tab="engagement"
@@ -708,7 +752,7 @@
     <!-- ============================================================
          ONGLET 1 — UNITÉS (Radars / Lanceurs / C2)
          ============================================================ -->
-    <div id="tab-entities" class="tab-panel" role="tabpanel">
+    <div id="tab-entities" class="tab-panel active" role="tabpanel">
 
       <!-- Sélecteur de type d'entité -->
       <div id="entity-seg-wrap">
@@ -754,9 +798,9 @@
     </div>
 
     <!-- ============================================================
-         ONGLET 2 — CAPTEUR (Altitudes cibles + réfraction)
+         ONGLET 2 — COUVERTURE (Altitudes, Atmosphère, DEM, Unités)
          ============================================================ -->
-    <div id="tab-sensor" class="tab-panel" role="tabpanel">
+    <div id="tab-coverage" class="tab-panel" role="tabpanel">
       <div class="tab-scroll">
         <div class="tab-section">
           <h3 data-i18n="altRef">Référence d'altitude</h3>
@@ -780,49 +824,16 @@
             </select>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
-         ONGLET 3 — CARTE (Affichage + Sommets locaux)
-         ============================================================ -->
-    <div id="tab-map" class="tab-panel active" role="tabpanel">
-      <div class="tab-scroll">
         <div class="tab-section">
-          <h3 data-i18n="displayCoords">Affichage & Coordonnées</h3>
-          <div class="row row-inline">
-            <label for="op-map" data-i18n="transpMap">Opacité carte</label>
-            <input type="range" id="op-map" min="0" max="100" value="100" style="max-width:140px;">
-          </div>
-          <div class="row row-inline">
-            <label for="op-cov" data-i18n="transpRadar">Opacité couverture</label>
-            <input type="range" id="op-cov" min="0" max="100" value="50" style="max-width:140px;">
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <label for="coord-format" data-i18n="coordFormat">Format des coordonnées</label>
-            <select id="coord-format">
-              <option value="DMS" selected data-i18n-opt="coordDMS">Degrés Minutes Secondes (DMS)</option>
-              <option value="DD"  data-i18n-opt="coordDD">Décimales (DD)</option>
-            </select>
-          </div>
-          <div class="row" style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:0">
-            <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
-            <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
-            <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
-            <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
-          </div>
-        </div>
-        <div class="tab-section">
-          <h3 data-i18n="calcSection">Calcul</h3>
+          <h3 data-i18n="calcSection">Précision DEM</h3>
           <div class="seg" id="dem-quality-seg">
             <button class="on" data-q="11" data-i18n="calcFast">Rapide</button>
             <button data-q="12" data-i18n="calcHD">Haute Précision</button>
           </div>
           <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
         </div>
-
-        <div class="tab-section">
-          <h3 data-i18n="unitSection">Unités d'affichage</h3>
+        <div class="tab-section" style="border-bottom:0">
+          <h3 data-i18n="unitSection">Unités</h3>
           <div class="row row-inline" style="margin-bottom:8px">
             <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
             <div class="seg" id="unit-alt-seg">
@@ -847,24 +858,11 @@
             </div>
           </div>
         </div>
-
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
-          <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
-          <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
-          <div class="row" style="margin-top:12px;">
-            <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
-            <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
-          </div>
-          <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
-          <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
-          <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
-        </div>
       </div>
     </div>
 
     <!-- ============================================================
-         ONGLET 4 — OUTILS (Import / Export KML)
+         ONGLET 3 — OUTILS (KML + Sommets + Affichage carte)
          ============================================================ -->
     <div id="tab-tools" class="tab-panel" role="tabpanel">
       <div class="tab-scroll">
@@ -877,11 +875,47 @@
           <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
           <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
         </div>
+        <div class="tab-section">
+          <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
+          <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
+          <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
+          <div class="row" style="margin-top:12px;">
+            <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
+            <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
+          </div>
+          <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
+          <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
+          <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
+        </div>
+        <div class="tab-section" style="border-bottom:0">
+          <h3 data-i18n="displayCoords">Affichage</h3>
+          <div class="row row-inline">
+            <label for="op-map" data-i18n="transpMap">Opacité carte</label>
+            <input type="range" id="op-map" min="0" max="100" value="100" style="max-width:140px;">
+          </div>
+          <div class="row row-inline">
+            <label for="op-cov" data-i18n="transpRadar">Opacité couverture</label>
+            <input type="range" id="op-cov" min="0" max="100" value="50" style="max-width:140px;">
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <label for="coord-format" data-i18n="coordFormat">Format des coordonnées</label>
+            <select id="coord-format">
+              <option value="DMS" selected data-i18n-opt="coordDMS">Degrés Minutes Secondes (DMS)</option>
+              <option value="DD"  data-i18n-opt="coordDD">Décimales (DD)</option>
+            </select>
+          </div>
+          <div class="row" style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:0">
+            <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
+            <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
+            <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
+            <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- ============================================================
-         ONGLET 5 — ENGAGEMENT (Trajectoire menace)
+         ONGLET 4 — ENGAGEMENT (Trajectoire menace)
          ============================================================ -->
     <div id="tab-engagement" class="tab-panel" role="tabpanel">
       <div class="entity-pane active" id="pane-threat">
@@ -907,7 +941,11 @@
           </div>
           <div id="sim-det-status" style="display:none;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line)"></div>
           <div>
-            <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
+            <div id="sim-progress-wrap">
+              <div id="sim-progress-bg"></div>
+              <div id="sim-progress-ticks"></div>
+              <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
+            </div>
             <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt-dim);margin-top:2px">
               <span id="sim-time-elapsed">T+—</span>
               <span id="sim-time-total">—</span>
@@ -917,6 +955,7 @@
         <div class="entity-pane-footer">
           <button class="btn-add" id="btn-draw-threat" data-i18n="engThreatBtn">✈ Trajectoire menace</button>
           <div class="hint" id="threat-hint" style="display:none; color:var(--warning); margin-top:6px;" data-i18n="engThreatHint">…</div>
+          <button class="btn-add" id="btn-calc-seq" style="margin-top:6px;display:none" data-i18n="calcSeqBtn">⚡ Calculer la séquence</button>
           <button class="btn-add" id="btn-clear-threat" style="margin-top:6px; border-color:var(--line); color:var(--txt-dim);" data-i18n="engClear">Effacer la trajectoire</button>
         </div>
       </div>
@@ -983,7 +1022,7 @@ function switchToTab(tabName) {
 
 function switchEntityPane(type) {
   const key = { radar:'radars', launcher:'launchers', c2:'c2' }[type] ?? type;
-  document.querySelectorAll('.entity-pane').forEach(p =>
+  document.querySelectorAll('#tab-entities .entity-pane').forEach(p =>
     p.classList.toggle('active', p.id === 'pane-' + key)
   );
   document.querySelectorAll('#entity-type-seg button').forEach(b =>
@@ -1798,6 +1837,7 @@ function renderC2UI() {
           <input type="number" step="${timeInputStep()}" min="0" value="${+timeInputV(c.engDelay||0).toFixed(unitTime==='min'?1:0)}" onchange="updateC2(${c.id},'engDelay',this.value)" style="flex:1">
           <span class="unit-tag">${timeInputU()}</span>
         </div></div>
+        <div class="radar-params"><label>${t('c2EngDecision')}</label><div class="seg" style="flex:1"><button onclick="updateC2(${c.id},'engDecision',true)" class="${c.engDecision?'on':''}">${t('c2EngDecYes')}</button><button onclick="updateC2(${c.id},'engDecision',false)" class="${!c.engDecision?'on':''}">${t('c2EngDecNo')}</button></div></div>
         <div class="radar-params"><label>${t('rC2Parent')}</label><div class="multi-input"><select onchange="updateC2(${c.id},'parentC2Id',this.value)" style="flex:1"><option value="" ${!c.parentC2Id?'selected':''}>${t('rC2None')}</option>${c2nodes.filter(x=>x.id!==c.id).map(x=>`<option value="${x.id}" ${c.parentC2Id===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('')}</select></div></div>
         <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(c.maxDistC2||0).toFixed(2)}" onchange="updateC2(${c.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateC2(${c.id},'linkType','fiber')" class="${(c.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateC2(${c.id},'linkType','radio')" class="${c.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
@@ -1858,14 +1898,15 @@ function updateC2(id, field, val) {
   }
   else if (field === 'maxDistC2')  { c.maxDistC2 = distFromU(parseFloat(val)||0); updateEntityLines(); return; }
   else if (field === 'linkType')   { c.linkType = val; }
-  else if (field === 'engDelay')   { c.engDelay = timeInputFrom(parseFloat(val) || 0); }
+  else if (field === 'engDelay')    { c.engDelay = timeInputFrom(parseFloat(val) || 0); }
+  else if (field === 'engDecision') { c.engDecision = (val === true || val === 'true'); }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { c[field] = deg; c.terrAlt = null; } }
   renderC2UI();
 }
 
 document.getElementById('btn-add-c2').addEventListener('click', () => {
   const center = map.getCenter(); const id = nextC2Id++;
-  c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', engDelay: 0, pinned: false});
+  c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', engDelay: 0, engDecision: false, pinned: false});
   selectEntity('c2', id);
 });
 document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
@@ -2291,7 +2332,8 @@ function kmlC2Balloon(c, isEn) {
   <table>
     <tr><th colspan="2">${isEn ? 'C2 node parameters' : 'Paramètres nœud C2'}</th></tr>
     <tr><td>${isEn ? 'Antenna height' : 'Haut. antenne'}</td><td>${c.hant ?? 0} m AGL</td></tr>
-    <tr><td>${isEn ? 'Engagement delay' : 'Délai engagement'}</td><td>${c.engDelay ?? 0} s</td></tr>
+    <tr><td>${isEn ? 'Reaction time' : 'Temps de réaction'}</td><td>${c.engDelay ?? 0} s</td></tr>
+    <tr><td>${isEn ? 'Engagement decision' : 'Décision engagement'}</td><td>${c.engDecision ? (isEn ? 'Yes' : 'Oui') : (isEn ? 'No' : 'Non')}</td></tr>
   </table>
   ${kmlC2Table(c.parentC2Id, c.maxDistC2, c.linkType, isEn, c2nodes)}
   <table>
@@ -2384,6 +2426,7 @@ ${extDataBlock(fields)}
       'spm:maxDistC2': c.maxDistC2 ?? 0,
       'spm:linkType': c.linkType ?? 'fiber',
       'spm:engDelay': c.engDelay ?? 0,
+      'spm:engDecision': c.engDecision ? 1 : 0,
     }, kmlC2Balloon(c, isEn))
   ).join('');
 
@@ -2630,6 +2673,7 @@ function importKMLString(xmlStr) {
       maxDistC2:  getNum(pm, 'spm:maxDistC2', 0),
       linkType:   getStr(pm, 'spm:linkType', 'fiber'),
       engDelay:   getNum(pm, 'spm:engDelay', 0),
+      engDecision: getNum(pm, 'spm:engDecision', 0) === 1,
       _origId:    getInt(pm, 'spm:id'),
       marker: null, terrAlt: null, pinned: false,
     });
@@ -2739,7 +2783,8 @@ const I18N = {
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
     launcherHAnt:'H. mat comm.',
     c2Network:'Nœuds C2', addC2:'+ Ajouter un nœud C2', c2Hint:'Glisser-déposer pour repositionner. Clic carte = désélection.', c2DefaultName:'C2',
-    c2HAnt:'H. antenne', c2EngDelay:'Délai engagement',
+    calcSeqBtn:'⚡ Calculer la séquence',
+    c2HAnt:'H. antenne', c2EngDelay:'Temps de réaction', c2EngDecision:'Décision engagement', c2EngDecYes:'Oui', c2EngDecNo:'Non',
     rC2Parent:'C2 parent', rC2None:'Aucun', rC2MaxDist:'Dist. max C2', rLinkType:'Liaison', linkFiber:'Fibre', linkRadio:'Radio',
     pinTitle:'Épingler ouvert',
     altPlaceholder:'Altitude…',
@@ -2760,9 +2805,9 @@ const I18N = {
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
     demResEstimate:(r,u,z)=>`Résolution estimée : ~${r} ${u} (zoom ${z})`,
     unitSection:'Unités d\'affichage', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
-    tabUnits:'Unités', tabSensor:'Alt. & Atmo', tabMap:'Carte', tabTools:'Outils', tabEngagement:'Engagement',
+    tabUnits:'Unités', tabCoverage:'Couverture', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
-    engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Annuler',
+    engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
     engWpAlt:'Altitude', engWpSpeed:'Vitesse',
     engClear:'Effacer la trajectoire',
@@ -2804,7 +2849,8 @@ const I18N = {
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
     launcherHAnt:'Mast ht',
     c2Network:'C2 nodes', addC2:'+ Add C2 node', c2Hint:'Drag and drop the unit to reposition.', c2DefaultName:'C2',
-    c2HAnt:'Antenna ht', c2EngDelay:'Engagement delay',
+    calcSeqBtn:'⚡ Calculate sequence',
+    c2HAnt:'Antenna ht', c2EngDelay:'Reaction time', c2EngDecision:'Engagement decision', c2EngDecYes:'Yes', c2EngDecNo:'No',
     rC2Parent:'Parent C2', rC2None:'None', rC2MaxDist:'Max dist. C2', rLinkType:'Link', linkFiber:'Fiber', linkRadio:'Radio',
     pinTitle:'Pin open',
     altPlaceholder:'Altitude…',
@@ -2825,9 +2871,9 @@ const I18N = {
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
     demResEstimate:(r,u,z)=>`Estimated resolution: ~${r} ${u} (zoom ${z})`,
     unitSection:'Display units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
-    tabUnits:'Units', tabSensor:'Alt. & Atmo', tabMap:'Map', tabTools:'Tools', tabEngagement:'Engagement',
+    tabUnits:'Units', tabCoverage:'Coverage', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
-    engThreatBtn:'✈ Threat trajectory', engThreatActive:'Cancel',
+    engThreatBtn:'✈ Threat trajectory', engThreatActive:'Done editing trajectory',
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
     engWpAlt:'Altitude', engWpSpeed:'Speed',
     engClear:'Clear trajectory',
@@ -3088,7 +3134,7 @@ document.querySelectorAll('#unit-dist-seg button').forEach(b => b.addEventListen
 document.querySelectorAll('#unit-time-seg button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#unit-time-seg button').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); unitTime = b.dataset.u;
-  renderThreatUI(); renderC2UI();
+  renderThreatUI(); renderC2UI(); showDetSummary(); renderProgressGradient();
 }));
 
 /* =========================================================================
@@ -3283,6 +3329,7 @@ document.getElementById('btn-draw-threat').addEventListener('click', () => {
 });
 
 document.getElementById('btn-clear-threat').addEventListener('click', clearThreat);
+document.getElementById('btn-calc-seq').addEventListener('click', runSequenceCalc);
 
 /* =========================================================================
    SIMULATION ENGINE — lecture de trajectoire menace
@@ -3302,7 +3349,13 @@ let _detSamples     = null;   // null = analyse non faite/périmée, Array = ana
 let _detLines       = [];     // L.polyline colorées de détection
 let _detStale       = true;
 let _detVersion     = 0;      // incrémenté à chaque invalidation pour annuler l'analyse en cours
+let _fireOrders     = [];     // [{t, lat, lon, radarId, tDet, c2Name}]
+let _fireOrderMarkers = [];   // L.marker[] sur la carte
 let _detAnalyzing   = false;
+let _seqCalculated  = false;  // séquence pré-calculée + overlay statique affiché
+let _traceSegs      = [];     // [{det, poly}] — trace temps réel derrière le marqueur
+let _traceIdx       = -1;     // dernier indice _detSamples traité pour la trace
+let _shownFO        = new Set(); // indices _fireOrders déjà affichés en temps réel
 
 /* ---- Géoazimut (cap vrai, 0°=N, sens horaire) ---- */
 function geoAzimuth(lat1, lon1, lat2, lon2) {
@@ -3386,7 +3439,11 @@ function invalidateDetection() {
   _detVersion++;
   _detStale  = true;
   _detSamples = null;
+  _fireOrders = [];
+  _seqCalculated = false;
   clearDetectionOverlay();
+  clearFireOrderMarkers();
+  renderProgressGradient();
   const el = document.getElementById('sim-det-status');
   if (el) el.style.display = 'none';
 }
@@ -3422,6 +3479,7 @@ function renderDetectionOverlay() {
 function showDetSummary() {
   const el = document.getElementById('sim-det-status');
   if (!el || !_detSamples) return;
+  const isEn = document.documentElement.dataset.lang === 'en';
   const firstDet = _detSamples.find(s => s.detected);
   if (!firstDet) {
     el.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--warning);color:var(--warning)';
@@ -3430,8 +3488,203 @@ function showDetSummary() {
   }
   const detPct = Math.round(_detSamples.filter(s => s.detected).length / _detSamples.length * 100);
   const radar  = radars.find(r => r.id === firstDet.radarId);
+  const lines  = [t('detResult', fmtTime(firstDet.t), radar ? radar.name : '?', detPct)];
+  // Ordres de tir
+  for (const fo of _fireOrders) {
+    const inTraj  = fo.t <= simTotalT;
+    const timeStr = fmtTime(fo.t);
+    const label   = isEn
+      ? `⚡ Fire order T+${timeStr} (${fo.c2Name})${inTraj ? '' : ' — beyond trajectory'}`
+      : `⚡ Ordre de tir T+${timeStr} (${fo.c2Name})${inTraj ? '' : ' — hors trajectoire'}`;
+    lines.push(label);
+  }
   el.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--success);color:var(--success)';
-  el.textContent = t('detResult', fmtTime(firstDet.t), radar ? radar.name : '?', detPct);
+  el.innerHTML = lines.map((l, i) => `<div${i > 0 ? ' style="color:var(--txt-dim)"' : ''}>${l}</div>`).join('');
+}
+
+/* ---- Chaîne C2 : délai cumulé jusqu'au premier décideur ---- */
+function getC2EngDelay(radarId) {
+  const radar = radars.find(r => r.id === radarId);
+  if (!radar || !radar.parentC2Id) return null;
+  let delay = 0, c2Id = radar.parentC2Id;
+  const visited = new Set();
+  while (c2Id != null) {
+    if (visited.has(c2Id)) break;
+    visited.add(c2Id);
+    const c2 = c2nodes.find(c => c.id === c2Id);
+    if (!c2) break;
+    delay += (c2.engDelay || 0);
+    if (c2.engDecision) return { delay, c2Name: c2.name };
+    c2Id = c2.parentC2Id;
+  }
+  return null; // aucun décideur trouvé dans la chaîne
+}
+
+/* ---- Position interpolée sur la trajectoire à l'instant t ---- */
+function interpolateThreatPos(t) {
+  if (!_detSamples || !_detSamples.length) return null;
+  if (t <= _detSamples[0].t) return { lat: _detSamples[0].lat, lon: _detSamples[0].lon };
+  const last = _detSamples[_detSamples.length - 1];
+  if (t >= last.t) return { lat: last.lat, lon: last.lon };
+  let lo = 0, hi = _detSamples.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (_detSamples[mid].t <= t) lo = mid; else hi = mid; }
+  const a = _detSamples[lo], b = _detSamples[hi];
+  const f = (b.t > a.t) ? (t - a.t) / (b.t - a.t) : 0;
+  return { lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f };
+}
+
+/* ---- Calcul des ordres de tir ---- */
+function computeFireOrders() {
+  _fireOrders = [];
+  if (!_detSamples || !_detSamples.length) return;
+  const lastDet = new Map(); // radarId -> dernière valeur detected
+  const fired   = new Set(); // radars ayant déjà généré un ordre de tir
+  for (const s of _detSamples) {
+    if (!s.detected || !s.radarId) { if (s.radarId) lastDet.set(s.radarId, false); continue; }
+    const prev = lastDet.get(s.radarId) ?? false;
+    lastDet.set(s.radarId, true);
+    if (!prev && !fired.has(s.radarId)) {
+      const result = getC2EngDelay(s.radarId);
+      if (result) {
+        const tFire = s.t + result.delay;
+        const pos   = interpolateThreatPos(tFire);
+        if (pos) _fireOrders.push({ t: tFire, lat: pos.lat, lon: pos.lon, radarId: s.radarId, tDet: s.t, c2Name: result.c2Name });
+        fired.add(s.radarId);
+      }
+    }
+  }
+}
+
+/* ---- Marqueurs d'ordre de tir sur la carte ---- */
+function clearFireOrderMarkers() {
+  _fireOrderMarkers.forEach(m => map.removeLayer(m));
+  _fireOrderMarkers = [];
+}
+
+function renderFireOrderMarkers() {
+  clearFireOrderMarkers();
+  const isEn = document.documentElement.dataset.lang === 'en';
+  _fireOrders.forEach(fo => {
+    if (fo.t > simTotalT) return; // hors trajectoire : pas de marqueur carte
+    const label = isEn
+      ? `Fire order T+${fmtTime(fo.t)} (${fo.c2Name})`
+      : `Ordre de tir T+${fmtTime(fo.t)} (${fo.c2Name})`;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:22px;height:22px;background:#e65100;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:default">⚡</div>`,
+      iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    const m = L.marker([fo.lat, fo.lon], { icon, interactive: true, zIndexOffset: 500 }).addTo(map);
+    m.bindTooltip(label, { permanent: false });
+    _fireOrderMarkers.push(m);
+  });
+}
+
+/* ---- Barre de progression colorée (détection + repères d'ordre de tir) ---- */
+function renderProgressGradient() {
+  const bg    = document.getElementById('sim-progress-bg');
+  const ticks = document.getElementById('sim-progress-ticks');
+  if (!bg || !ticks) return;
+  if (!_detSamples || !_detSamples.length || simTotalT <= 0) {
+    bg.style.background = 'var(--line)';
+    ticks.innerHTML = '';
+    return;
+  }
+  // Segments rouge/vert avec hard stops
+  const segs = [];
+  let segStart = 0, segDet = _detSamples[0].detected;
+  for (let i = 1; i < _detSamples.length; i++) {
+    if (_detSamples[i].detected !== segDet) {
+      segs.push({ det: segDet, start: segStart, end: _detSamples[i].t / simTotalT * 100 });
+      segStart = _detSamples[i].t / simTotalT * 100;
+      segDet = _detSamples[i].detected;
+    }
+  }
+  segs.push({ det: segDet, start: segStart, end: 100 });
+  const stops = segs.flatMap(s => {
+    const c = s.det ? '#18753c' : '#ce0500';
+    return [`${c} ${s.start.toFixed(2)}%`, `${c} ${s.end.toFixed(2)}%`];
+  });
+  bg.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+  // Repères d'ordre de tir (traits verticaux orange) — seulement dans la trajectoire
+  const isEn = document.documentElement.dataset.lang === 'en';
+  ticks.innerHTML = _fireOrders.filter(fo => fo.t <= simTotalT).map(fo => {
+    const pct  = (fo.t / simTotalT * 100).toFixed(2);
+    const tip  = isEn ? `Fire order T+${fmtTime(fo.t)}` : `Ordre de tir T+${fmtTime(fo.t)}`;
+    return `<div title="${tip}" style="position:absolute;left:${pct}%;top:2px;bottom:2px;width:3px;background:#e65100;border-radius:2px;transform:translateX(-50%)"></div>`;
+  }).join('');
+}
+
+/* ---- Trace temps réel (segment coloré derrière le marqueur) ---- */
+function clearTrace() {
+  _traceSegs.forEach(s => map.removeLayer(s.poly));
+  _traceSegs = [];
+  _traceIdx  = -1;
+}
+
+function updateTrace(tCurrent) {
+  if (!_detSamples || !_detSamples.length) return;
+  let newIdx = _traceIdx;
+  while (newIdx + 1 < _detSamples.length && _detSamples[newIdx + 1].t <= tCurrent) newIdx++;
+  if (newIdx <= _traceIdx) return;
+  const start = _traceIdx < 0 ? 1 : _traceIdx + 1;
+  for (let i = start; i <= newIdx; i++) {
+    const s  = _detSamples[i];
+    const pt = [s.lat, s.lon];
+    const prev = [_detSamples[i - 1].lat, _detSamples[i - 1].lon];
+    if (!_traceSegs.length || _traceSegs[_traceSegs.length - 1].det !== s.detected) {
+      const color = s.detected ? '#18753c' : '#ce0500';
+      const poly  = L.polyline([prev, pt], { color, weight: 4, opacity: 0.9 }).addTo(map);
+      _traceSegs.push({ det: s.detected, poly });
+    } else {
+      _traceSegs[_traceSegs.length - 1].poly.addLatLng(pt);
+    }
+  }
+  _traceIdx = newIdx;
+}
+
+/* ---- Apparition des marqueurs d'ordre de tir en temps réel ---- */
+function updateRealtimeFireOrders() {
+  if (!_fireOrders.length) return;
+  const isEn = document.documentElement.dataset.lang === 'en';
+  _fireOrders.forEach((fo, i) => {
+    if (_shownFO.has(i) || fo.t > simCurrentT || fo.t > simTotalT) return;
+    const label = isEn
+      ? `Fire order T+${fmtTime(fo.t)} (${fo.c2Name})`
+      : `Ordre de tir T+${fmtTime(fo.t)} (${fo.c2Name})`;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:22px;height:22px;background:#e65100;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:default">⚡</div>`,
+      iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    const m = L.marker([fo.lat, fo.lon], { icon, interactive: true, zIndexOffset: 500 }).addTo(map);
+    m.bindTooltip(label, { permanent: false });
+    _fireOrderMarkers.push(m);
+    _shownFO.add(i);
+  });
+}
+
+/* ---- Calcul de la séquence d'engagement (bouton) ---- */
+async function runSequenceCalc() {
+  if (_detAnalyzing || !threatWaypoints.length) return;
+  if (simState !== 'stopped') return;
+  _simTofCache = computeThreatTOF();
+  simTotalT    = _simTofCache[_simTofCache.length - 1] || 0;
+  _detAnalyzing = true;
+  const btn = document.getElementById('btn-calc-seq');
+  if (btn) btn.disabled = true;
+  const statusEl = document.getElementById('sim-det-status');
+  statusEl.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line);color:var(--txt-dim)';
+  statusEl.textContent = t('detAnalyzing', 0);
+  await runDetectionAnalysis(pct => { statusEl.textContent = t('detAnalyzing', pct); });
+  _detAnalyzing = false;
+  if (btn) btn.disabled = false;
+  if (!_detStale) {
+    _seqCalculated = true;
+    showDetSummary();
+    renderProgressGradient();
+    /* overlay + fire order markers already rendered by runDetectionAnalysis */
+  }
 }
 
 /* ---- Échantillonnage de la trajectoire ---- */
@@ -3473,6 +3726,9 @@ async function runDetectionAnalysis(onProgress) {
     _detStale = false;
     renderDetectionOverlay();
     showDetSummary();
+    computeFireOrders();
+    renderFireOrderMarkers();
+    renderProgressGradient();
     return;
   }
 
@@ -3530,6 +3786,9 @@ async function runDetectionAnalysis(onProgress) {
   _detStale   = false;
   renderDetectionOverlay();
   showDetSummary();
+  computeFireOrders();
+  renderFireOrderMarkers();
+  renderProgressGradient();
 }
 
 function simUpdateUI() {
@@ -3563,10 +3822,11 @@ async function simPlay() {
   _simTofCache = computeThreatTOF();
   simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
   if (simTotalT <= 0) return;
-  /* Redémarrer depuis le début si fin atteinte ou état arrêté */
-  if (simState === 'stopped' || simCurrentT >= simTotalT) simCurrentT = 0;
 
-  /* Analyse de détection si nécessaire */
+  const restart = simState === 'stopped' || simCurrentT >= simTotalT;
+  if (restart) simCurrentT = 0;
+
+  /* Analyse silencieuse si nécessaire (sans afficher l'overlay statique) */
   if (_detStale || _detSamples === null) {
     _detAnalyzing = true;
     document.getElementById('sim-play').disabled = true;
@@ -3575,9 +3835,19 @@ async function simPlay() {
     statusEl.textContent = t('detAnalyzing', 0);
     await runDetectionAnalysis(pct => { statusEl.textContent = t('detAnalyzing', pct); });
     _detAnalyzing = false;
-    /* Si la trajectoire a changé pendant l'analyse, abandonner */
     if (_detStale) { simRefreshButtons(); return; }
     document.getElementById('sim-play').disabled = false;
+    /* L'analyse a rendu l'overlay statique — le supprimer pour le mode temps réel */
+    clearDetectionOverlay();
+    clearFireOrderMarkers();
+  }
+
+  if (restart) {
+    /* Départ depuis T=0 : supprimer overlay statique et réinitialiser la trace */
+    clearDetectionOverlay();
+    clearFireOrderMarkers();
+    clearTrace();
+    _shownFO = new Set();
   }
 
   simState = 'playing';
@@ -3600,6 +3870,15 @@ function simStop() {
   simState = 'stopped';
   simCurrentT = 0;
   simHideMarker();
+  clearTrace();
+  clearFireOrderMarkers();
+  _shownFO = new Set();
+  /* Restaurer l'overlay statique si la séquence a été pré-calculée */
+  if (_seqCalculated) {
+    renderDetectionOverlay();
+    renderFireOrderMarkers();
+    showDetSummary();
+  }
   setSimLocked(false);
   simRefreshButtons();
   simUpdateUI();
@@ -3613,6 +3892,8 @@ function simTick(ts) {
   }
   simLastTs = ts;
   simUpdateMarker();
+  updateTrace(simCurrentT);
+  updateRealtimeFireOrders();
   simUpdateUI();
   if (simCurrentT >= simTotalT) {
     /* Auto-pause en fin de trajectoire */
@@ -3637,6 +3918,8 @@ function updateSimPanel() {
   if (!panel) return;
   const hasWps = threatWaypoints.length >= 1;
   panel.style.display = hasWps ? 'flex' : 'none';
+  const btnCalc = document.getElementById('btn-calc-seq');
+  if (btnCalc) btnCalc.style.display = hasWps ? '' : 'none';
   if (hasWps) {
     _simTofCache = computeThreatTOF();
     simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
