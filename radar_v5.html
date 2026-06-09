@@ -137,7 +137,10 @@
     flex-shrink: 0;
     background: var(--panel2);
     border-bottom: 2px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  #panel-tabs-nav::-webkit-scrollbar { display: none; }
   .tab-btn {
     flex: 1;
     padding: 10px 4px 8px;
@@ -155,7 +158,7 @@
     transition: color .12s, border-color .12s, background .12s;
     white-space: normal;
     text-align: center;
-    min-width: 0;
+    min-width: max-content;
     line-height: 1.2;
     user-select: none;
   }
@@ -222,12 +225,13 @@
   /* Zone scrollable de la liste d'entités */
   .entity-list-scroll {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
     min-height: 0;
     padding: 12px 14px 4px;
     scrollbar-width: thin;
     scrollbar-color: var(--line) transparent;
+    scrollbar-gutter: stable;
   }
   .entity-list-scroll::-webkit-scrollbar { width: 5px; }
   .entity-list-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
@@ -622,7 +626,7 @@
       <button class="tab-btn"        role="tab" data-tab="entities"
               aria-selected="false" aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
       <button class="tab-btn"        role="tab" data-tab="sensor"
-              aria-selected="false" aria-controls="tab-sensor"    data-i18n="tabSensor">CIBLE &amp; ATMO</button>
+              aria-selected="false" aria-controls="tab-sensor"    data-i18n="tabSensor">ALT. &amp; ATMO</button>
       <button class="tab-btn"        role="tab" data-tab="tools"
               aria-selected="false" aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
       <button class="tab-btn"        role="tab" data-tab="engagement"
@@ -1734,7 +1738,7 @@ function renderAltList() {
     row.style.flexDirection = 'row'; row.style.alignItems = 'center'; row.style.gap = '8px'; row.style.marginBottom = '8px';
     row.innerHTML = `
       <input type="color" value="${entry.color}" style="padding:0;width:28px;height:28px;border:1px solid var(--txt);cursor:pointer;flex-shrink:0" oninput="altEntries[${i}].color=this.value">
-      <input type="number" value="${isEmpty ? '' : entry.value}" min="0" placeholder="${t('altPlaceholder')}" style="flex:1; height:32px;" oninput="onAltInput(${i}, this.value)">
+      <input type="number" value="${isEmpty ? '' : entry.value}" min="0" placeholder="${t('altPlaceholder')}" style="flex:1; height:32px;" oninput="onAltInput(${i}, this.value)" onblur="onAltBlur(${i})">
       <span style="font-size:12px;color:var(--txt-dim);flex-shrink:0">m</span>
       ${!isEmpty ? `<button onclick="removeAlt(${i})" style="background:transparent;border:0;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0" title="${t('pDelete')}">✖</button>` : '<span style="width:18px"></span>'}` ;
     ct.appendChild(row);
@@ -1743,12 +1747,17 @@ function renderAltList() {
 function onAltInput(i, val) {
   altEntries[i].value = val === '' ? '' : val;
   markCoverageStale();
-  if (i === altEntries.length - 1 && val !== '') {
-    altEntries.push({value: '', color: '#6a6af4'});
-    renderAltList();
-    const inputs = document.querySelectorAll('#alt-list input[type="number"]');
-    if (inputs[i]) { inputs[i].focus(); inputs[i].setSelectionRange(inputs[i].value.length, inputs[i].value.length); }
+}
+function onAltBlur(i) {
+  /* Ajouter un placeholder si l'entrée saisie est la dernière et non vide */
+  if (i === altEntries.length - 1 && altEntries[i].value !== '') {
+    altEntries.push({ value: '', color: '#6a6af4' });
   }
+  /* Trier les entrées remplies par ordre croissant, placeholder vide à la fin */
+  const filled  = altEntries.filter(e => e.value !== '').sort((a, b) => parseFloat(a.value) - parseFloat(b.value));
+  const empty   = altEntries.filter(e => e.value === '');
+  altEntries = [...filled, ...(empty.length ? [empty[empty.length - 1]] : [{ value: '', color: '#6a6af4' }])];
+  renderAltList();
 }
 function removeAlt(i) { markCoverageStale(); altEntries.splice(i, 1); if (altEntries.length === 0 || altEntries[altEntries.length - 1].value !== '') altEntries.push({value: '', color: '#6a6af4'}); renderAltList(); }
 
@@ -2586,7 +2595,7 @@ const I18N = {
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
     demResEstimate:(r,z)=>`Résolution estimée : ~${r} m (zoom ${z})`,
-    tabUnits:'Unités', tabSensor:'Cible & Atmo', tabMap:'Carte', tabTools:'Outils', tabEngagement:'Engagement',
+    tabUnits:'Unités', tabSensor:'Alt. & Atmo', tabMap:'Carte', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
     engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Annuler',
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
@@ -2646,7 +2655,7 @@ const I18N = {
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
     demResEstimate:(r,z)=>`Estimated resolution: ~${r} m (zoom ${z})`,
-    tabUnits:'Units', tabSensor:'Target & Atmo', tabMap:'Map', tabTools:'Tools', tabEngagement:'Engagement',
+    tabUnits:'Units', tabSensor:'Alt. & Atmo', tabMap:'Map', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
     engThreatBtn:'✈ Threat trajectory', engThreatActive:'Cancel',
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
