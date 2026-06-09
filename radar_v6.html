@@ -3605,12 +3605,28 @@ function renderFireOrderMarkers() {
    MISSILES & PIP (Point d'Interception Prévu)
    ========================================================================= */
 
-async function loadMissileConfigs() {
-  const files = ['missiles/generic_mrm.json'];
-  for (const f of files) {
-    try { const cfg = await fetch(f).then(r => r.json()); _missileConfigs[cfg.id] = cfg; }
-    catch (e) { console.warn('Missile config load failed:', f, e); }
+/* Configs embarquées — pas de dépendance réseau (app standalone file://) */
+const BUNDLED_MISSILE_CONFIGS = [
+  {
+    id: 'generic_mrm',
+    label: { fr: 'MSAM Générique (Portée Moyenne)', en: 'Generic MSAM (Medium Range)' },
+    kinematics: {
+      launchDelay_s: 3.5, boostEnd_s: 3.0, maxFlightTime_s: 20.0,
+      altCorrection: 'ISA',
+      velocityProfile: [
+        { t_s:  0.0, v_ms:   0 }, { t_s:  0.3, v_ms: 180 },
+        { t_s:  1.0, v_ms: 580 }, { t_s:  3.0, v_ms: 800 },
+        { t_s:  7.0, v_ms: 650 }, { t_s: 13.0, v_ms: 490 },
+        { t_s: 20.0, v_ms: 340 }
+      ]
+    },
+    envelope: { slantRangeMin_m: 500, slantRangeMax_m: 10000, altMin_m: 20, altMax_m: 6000, targetSpeedMax_ms: 500, maxLateralAccel_g: 15 },
+    warhead: { lethalRadius_m: 10 }
   }
+];
+
+function loadMissileConfigs() {
+  BUNDLED_MISSILE_CONFIGS.forEach(cfg => { _missileConfigs[cfg.id] = cfg; });
   renderLaunchersUI();
 }
 
