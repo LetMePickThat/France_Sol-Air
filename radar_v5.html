@@ -604,6 +604,82 @@
     /* Sections des onglets Carte / Cible&Atmo */
     .tab-section { padding: 8px 18px; }
   }
+
+  /* =========================================================================
+     SIMULATION ENGINE
+     ========================================================================= */
+  #sim-panel {
+    flex-shrink: 0;
+    border-top: 1px solid var(--line);
+    padding: 10px 14px;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sim-btn {
+    display: flex; align-items: center; justify-content: center;
+    padding: 7px 10px;
+    background: transparent;
+    border: 1px solid var(--line); color: var(--txt);
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    cursor: pointer; border-radius: 0;
+    transition: background .1s;
+    white-space: nowrap;
+  }
+  .sim-btn:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .sim-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .sim-btn.sim-btn-primary { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .sim-btn.sim-btn-primary:hover:not(:disabled) { background: var(--accent-light); }
+
+  .sim-marker-dot {
+    width: 18px; height: 18px;
+    background: #ce0500;
+    border: 2.5px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2.5px rgba(206,5,0,.45), 0 2px 6px rgba(0,0,0,.45);
+  }
+
+  #sim-progress {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    display: block;
+  }
+
+  #sim-lock-banner {
+    display: none;
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+    font-size: 11px; color: var(--warning); font-weight: 600;
+    align-items: center; gap: 6px;
+  }
+  body.sim-active #sim-lock-banner { display: flex; }
+
+  /* Lock édition pendant la simulation */
+  body.sim-active .entity-pane-footer button,
+  body.sim-active #go,
+  body.sim-active .btn-del,
+  body.sim-active .btn-pin,
+  body.sim-active .radar-item input,
+  body.sim-active .radar-item select,
+  body.sim-active #btn-export-kml,
+  body.sim-active label[for="kml-file-input"],
+  body.sim-active #btn-draw-zone,
+  body.sim-active #btn-search-peaks,
+  body.sim-active #btn-clear-peaks { pointer-events: none; opacity: .4; }
+
+  /* Exception : les contrôles de sim restent actifs */
+  body.sim-active #sim-play,
+  body.sim-active #sim-pause,
+  body.sim-active #sim-stop,
+  body.sim-active #sim-speed-seg button,
+  body.sim-active #sim-progress { pointer-events: auto !important; opacity: 1 !important; cursor: pointer; }
+  body.sim-active #sim-pause:disabled,
+  body.sim-active #sim-stop:disabled { pointer-events: none !important; opacity: .4 !important; }
 </style>
 </head>
 <body>
@@ -815,8 +891,33 @@
          ============================================================ -->
     <div id="tab-engagement" class="tab-panel" role="tabpanel">
       <div class="entity-pane active" id="pane-threat">
+        <div id="sim-lock-banner">⚠ <span data-i18n="simLockBanner">Simulation en cours — édition suspendue</span></div>
         <div class="entity-list-scroll">
           <div id="threat-wp-list"></div>
+        </div>
+        <!-- Simulation panel : caché si aucun waypoint -->
+        <div id="sim-panel" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;font-weight:700;flex:1" data-i18n="simSection">Simulation</span>
+            <div class="seg" id="sim-speed-seg">
+              <button class="on" data-spd="1">×1</button>
+              <button data-spd="5">×5</button>
+              <button data-spd="10">×10</button>
+              <button data-spd="100">×100</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px">
+            <button id="sim-play"  class="sim-btn sim-btn-primary" style="flex:1" data-i18n="simPlay">▶ Jouer</button>
+            <button id="sim-pause" class="sim-btn" style="flex:1" disabled data-i18n="simPause">⏸ Pause</button>
+            <button id="sim-stop"  class="sim-btn" style="flex:0 0 40px">⏹</button>
+          </div>
+          <div>
+            <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt-dim);margin-top:2px">
+              <span id="sim-time-elapsed">T+—</span>
+              <span id="sim-time-total">—</span>
+            </div>
+          </div>
         </div>
         <div class="entity-pane-footer">
           <button class="btn-add" id="btn-draw-threat" data-i18n="engThreatBtn">✈ Trajectoire menace</button>
@@ -2655,6 +2756,8 @@ const I18N = {
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
     engWpAlt:'Altitude', engWpSpeed:'Vitesse',
     engClear:'Effacer la trajectoire',
+    simSection:'Simulation', simPlay:'▶ Jouer', simPause:'⏸ Pause', simStop:'⏹ Stop',
+    simLockBanner:'Simulation en cours — édition suspendue',
   },
   en: {
     appTitle:'Radar Intervisibility', cartoLight:'Map (light)', cartoDark:'Map (dark)', elevBtn:'Elevation',
@@ -2715,6 +2818,8 @@ const I18N = {
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
     engWpAlt:'Altitude', engWpSpeed:'Speed',
     engClear:'Clear trajectory',
+    simSection:'Simulation', simPlay:'▶ Play', simPause:'⏸ Pause', simStop:'⏹ Stop',
+    simLockBanner:'Simulation running — editing suspended',
   }
 };
 let lang = 'fr';
@@ -3075,7 +3180,10 @@ function renderThreatUI() {
       wp.marker.setTooltipContent(`WP ${n}`);
       if (wp.marker.dragging) { wp.marker.dragging.disable(); wp.marker.dragging.enable(); }
     }
+    /* Si sim active, verrouiller les marqueurs nouvellement créés */
+    if (simState !== 'stopped' && wp.marker?.dragging) wp.marker.dragging.disable();
   });
+  updateSimPanel();
 }
 
 function selectThreatWp(id) {
@@ -3127,6 +3235,7 @@ function threatHandleClick(e) {
 }
 
 function clearThreat() {
+  if (simState !== 'stopped') simStop();
   threatWaypoints.forEach(wp => { if (wp.marker) map.removeLayer(wp.marker); });
   threatWaypoints = [];
   activeThreatWpId = null;
@@ -3154,6 +3263,175 @@ document.getElementById('btn-draw-threat').addEventListener('click', () => {
 });
 
 document.getElementById('btn-clear-threat').addEventListener('click', clearThreat);
+
+/* =========================================================================
+   SIMULATION ENGINE — lecture de trajectoire menace
+   ========================================================================= */
+let simState    = 'stopped'; // 'stopped' | 'playing' | 'paused'
+let simSpeed    = 1;
+let simCurrentT = 0;   // secondes écoulées depuis le début
+let simTotalT   = 0;   // durée totale de la trajectoire (s)
+let simLastTs   = 0;   // timestamp du dernier frame rAF (0 = forcer reset)
+let simRafId    = null;
+let simMarker   = null;
+let _simTofCache = [];
+
+function simMarkerIcon() {
+  return L.divIcon({
+    html: '<div class="sim-marker-dot"></div>',
+    className: '', iconSize: [18, 18], iconAnchor: [9, 9]
+  });
+}
+
+function simPosAtTime(t) {
+  const n = _simTofCache.length;
+  if (!n || !threatWaypoints.length) return null;
+  if (t <= 0) return { lat: threatWaypoints[0].lat, lon: threatWaypoints[0].lon };
+  if (t >= _simTofCache[n-1]) return { lat: threatWaypoints[n-1].lat, lon: threatWaypoints[n-1].lon };
+  for (let i = 1; i < n; i++) {
+    if (t <= _simTofCache[i]) {
+      const f = (t - _simTofCache[i-1]) / (_simTofCache[i] - _simTofCache[i-1]);
+      const a = threatWaypoints[i-1], b = threatWaypoints[i];
+      return { lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f };
+    }
+  }
+  return { lat: threatWaypoints[n-1].lat, lon: threatWaypoints[n-1].lon };
+}
+
+function simUpdateMarker() {
+  const pos = simPosAtTime(simCurrentT);
+  if (!pos) return;
+  if (!simMarker) {
+    simMarker = L.marker([pos.lat, pos.lon], {
+      icon: simMarkerIcon(), interactive: false, zIndexOffset: 3000
+    }).addTo(map);
+  } else {
+    simMarker.setLatLng([pos.lat, pos.lon]);
+  }
+}
+
+function simHideMarker() {
+  if (simMarker) { map.removeLayer(simMarker); simMarker = null; }
+}
+
+function simUpdateUI() {
+  const prog = document.getElementById('sim-progress');
+  if (!prog) return;
+  const maxSteps = Math.max(1, Math.round(simTotalT * 10));
+  prog.max   = maxSteps;
+  prog.value = Math.round(simCurrentT * 10);
+  document.getElementById('sim-time-elapsed').textContent = 'T+' + fmtTime(simCurrentT);
+  document.getElementById('sim-time-total').textContent   = '/ ' + fmtTime(simTotalT);
+}
+
+function simRefreshButtons() {
+  document.getElementById('sim-play').disabled  = (simState === 'playing');
+  document.getElementById('sim-pause').disabled = (simState !== 'playing');
+  document.getElementById('sim-stop').disabled  = false;
+}
+
+function setSimLocked(locked) {
+  document.body.classList.toggle('sim-active', locked);
+  [...radars, ...launchers, ...c2nodes, ...threatWaypoints].forEach(e => {
+    if (e.marker?.dragging) locked ? e.marker.dragging.disable() : e.marker.dragging.enable();
+  });
+  peakVertMarkers.forEach(m => {
+    if (m.dragging) locked ? m.dragging.disable() : m.dragging.enable();
+  });
+}
+
+function simPlay() {
+  if (!threatWaypoints.length) return;
+  _simTofCache = computeThreatTOF();
+  simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
+  if (simTotalT <= 0) return;
+  /* Redémarrer depuis le début si fin atteinte ou état arrêté */
+  if (simState === 'stopped' || simCurrentT >= simTotalT) simCurrentT = 0;
+  simState = 'playing';
+  setSimLocked(true);
+  simLastTs = 0;
+  simRafId = requestAnimationFrame(simTick);
+  simRefreshButtons();
+}
+
+function simPause() {
+  if (simState !== 'playing') return;
+  if (simRafId) { cancelAnimationFrame(simRafId); simRafId = null; }
+  simState = 'paused';
+  setSimLocked(false);
+  simRefreshButtons();
+}
+
+function simStop() {
+  if (simRafId) { cancelAnimationFrame(simRafId); simRafId = null; }
+  simState = 'stopped';
+  simCurrentT = 0;
+  simHideMarker();
+  setSimLocked(false);
+  simRefreshButtons();
+  simUpdateUI();
+}
+
+function simTick(ts) {
+  if (simState !== 'playing') return;
+  if (simLastTs > 0) {
+    const dt = (ts - simLastTs) / 1000 * simSpeed;
+    simCurrentT = Math.min(simCurrentT + dt, simTotalT);
+  }
+  simLastTs = ts;
+  simUpdateMarker();
+  simUpdateUI();
+  if (simCurrentT >= simTotalT) {
+    /* Auto-pause en fin de trajectoire */
+    simRafId = null;
+    simState = 'paused';
+    setSimLocked(false);
+    simRefreshButtons();
+    return;
+  }
+  simRafId = requestAnimationFrame(simTick);
+}
+
+function simSetTime(t) {
+  simCurrentT = Math.max(0, Math.min(t, simTotalT));
+  simLastTs = 0; /* empêche un saut de temps sur le prochain tick */
+  simUpdateMarker();
+  simUpdateUI();
+}
+
+function updateSimPanel() {
+  const panel = document.getElementById('sim-panel');
+  if (!panel) return;
+  const hasWps = threatWaypoints.length >= 1;
+  panel.style.display = hasWps ? 'flex' : 'none';
+  if (hasWps) {
+    _simTofCache = computeThreatTOF();
+    simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
+    if (simState === 'stopped') simUpdateUI();
+  } else if (simState !== 'stopped') {
+    simStop();
+  }
+}
+
+/* Vitesse de lecture */
+document.querySelectorAll('#sim-speed-seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#sim-speed-seg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  simSpeed = parseInt(b.dataset.spd);
+}));
+
+document.getElementById('sim-play').addEventListener('click', simPlay);
+document.getElementById('sim-pause').addEventListener('click', simPause);
+document.getElementById('sim-stop').addEventListener('click', simStop);
+
+/* Barre de progression — drag scrubber */
+document.getElementById('sim-progress').addEventListener('input', function() {
+  if (!threatWaypoints.length) return;
+  if (!_simTofCache.length) { _simTofCache = computeThreatTOF(); simTotalT = _simTofCache[_simTofCache.length-1] || 0; }
+  simSetTime(+this.value / 10);
+  /* Si arrêté : afficher le marqueur sans démarrer */
+  if (simState === 'stopped' && simCurrentT > 0) simUpdateMarker();
+});
 
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
 updateDemResEstimate();
