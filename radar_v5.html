@@ -1777,7 +1777,7 @@ async function compute(){
   radars.forEach(r => { const dDeg = ((r.rmax*1000)/R_E)*180/Math.PI * 1.05; const dLon = dDeg/Math.cos(r.lat*Math.PI/180); gN = Math.max(gN, r.lat + dDeg); gS = Math.min(gS, r.lat - dDeg); gE = Math.max(gE, r.lon + dLon); gW = Math.min(gW, r.lon - dLon); });
   const bbox = {n:gN, s:gS, w:gW, e:gE};
   const centerLatRad = ((gN+gS)/2)*Math.PI/180;
-  let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*60))); zoom=Math.max(8,Math.min(13,zoom));
+  let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*30))); zoom=Math.max(8,Math.min(12,zoom));
 
   msgEl.textContent=t('msgDEM');
   let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot)); } catch(err){ busyEl.classList.remove('show'); btnGo.disabled=false; alert(t('errDEM')); return; }
