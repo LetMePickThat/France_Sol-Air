@@ -811,19 +811,28 @@
           <tr><th>Terme</th><th>Définition</th></tr>
         </thead>
         <tbody>
-          <tr><td>AGL</td><td><em>Above Ground Level</em> — altitude au-dessus du sol local.</td></tr>
-          <tr><td>AMSL</td><td><em>Above Mean Sea Level</em> — altitude au-dessus du niveau moyen de la mer.</td></tr>
-          <tr><td>Azimut</td><td>Angle horizontal mesuré dans le sens des aiguilles d'une montre depuis le Nord géographique (0–360 °).</td></tr>
-          <tr><td>C2</td><td><em>Command and Control</em> — poste de commandement et de contrôle.</td></tr>
-          <tr><td>DEM / MNT</td><td><em>Digital Elevation Model / Modèle Numérique de Terrain</em> — représentation numérique du relief.</td></tr>
-          <tr><td>DMS</td><td><em>Degrees Minutes Seconds</em> — format de coordonnées géographiques sexagésimal.</td></tr>
-          <tr><td>GBAD</td><td><em>Ground Based Air Defense</em> — défense aérienne sol-air.</td></tr>
-          <tr><td>KML</td><td><em>Keyhole Markup Language</em> — format de données géospatiales basé sur XML.</td></tr>
-          <tr><td>LOS</td><td><em>Line Of Sight</em> — ligne de visée optique / radio directe entre deux points.</td></tr>
-          <tr><td>Raycast</td><td>Technique algorithmique de lancer de rayons pour détecter les obstructions le long d'un trajet.</td></tr>
-          <tr><td>Réfraction (k)</td><td>Facteur correctif de la courbure effective du trajet radar. k = 4/3 est la valeur standard atmosphérique.</td></tr>
-          <tr><td>Site</td><td>Angle d'élévation d'un radar (dans le plan vertical). Négatif sous l'horizontale, positif au-dessus.</td></tr>
-          <tr><td>Terrarium</td><td>Format de tuile d'élévation RGB-encoded distribué par AWS. Résolution ~30 m au zoom 11.</td></tr>
+          <tr><td>AGL</td><td><em>Above Ground Level</em> — altitude au-dessus du sol local, indépendamment du niveau de la mer.</td></tr>
+          <tr><td>AMSL</td><td><em>Above Mean Sea Level</em> — altitude au-dessus du niveau moyen de la mer, indépendamment du relief sous-jacent.</td></tr>
+          <tr><td>AWS</td><td><em>Amazon Web Services</em> — fournisseur des tuiles d'altitude Terrarium utilisées par France Sol-Air pour les calculs de relief.</td></tr>
+          <tr><td>Azimut</td><td>Angle horizontal mesuré dans le sens des aiguilles d'une montre depuis le Nord géographique (0–360 °). Définit l'orientation d'un secteur de couverture radar.</td></tr>
+          <tr><td>C2</td><td><em>Command and Control</em> — poste de commandement et de contrôle chargé de coordonner les radars et lanceurs d'un réseau GBAD.</td></tr>
+          <tr><td>DD</td><td><em>Decimal Degrees</em> — format décimal des coordonnées géographiques (ex. : 48,856388° N). Alternative au format DMS.</td></tr>
+          <tr><td>DEM / MNT</td><td><em>Digital Elevation Model / Modèle Numérique de Terrain</em> — représentation numérique du relief sous forme de grille d'altitudes.</td></tr>
+          <tr><td>DMS</td><td><em>Degrees Minutes Seconds</em> — format sexagésimal des coordonnées géographiques (ex. : 48° 51′ 23,8″ N). Alternative au format DD.</td></tr>
+          <tr><td>DTED</td><td><em>Digital Terrain Elevation Data</em> — standard OTAN pour les données d'élévation. DTED0 : résolution 900 m. DTED1 : résolution 90 m. France Sol-Air utilise des données Terrarium (~30 m), de résolution supérieure.</td></tr>
+          <tr><td>GBAD</td><td><em>Ground Based Air Defense</em> — défense aérienne sol-air, regroupant radars de surveillance, systèmes de missiles et postes de commandement.</td></tr>
+          <tr><td>IADS</td><td><em>Integrated Air Defense System</em> — réseau intégré de défense aérienne. Désigne l'ensemble des capteurs, armes et postes C2 interconnectés pour assurer la défense d'un espace aérien.</td></tr>
+          <tr><td>Intervisibilité</td><td>Condition dans laquelle deux points peuvent se "voir" mutuellement sans obstacle interposé (relief, bâtiment…). En radar, elle conditionne la capacité à détecter un objectif ou à établir une liaison de communication.</td></tr>
+          <tr><td>KML</td><td><em>Keyhole Markup Language</em> — format de données géospatiales basé sur XML, compatible avec Google Earth, QGIS et la majorité des SIG.</td></tr>
+          <tr><td>LOS</td><td><em>Line Of Sight</em> — ligne de visée directe entre deux points. Une liaison radio nécessite une LOS dégagée entre les deux antennes.</td></tr>
+          <tr><td>Portée horizon</td><td>Distance maximale à laquelle un radar peut détecter une cible au ras du sol, limitée par la courbure terrestre et le modèle de réfraction atmosphérique. Un facteur k &gt; 1 augmente cette portée.</td></tr>
+          <tr><td>Raycast</td><td>Technique de calcul consistant à émettre des rayons depuis un point source et à détecter les intersections avec le terrain. Utilisée par France Sol-Air pour calculer l'empreinte de couverture radar.</td></tr>
+          <tr><td>Réfraction (k)</td><td>Facteur correctif modélisant la courbure des ondes radio dans l'atmosphère. k = 4/3 est la valeur standard ; k = 1,6 modélise une surréfraction qui augmente la portée.</td></tr>
+          <tr><td>Site</td><td>Angle d'élévation dans le plan vertical (positif vers le haut, négatif vers le bas). Définit la limite basse et haute du faisceau radar.</td></tr>
+          <tr><td>SPM</td><td>Namespace propriétaire (<code>spm:</code>) utilisé dans les fichiers KML exportés par France Sol-Air pour stocker les paramètres spécifiques de chaque unité (portée, secteur, réfraction…).</td></tr>
+          <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — mission spatiale NASA (2000) ayant produit un MNT mondial à résolution ~30 m. Source des données d'élévation utilisées par AWS Terrarium.</td></tr>
+          <tr><td>Surréfraction</td><td>Phénomène atmosphérique (inversion de température, forte humidité) courbant les ondes radio au-delà de la normale, augmentant la portée horizon. Modélisé par k = 1,6 dans France Sol-Air.</td></tr>
+          <tr><td>Terrarium</td><td>Format de tuile d'élévation distribué par AWS, encodant l'altitude dans les canaux RGB d'une image PNG. Résolution ~30 m (SRTM). Utilisé pour tous les calculs d'élévation de France Sol-Air.</td></tr>
         </tbody>
       </table>
     </section>
