@@ -555,6 +555,45 @@
     background: color-mix(in srgb, var(--panel2) 85%, transparent);
     padding: 2px 4px;
   }
+
+  /* =========================================================================
+     MODE COMPACT — écrans à faible hauteur (≤ 820 px)
+     ========================================================================= */
+  @media (max-height: 820px) {
+    /* Masque le bloc Marianne et le sous-titre, réduit le padding de l'en-tête */
+    #panel header .marianne-bloc { display: none; }
+    #panel header p { display: none; }
+    #panel header { padding: 8px 20px 6px; gap: 0; }
+    #panel header .seg { margin-top: 6px; }
+
+    /* Onglets de navigation plus compacts */
+    .tab-btn { padding: 6px 4px 4px; }
+
+    /* Sélecteur Radars/Lanceurs/C2 */
+    #entity-seg-wrap { padding: 6px 14px; }
+
+    /* Inputs plus petits */
+    input[type=number],
+    input[type=text],
+    select { height: 32px; font-size: 13px; padding: 0 8px; }
+
+    /* Espacement des lignes de formulaire */
+    .row { margin-bottom: 8px; gap: 4px; }
+    .row.row-inline { margin-bottom: 6px; }
+
+    /* Footer Calculer + bascules */
+    #panel-footer { padding: 8px 18px; gap: 6px; }
+    #panel-footer .footer-toggles { margin-top: 2px; }
+
+    /* Pied de panneau entité */
+    .entity-pane-footer { padding: 6px 14px 8px; gap: 4px; }
+
+    /* Zone de liste entités */
+    .entity-list-scroll { padding: 8px 14px 4px; }
+
+    /* Sections des onglets Carte / Cible&Atmo */
+    .tab-section { padding: 8px 18px; }
+  }
 </style>
 </head>
 <body>
