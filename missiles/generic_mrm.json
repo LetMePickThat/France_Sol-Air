@@ -1,0 +1,30 @@
+{
+  "id": "generic_mrm",
+  "label": { "fr": "MSAM Générique (Portée Moyenne)", "en": "Generic MSAM (Medium Range)" },
+  "kinematics": {
+    "launchDelay_s": 3.5,
+    "boostEnd_s": 3.0,
+    "velocityProfile": [
+      { "t_s":  0.0, "v_ms":   0 },
+      { "t_s":  0.3, "v_ms": 180 },
+      { "t_s":  1.0, "v_ms": 580 },
+      { "t_s":  3.0, "v_ms": 800 },
+      { "t_s":  7.0, "v_ms": 650 },
+      { "t_s": 13.0, "v_ms": 490 },
+      { "t_s": 20.0, "v_ms": 340 }
+    ],
+    "maxFlightTime_s": 20.0,
+    "altCorrection": "ISA"
+  },
+  "envelope": {
+    "slantRangeMin_m": 500,
+    "slantRangeMax_m": 10000,
+    "altMin_m": 20,
+    "altMax_m": 6000,
+    "targetSpeedMax_ms": 500,
+    "maxLateralAccel_g": 15
+  },
+  "warhead": {
+    "lethalRadius_m": 10
+  }
+}
