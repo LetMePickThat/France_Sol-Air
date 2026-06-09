@@ -3024,9 +3024,9 @@ function renderThreatUI() {
       <div class="radar-item-header">
         <button class="radar-item-toggle" onclick="selectThreatWp(${wp.id})" aria-expanded="${isAct || !!wp.pinned}">
           WP ${n}${isAct ? ` <span class="active-badge">${t('pActive')}</span>` : ''}
-          <span style="font-size:10px;color:var(--txt-dim);font-weight:400;margin-left:4px">T+${fmtTime(tofTimes[idx])}</span>
         </button>
         <div class="radar-item-header-actions">
+          <span style="font-size:10px;color:var(--txt-dim);white-space:nowrap;padding-right:2px">T+${fmtTime(tofTimes[idx])}</span>
           <button class="btn-pin" onclick="toggleThreatWpPin(${wp.id},event)" title="${t('pinTitle')}">📌</button>
           <button class="btn-del" onclick="event.stopPropagation();removeThreatWp(${wp.id})" title="${t('pDelete')}">✖</button>
         </div>
