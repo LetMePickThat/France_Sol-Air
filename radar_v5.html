@@ -730,6 +730,15 @@
             <span style="font-size:12px; color:var(--txt-dim)">km</span>
           </div>
         </div>
+        <div class="tab-section">
+          <h3 data-i18n="calcSection">Calcul</h3>
+          <div class="seg" id="dem-quality-seg">
+            <button class="on" data-q="11" data-i18n="calcFast">Rapide</button>
+            <button data-q="12" data-i18n="calcHD">Haute Précision</button>
+          </div>
+          <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
+        </div>
+
         <div class="tab-section" style="border-bottom:0">
           <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
           <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
@@ -882,6 +891,9 @@ const SPOT_WORLD_PX = 256 * (1 << SPOT_ZOOM);   // 524288
 
 /* Facteur de réfraction courant — synchronisé avec le <select> #kfac */
 let _kfac = 4 / 3;
+
+/* Plafond de zoom DEM — synchronisé avec le toggle #dem-quality-seg */
+let demZoomCap = 11;
 
 let baseMap = 'carto';
 let refMode = 'agl';
@@ -1777,7 +1789,7 @@ async function compute(){
   radars.forEach(r => { const dDeg = ((r.rmax*1000)/R_E)*180/Math.PI * 1.05; const dLon = dDeg/Math.cos(r.lat*Math.PI/180); gN = Math.max(gN, r.lat + dDeg); gS = Math.min(gS, r.lat - dDeg); gE = Math.max(gE, r.lon + dLon); gW = Math.min(gW, r.lon - dLon); });
   const bbox = {n:gN, s:gS, w:gW, e:gE};
   const centerLatRad = ((gN+gS)/2)*Math.PI/180;
-  let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*30))); zoom=Math.max(8,Math.min(12,zoom));
+  let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*30))); zoom=Math.max(8,Math.min(demZoomCap,zoom));
 
   msgEl.textContent=t('msgDEM');
   let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot)); } catch(err){ busyEl.classList.remove('show'); btnGo.disabled=false; alert(t('errDEM')); return; }
@@ -2506,6 +2518,8 @@ const I18N = {
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
+    calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
+    demResEstimate:(r,z)=>`Résolution estimée : ~${r} m (zoom ${z})`,
     tabUnits:'Unités', tabSensor:'Cible & Atmo', tabMap:'Carte', tabTools:'Outils',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
   },
@@ -2560,6 +2574,8 @@ const I18N = {
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
+    calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
+    demResEstimate:(r,z)=>`Estimated resolution: ~${r} m (zoom ${z})`,
     tabUnits:'Units', tabSensor:'Target & Atmo', tabMap:'Map', tabTools:'Tools',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
   }
@@ -2767,7 +2783,31 @@ document.getElementById('kfac').addEventListener('change', e => {
 document.getElementById('btn-export-kml').addEventListener('click', exportKML);
 document.getElementById('kml-file-input').addEventListener('change', function() { importKMLFile(this); });
 
+/* Toggle qualité DEM — Rapide (z≤11) / Haute Précision (z≤12) */
+function updateDemResEstimate() {
+  const all = [...radars, ...launchers, ...c2nodes];
+  const lat = all.length
+    ? all.reduce((s, e) => s + e.lat, 0) / all.length
+    : map.getCenter().lat;
+  const cosLat = Math.cos(lat * Math.PI / 180);
+  const autoZoom = Math.round(Math.log2(R_MERC * 2 * Math.PI * cosLat / (256 * 30)));
+  const z = Math.max(8, Math.min(demZoomCap, autoZoom));
+  const res = Math.round((2 * Math.PI * R_MERC * cosLat) / (256 * Math.pow(2, z)));
+  document.getElementById('dem-res-estimate').textContent = t('demResEstimate', res, z);
+}
+
+document.querySelectorAll('#dem-quality-seg button').forEach(b =>
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#dem-quality-seg button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    demZoomCap = parseInt(b.dataset.q);
+    updateDemResEstimate();
+    markCoverageStale();
+  })
+);
+
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
+updateDemResEstimate();
 document.getElementById('go').addEventListener('click',compute);
 </script>
 </body>
