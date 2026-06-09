@@ -356,14 +356,16 @@
     <!-- ============================================================ INTRODUCTION -->
     <section class="help-section" id="intro">
       <h2>Introduction</h2>
-      <p><strong>France Sol-Air</strong> est un outil de planification de déploiement GBAD (<em>Ground Based Air Defense</em>) et d'analyse de couverture radar. Il permet de :</p>
+      <p><strong>France Sol-Air</strong> est un outil de planification de déploiement pensé pour la défense sol-air courte, moyenne et longue portée. Il a été conçu pour travailler des déploiements de systèmes seuls ou en réseau dans le cadre d'un <strong>IADS</strong>.</p>
+      <p>Il permet de :</p>
       <ul>
         <li>Positionner des <strong>radars</strong>, des <strong>lanceurs</strong> et des <strong>nœuds C2</strong> sur une carte interactive.</li>
-        <li>Calculer l'<strong>intervisibilité radar</strong> en tenant compte du relief réel du terrain (MNT AWS Terrarium, résolution ~30 m).</li>
-        <li>Visualiser la couverture pour plusieurs altitudes cibles simultanément.</li>
         <li>Rechercher les <strong>sommets locaux</strong> d'une zone pour identifier les emplacements d'implantation favorables.</li>
-        <li>Importer et exporter des scénarios complets au format <strong>KML</strong>.</li>
+        <li>Visualiser la <strong>couverture radar</strong> d'un déploiement pour plusieurs altitudes cibles simultanément.</li>
+        <li>Calculer l'<strong>intervisibilité radio</strong> entre les différents constituants de l'IADS en tenant compte du relief réel du terrain.</li>
+        <li>Importer et exporter des déploiements complets au format <strong>KML</strong>.</li>
       </ul>
+      <p>L'outil base ses calculs sur les données d'élévation fournies par le MNT AWS Terrarium. La résolution obtenue, de l'ordre de 30 m, est supérieure à celle nativement permise par des données de type DTED0 (900 m) ou DTED1 (90 m).</p>
       <div class="callout">
         <strong>Prérequis</strong>
         L'application est entièrement côté client (navigateur). Une connexion Internet est nécessaire pour charger les fonds de carte et les tuiles d'altitude AWS.
