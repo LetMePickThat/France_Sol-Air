@@ -414,6 +414,8 @@
   .radar-params input,
   .radar-params select { height: 32px; font-size: 12px; padding: 0 8px; }
 
+  .unit-tag { font-size:11px; color:var(--txt-dim); flex-shrink:0; padding-left:3px; }
+
   /* Badge altitude */
   .elev-badge {
     display: block; margin-top: 6px;
@@ -737,7 +739,7 @@
             <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
             <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
             <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
-            <span style="font-size:12px; color:var(--txt-dim)">km</span>
+            <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
           </div>
         </div>
         <div class="tab-section">
@@ -747,6 +749,33 @@
             <button data-q="12" data-i18n="calcHD">Haute Précision</button>
           </div>
           <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
+        </div>
+
+        <div class="tab-section">
+          <h3 data-i18n="unitSection">Unités d'affichage</h3>
+          <div class="row row-inline" style="margin-bottom:8px">
+            <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
+            <div class="seg" id="unit-alt-seg">
+              <button class="on" data-u="m">m</button>
+              <button data-u="ft">ft</button>
+            </div>
+          </div>
+          <div class="row row-inline" style="margin-bottom:8px">
+            <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
+            <div class="seg" id="unit-dist-seg">
+              <button data-u="m">m</button>
+              <button class="on" data-u="km">km</button>
+              <button data-u="nm">nm</button>
+            </div>
+          </div>
+          <div class="row row-inline">
+            <label data-i18n="unitTimeLabel" style="font-size:12px;font-weight:600;width:70px">Temps</label>
+            <div class="seg" id="unit-time-seg">
+              <button data-u="sec">s</button>
+              <button class="on" data-u="min">min</button>
+              <button data-u="hms">h m s</button>
+            </div>
+          </div>
         </div>
 
         <div class="tab-section" style="border-bottom:0">
@@ -892,6 +921,35 @@ document.querySelectorAll('#entity-type-seg button').forEach(b =>
 /* Verrou posé pendant renderAll() pour n'appeler updateEntityLines qu'une fois
    après les 3 renders, au lieu de 3 fois en cascade */
 let _batchingRenders = false;
+
+/* =========================================================================
+   SYSTÈME D'UNITÉS — unités d'affichage + fonctions de conversion
+   Stockage interne : altitudes en mètres, distances en km, temps en secondes.
+   ========================================================================= */
+let unitAlt  = 'm';   // 'm' | 'ft'
+let unitDist = 'km';  // 'm' | 'km' | 'nm'
+let unitTime = 'min'; // 'sec' | 'min' | 'hms'
+
+function altV(m)     { return unitAlt === 'ft' ? m / 0.3048 : m; }
+function altU()      { return unitAlt; }
+function altStep()   { return unitAlt === 'ft' ? 10 : 1; }
+function altFromU(v) { return unitAlt === 'ft' ? v * 0.3048 : v; }
+function altFmt(m)   { const v = altV(m); return unitAlt === 'ft' ? v.toFixed(0) : v.toFixed(1); }
+
+function distV(km)   { return unitDist === 'nm' ? km / 1.852 : unitDist === 'm' ? km * 1000 : km; }
+function distU()     { return unitDist; }
+function distStep()  { return unitDist === 'm' ? 100 : 1; }
+function distFmt(km) { const v = distV(km); return unitDist === 'm' ? v.toFixed(0) : v.toFixed(2); }
+function distFromU(v){ return unitDist === 'nm' ? v * 1.852 : unitDist === 'm' ? v / 1000 : v; }
+
+function fmtTime(sec) {
+  if (!isFinite(sec) || sec < 0) return '—';
+  if (unitTime === 'sec') return `${Math.round(sec)} s`;
+  if (unitTime === 'min') return `${(sec / 60).toFixed(1)} min`;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.round(sec % 60);
+  return h > 0 ? `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
+       : m > 0 ? `${m}m ${String(s).padStart(2,'0')}s` : `${s}s`;
+}
 
 /**
  * Reconstruit les 3 listes d'entités (radars, lanceurs, C2) puis appelle
@@ -1061,13 +1119,12 @@ function drawRings() {
   if (ringsLayer) map.removeLayer(ringsLayer); if (!document.getElementById('show-rings').checked) return;
   ringsLayer = L.featureGroup().addTo(map); 
   
-  // Correction 1 : Bloquer la valeur minimale saisie à 1km pour éviter les blocages de boucle
   let stepInput = parseFloat(document.getElementById('ring-step').value);
-  if (isNaN(stepInput) || stepInput < 1) {
-    stepInput = 1;
-    document.getElementById('ring-step').value = 1;
+  if (isNaN(stepInput) || stepInput <= 0) {
+    stepInput = distV(1);
+    document.getElementById('ring-step').value = stepInput;
   }
-  const step = stepInput * 1000;
+  const step = Math.max(100, distFromU(stepInput) * 1000);
   const allMode = document.getElementById('rings-all').checked;
   const targets = allMode ? radars : radars.filter(x => x.id === activeRadarId);
   
@@ -1162,23 +1219,19 @@ async function fetchSpotElevation(lat, lon) {
 
 function formatAltBadge(r) {
   if (r.terrAlt === null || isNaN(r.terrAlt)) return t('altUnknown');
-  const z = Math.round(r.terrAlt);
-  const ant = parseFloat(r.hant) || 0;
-  const mat = parseFloat(r.hmat) || 0;
+  const z = altFmt(r.terrAlt), ant = altFmt(parseFloat(r.hant)||0), mat = altFmt(parseFloat(r.hmat)||0);
   if (refMode === 'agl')
     return t('badgeRadarAGL', z, ant, mat);
   else
-    return t('badgeRadarAMSL', z+ant, z+mat, z);
+    return t('badgeRadarAMSL', altFmt(r.terrAlt+(parseFloat(r.hant)||0)), altFmt(r.terrAlt+(parseFloat(r.hmat)||0)), z);
 }
 function formatLauncherBadge(l) {
   if (l.terrAlt === null || isNaN(l.terrAlt)) return t('altUnknown');
-  const z = Math.round(l.terrAlt), mat = parseFloat(l.hant) || 0;
-  return t('badgeLauncher', z, mat);
+  return t('badgeLauncher', altFmt(l.terrAlt), altFmt(parseFloat(l.hant)||0));
 }
 function formatC2Badge(c) {
   if (c.terrAlt === null || isNaN(c.terrAlt)) return t('altUnknown');
-  const z = Math.round(c.terrAlt), ant = parseFloat(c.hant) || 0;
-  return t('badgeC2', z, ant);
+  return t('badgeC2', altFmt(c.terrAlt), altFmt(parseFloat(c.hant)||0));
 }
 
 function togglePin(type, id, event) {
@@ -1287,14 +1340,14 @@ function renderRadarsUI() {
       <div class="radar-item-body">
         <div class="radar-params"><label>${t('pName')}</label><div class="multi-input"><input type="text" value="${escapeHtml(r.name)}" onchange="updateRadar(${r.id}, 'name', this.value)"></div></div>
         <div class="radar-params"><label>${t('pPos')}</label><div class="multi-input"><input type="text" value="${escapeHtml(formatCoord(r.lat, true))}" onchange="updateRadar(${r.id}, 'lat', this.value)"><input type="text" value="${escapeHtml(formatCoord(r.lon, false))}" onchange="updateRadar(${r.id}, 'lon', this.value)"></div></div>
-        <div class="radar-params"><label>${t('pHeight')}</label><div class="multi-input"><input type="number" step="0.5" value="${r.hant}" onchange="updateRadar(${r.id}, 'hant', this.value)"></div></div>
-        <div class="radar-params"><label>${t('pRange')}</label><div class="multi-input"><input type="number" step="1" value="${r.rmax}" onchange="updateRadar(${r.id}, 'rmax', this.value)"></div></div>
+        <div class="radar-params"><label>${t('pHeight')}</label><div class="multi-input"><input type="number" step="${altStep()}" value="${+altV(r.hant).toFixed(1)}" onchange="updateRadar(${r.id}, 'hant', this.value)" style="flex:1"><span class="unit-tag">${altU()}</span></div></div>
+        <div class="radar-params"><label>${t('pRange')}</label><div class="multi-input"><input type="number" step="${distStep()}" value="${+distV(r.rmax).toFixed(2)}" onchange="updateRadar(${r.id}, 'rmax', this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('pSites')}</label><div class="multi-input"><input type="number" step="0.5" value="${r.elmin}" onchange="updateRadar(${r.id}, 'elmin', this.value)"><input type="number" step="0.5" value="${r.elmax}" onchange="updateRadar(${r.id}, 'elmax', this.value)"></div></div>
         <div class="radar-params"><label>${t('pAzimuth')}</label><div class="multi-input"><input type="number" step="1" value="${r.azmin}" onchange="updateRadar(${r.id}, 'azmin', this.value)"><input type="number" step="1" value="${r.azmax}" onchange="updateRadar(${r.id}, 'azmax', this.value)"></div></div>
         <div class="radar-params"><label>${t('rC2Parent')}</label><div class="multi-input"><select onchange="updateRadar(${r.id},'parentC2Id',this.value)" style="flex:1"><option value="" ${!r.parentC2Id?'selected':''}>${t('rC2None')}</option>${c2nodes.map(c=>`<option value="${c.id}" ${r.parentC2Id===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div></div>
-        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="1" min="0" value="${r.maxDistC2||0}" onchange="updateRadar(${r.id},'maxDistC2',this.value)" style="flex:1"><span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">km</span></div></div>
+        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(r.maxDistC2||0).toFixed(2)}" onchange="updateRadar(${r.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateRadar(${r.id},'linkType','fiber')" class="${(r.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateRadar(${r.id},'linkType','radio')" class="${r.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
-        <div class="radar-params"><label>${t('radarHMat')}</label><div class="multi-input"><input type="number" step="0.5" min="0" value="${r.hmat||0}" onchange="updateRadar(${r.id},'hmat',this.value)" style="flex:1"><span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">m</span></div></div>
+        <div class="radar-params"><label>${t('radarHMat')}</label><div class="multi-input"><input type="number" step="${altStep()}" min="0" value="${+altV(r.hmat||0).toFixed(1)}" onchange="updateRadar(${r.id},'hmat',this.value)" style="flex:1"><span class="unit-tag">${altU()}</span></div></div>
         <div class="elev-badge" data-rid="${r.id}">${r.terrAlt !== null ? formatAltBadge(r) : '…'}</div>
       </div>`;
     container.appendChild(div);
@@ -1330,9 +1383,11 @@ function updateRadar(id, field, val) {
   if (_renderingUI) return; const r = radars.find(x => x.id === id); if(!r) return;
   if(field === 'name') { r.name = val; if(r.marker) r.marker.setTooltipContent(r.name); }
   else if(field === 'parentC2Id') { r.parentC2Id = val ? parseInt(val) : null; }
-  else if(field === 'maxDistC2') { r.maxDistC2 = parseFloat(val)||0; }
-  else if(field === 'linkType') { r.linkType = val; } 
-  else if(['hant','hmat','rmax','elmin','elmax','azmin','azmax'].includes(field)) { r[field] = parseFloat(val); markCoverageStale(); }
+  else if(field === 'maxDistC2') { r.maxDistC2 = distFromU(parseFloat(val)||0); }
+  else if(field === 'linkType') { r.linkType = val; }
+  else if(field === 'rmax') { r.rmax = distFromU(parseFloat(val)||0); markCoverageStale(); }
+  else if(['hant','hmat'].includes(field)) { r[field] = altFromU(parseFloat(val)||0); markCoverageStale(); }
+  else if(['elmin','elmax','azmin','azmax'].includes(field)) { r[field] = parseFloat(val); markCoverageStale(); }
   else { const deg = parseCoord(val); if(!isNaN(deg)) { r[field] = deg; r.terrAlt = null; markCoverageStale(); } }
   renderRadarsUI();
 }
@@ -1387,11 +1442,11 @@ function renderLaunchersUI() {
           <input type="text" value="${escapeHtml(formatCoord(l.lon, false))}" onchange="updateLauncher(${l.id}, 'lon', this.value)">
         </div></div>
         <div class="radar-params"><label>${t('rC2Parent')}</label><div class="multi-input"><select onchange="updateLauncher(${l.id},'parentC2Id',this.value)" style="flex:1"><option value="" ${!l.parentC2Id?'selected':''}>${t('rC2None')}</option>${c2nodes.map(c=>`<option value="${c.id}" ${l.parentC2Id===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div></div>
-        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="1" min="0" value="${l.maxDistC2||0}" onchange="updateLauncher(${l.id},'maxDistC2',this.value)" style="flex:1"><span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">km</span></div></div>
+        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(l.maxDistC2||0).toFixed(2)}" onchange="updateLauncher(${l.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateLauncher(${l.id},'linkType','fiber')" class="${(l.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateLauncher(${l.id},'linkType','radio')" class="${l.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
         <div class="radar-params"><label>${t('launcherHAnt')}</label><div class="multi-input">
-          <input type="number" step="0.5" min="0" value="${l.hant||0}" onchange="updateLauncher(${l.id},'hant',this.value)" style="flex:1">
-          <span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">m</span>
+          <input type="number" step="${altStep()}" min="0" value="${+altV(l.hant||0).toFixed(1)}" onchange="updateLauncher(${l.id},'hant',this.value)" style="flex:1">
+          <span class="unit-tag">${altU()}</span>
         </div></div>
         <div class="elev-badge" data-lid="${l.id}">${l.terrAlt !== null ? formatLauncherBadge(l) : '…'}</div>
       </div>`;
@@ -1433,9 +1488,9 @@ function updateLauncher(id, field, val) {
   /* markCoverageStale() intentionally omitted: launchers don't enter the radar FOV computation. */
   if (field === 'name') { l.name = val; if (l.marker) l.marker.setTooltipContent(val); }
   else if (field === 'parentC2Id') { l.parentC2Id = val ? parseInt(val) : null; }
-  else if (field === 'maxDistC2') { l.maxDistC2 = parseFloat(val)||0; }
+  else if (field === 'maxDistC2') { l.maxDistC2 = distFromU(parseFloat(val)||0); }
   else if (field === 'linkType') { l.linkType = val; }
-  else if (field === 'hant') { l.hant = parseFloat(val)||0; }
+  else if (field === 'hant') { l.hant = altFromU(parseFloat(val)||0); }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { l[field] = deg; l.terrAlt = null; } }
   renderLaunchersUI();
 }
@@ -1634,11 +1689,11 @@ function renderC2UI() {
           <input type="text" value="${escapeHtml(formatCoord(c.lon, false))}" onchange="updateC2(${c.id}, 'lon', this.value)">
         </div></div>
         <div class="radar-params"><label>${t('c2HAnt')}</label><div class="multi-input">
-          <input type="number" step="0.5" min="0" value="${c.hant||0}" onchange="updateC2(${c.id},'hant',this.value)" style="flex:1">
-          <span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">m</span>
+          <input type="number" step="${altStep()}" min="0" value="${+altV(c.hant||0).toFixed(1)}" onchange="updateC2(${c.id},'hant',this.value)" style="flex:1">
+          <span class="unit-tag">${altU()}</span>
         </div></div>
         <div class="radar-params"><label>${t('rC2Parent')}</label><div class="multi-input"><select onchange="updateC2(${c.id},'parentC2Id',this.value)" style="flex:1"><option value="" ${!c.parentC2Id?'selected':''}>${t('rC2None')}</option>${c2nodes.filter(x=>x.id!==c.id).map(x=>`<option value="${x.id}" ${c.parentC2Id===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('')}</select></div></div>
-        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="1" min="0" value="${c.maxDistC2||0}" onchange="updateC2(${c.id},'maxDistC2',this.value)" style="flex:1"></div></div>
+        <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(c.maxDistC2||0).toFixed(2)}" onchange="updateC2(${c.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateC2(${c.id},'linkType','fiber')" class="${(c.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateC2(${c.id},'linkType','radio')" class="${c.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
         <div class="elev-badge" data-c2id="${c.id}">${c.terrAlt !== null ? formatC2Badge(c) : '…'}</div>
       </div>`;
@@ -1687,7 +1742,7 @@ function updateC2(id, field, val) {
   if (_renderingC2UI) return;
   const c = c2nodes.find(x => x.id === id); if (!c) return;
   if (field === 'name') { c.name = val; if (c.marker) c.marker.setTooltipContent(val); renderAll(true); return; }
-  else if (field === 'hant')       { c.hant = parseFloat(val)||0; }
+  else if (field === 'hant')       { c.hant = altFromU(parseFloat(val)||0); }
   else if (field === 'parentC2Id') {
     const newParent = val ? parseInt(val) : null;
     if (newParent !== null && hasC2Cycle(id, newParent)) { renderC2UI(); return; }
@@ -1695,7 +1750,7 @@ function updateC2(id, field, val) {
     updateEntityLines();
     return;
   }
-  else if (field === 'maxDistC2')  { c.maxDistC2 = parseFloat(val)||0; updateEntityLines(); return; }
+  else if (field === 'maxDistC2')  { c.maxDistC2 = distFromU(parseFloat(val)||0); updateEntityLines(); return; }
   else if (field === 'linkType')   { c.linkType = val; }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { c[field] = deg; c.terrAlt = null; } }
   renderC2UI();
@@ -1717,9 +1772,9 @@ map.on('mousemove', e => {
   _rafId = requestAnimationFrame(() => {
     tooltip.style.display = 'block'; tooltip.style.left = (e.containerPoint.x + 15) + 'px'; tooltip.style.top = (e.containerPoint.y + 15) + 'px';
     const {lat, lng} = e.latlng; const coordStr = formatCoordsCombined(lat, lng);
-    if (globalDemSampler) { const alt = globalDemSampler(lng, lat); if (!isNaN(alt)) { tooltip.innerHTML = `<b>${coordStr}</b><br><span style="color:#7dd3fc">${Math.round(alt)} m AMSL</span>`; return; } }
+    if (globalDemSampler) { const alt = globalDemSampler(lng, lat); if (!isNaN(alt)) { tooltip.innerHTML = `<b>${coordStr}</b><br><span style="color:#7dd3fc">${altFmt(alt)} ${altU()} AMSL</span>`; return; } }
     const reqId = ++_elevReqId; tooltip.innerHTML = `<b>${coordStr}</b><br><span style="color:var(--txt-dim)">…</span>`;
-    fetchSpotElevation(lat, lng).then(alt => { if (reqId !== _elevReqId) return; tooltip.innerHTML = `<b>${formatCoordsCombined(lat, lng)}</b><br><span style="color:#7dd3fc">${isNaN(alt) ? t('noData') : Math.round(alt) + ' m AMSL'}</span>`; });
+    fetchSpotElevation(lat, lng).then(alt => { if (reqId !== _elevReqId) return; tooltip.innerHTML = `<b>${formatCoordsCombined(lat, lng)}</b><br><span style="color:#7dd3fc">${isNaN(alt) ? t('noData') : altFmt(alt) + ' ' + altU() + ' AMSL'}</span>`; });
   });
 });
 map.on('mouseout', () => { tooltip.style.display = 'none'; });
@@ -1738,14 +1793,14 @@ function renderAltList() {
     row.style.flexDirection = 'row'; row.style.alignItems = 'center'; row.style.gap = '8px'; row.style.marginBottom = '8px';
     row.innerHTML = `
       <input type="color" value="${entry.color}" style="padding:0;width:28px;height:28px;border:1px solid var(--txt);cursor:pointer;flex-shrink:0" oninput="altEntries[${i}].color=this.value">
-      <input type="number" value="${isEmpty ? '' : entry.value}" min="0" placeholder="${t('altPlaceholder')}" style="flex:1; height:32px;" oninput="onAltInput(${i}, this.value)" onblur="onAltBlur(${i})">
-      <span style="font-size:12px;color:var(--txt-dim);flex-shrink:0">m</span>
+      <input type="number" step="${altStep()}" value="${isEmpty ? '' : altFmt(entry.value)}" min="0" placeholder="${t('altPlaceholder')}" style="flex:1; height:32px;" oninput="onAltInput(${i}, this.value)" onblur="onAltBlur(${i})">
+      <span style="font-size:12px;color:var(--txt-dim);flex-shrink:0">${altU()}</span>
       ${!isEmpty ? `<button onclick="removeAlt(${i})" style="background:transparent;border:0;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0" title="${t('pDelete')}">✖</button>` : '<span style="width:18px"></span>'}` ;
     ct.appendChild(row);
   });
 }
 function onAltInput(i, val) {
-  altEntries[i].value = val === '' ? '' : val;
+  altEntries[i].value = val === '' ? '' : altFromU(parseFloat(val));
   markCoverageStale();
 }
 function onAltBlur(i) {
@@ -1911,7 +1966,7 @@ async function compute(){
     resultsEl.style.display = 'block';
     resultsEl.innerHTML =
       `<b>${t('resNetwork')} :</b> ${t('resNetworkVal', radars.length)}<br>` +
-      `<b>${t('resDEM')} :</b> ${t('resDEMVal', groundRes.toFixed(0), zoom)}<br>` +
+      `<b>${t('resDEM')} :</b> ${t('resDEMVal', altFmt(groundRes), altU(), zoom)}<br>` +
       `<b>${t('resCov')} :</b> ${t('resCovVal', km2.toFixed(0))}`;
     coverageExists = true;
     coverageStale  = false;
@@ -2549,9 +2604,9 @@ const I18N = {
     marksDist:'Marques dist.', allRadars:'Tous',
     radarNetwork:'Maillage de radars tactiques', addRadar:'+ Ajouter un radar',
     clickHint:'Glisser-déposer pour repositionner. Clic carte = désélection.',
-    pName:'Nom', pPos:'Position', pHeight:'Hauteur radar (m)', pRange:'Portée maximale (km)',
+    pName:'Nom', pPos:'Position', pHeight:'Hauteur radar', pRange:'Portée maximale',
     pSites:'Sites min/max (°)', pAzimuth:'Azimut (°)', pActive:'Actif', pDelete:'✖', altUnknown:'Alt. inconnue',
-    radarHMat:'H. mat comm. (m)',
+    radarHMat:'H. mat comm.',
     targetAtmo:'Cible & atmosphère', altRef:'Référence d\'altitude', altAGL:'Sol (AGL)', altAMSL:'Mer (AMSL)',
     altTargets:'Altitudes cibles', refraction:'Facteur de réfraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — géométrique', kDry:'1.15 — air sec', kSuper:'1.6 — surréfraction',
@@ -2569,21 +2624,21 @@ const I18N = {
     msgRender:'Rendu de l\'empreinte sur la carte…',
     errNoRadar:'Ajoutez au moins un radar.', errNoAlt:'Renseignez au moins une altitude cible.', errDEM:'Échec du chargement des tuiles de relief.',
     resNetwork:'Réseau', resNetworkVal:(n)=>`${n} radar(s) calculé(s)`, resDEM:'Résolution DEM',
-    resDEMVal:(r,z)=>`~${r} m (zoom ${z})`, resCov:'Couverture Totale', resCovVal:(k)=>`~${k} km²`,
+    resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Couverture Totale', resCovVal:(k)=>`~${k} km²`,
     badgeTerrain:(z,h)=>`Terrain: ${z}m AMSL (Antenne: ${h}m AGL)`, badgeAntenna:(a,z)=>`Antenne: ${a}m AMSL (Sol: ${z}m)`,
     noData:'Hors données',
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
-    launcherHAnt:'H. mat comm. (m)',
+    launcherHAnt:'H. mat comm.',
     c2Network:'Nœuds C2', addC2:'+ Ajouter un nœud C2', c2Hint:'Glisser-déposer pour repositionner. Clic carte = désélection.', c2DefaultName:'C2',
-    c2HAnt:'H. antenne (m)',
-    rC2Parent:'C2 parent', rC2None:'Aucun', rC2MaxDist:'Dist. max C2 (km)', rLinkType:'Liaison', linkFiber:'Fibre', linkRadio:'Radio',
+    c2HAnt:'H. antenne',
+    rC2Parent:'C2 parent', rC2None:'Aucun', rC2MaxDist:'Dist. max C2', rLinkType:'Liaison', linkFiber:'Fibre', linkRadio:'Radio',
     pinTitle:'Épingler ouvert',
     altPlaceholder:'Altitude…',
     latLabel:'Lat', lonLabel:'Lon',
-    badgeRadarAGL:(z,a,m)=>`Terrain: ${z}m AMSL · Ant: ${a}m · Mat: ${m}m AGL`,
-    badgeRadarAMSL:(a,m,z)=>`Ant: ${a}m · Mat: ${m}m AMSL (Sol: ${z}m)`,
-    badgeLauncher:(z,m)=>`Terrain: ${z}m AMSL · Mat: ${m}m AGL`,
-    badgeC2:(z,a)=>`Terrain: ${z}m AMSL · Ant: ${a}m AGL`,
+    badgeRadarAGL:(z,a,m)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} · Mat: ${m}${altU()} AGL`,
+    badgeRadarAMSL:(a,m,z)=>`Ant: ${a}${altU()} · Mat: ${m}${altU()} AMSL (Sol: ${z}${altU()})`,
+    badgeLauncher:(z,m)=>`Terrain: ${z}${altU()} AMSL · Mat: ${m}${altU()} AGL`,
+    badgeC2:(z,a)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} AGL`,
     kmlSection:'Import / Export KML',
     kmlExport:'⬇ Exporter KML',
     kmlExportHint:'Génère un fichier KML avec toutes les unités, liaisons et paramètres capteurs.',
@@ -2594,7 +2649,8 @@ const I18N = {
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
-    demResEstimate:(r,z)=>`Résolution estimée : ~${r} m (zoom ${z})`,
+    demResEstimate:(r,u,z)=>`Résolution estimée : ~${r} ${u} (zoom ${z})`,
+    unitSection:'Unités d\'affichage', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
     tabUnits:'Unités', tabSensor:'Alt. & Atmo', tabMap:'Carte', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
     engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Annuler',
@@ -2609,9 +2665,9 @@ const I18N = {
     marksDist:'Range marks', allRadars:'All',
     radarNetwork:'Tactical radar network', addRadar:'+ Add radar',
     clickHint:'Drag and drop the unit to reposition. Click the map to deselect.',
-    pName:'Name', pPos:'Position', pHeight:'Radar height (m)', pRange:'Max range (km)',
+    pName:'Name', pPos:'Position', pHeight:'Radar height', pRange:'Max range',
     pSites:'Elevation min/max (°)', pAzimuth:'Azimuth (°)', pActive:'Active', pDelete:'✖', altUnknown:'Unknown alt.',
-    radarHMat:'Comm mast ht (m)',
+    radarHMat:'Comm mast ht',
     targetAtmo:'Target & atmosphere', altRef:'Alt. reference', altAGL:'Ground (AGL)', altAMSL:'Sea level (AMSL)',
     altTargets:'Target altitudes', refraction:'Refraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — geometric', kDry:'1.15 — dry air', kSuper:'1.6 — super-refraction',
@@ -2629,21 +2685,21 @@ const I18N = {
     msgRender:'Rendering coverage on map…',
     errNoRadar:'Please add at least one radar.', errNoAlt:'Please enter at least one target altitude.', errDEM:'Failed to load terrain tiles.',
     resNetwork:'Network', resNetworkVal:(n)=>`${n} radar(s) computed`, resDEM:'DEM resolution',
-    resDEMVal:(r,z)=>`~${r} m (zoom ${z})`, resCov:'Total Coverage', resCovVal:(k)=>`~${k} km²`,
+    resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Total Coverage', resCovVal:(k)=>`~${k} km²`,
     badgeTerrain:(z,h)=>`Terrain: ${z}m AMSL (Antenna: ${h}m AGL)`, badgeAntenna:(a,z)=>`Antenne: ${a}m AMSL (Ground: ${z}m)`,
     noData:'No data',
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
-    launcherHAnt:'Mast ht (m)',
+    launcherHAnt:'Mast ht',
     c2Network:'C2 nodes', addC2:'+ Add C2 node', c2Hint:'Drag and drop the unit to reposition.', c2DefaultName:'C2',
-    c2HAnt:'Antenna ht (m)',
-    rC2Parent:'Parent C2', rC2None:'None', rC2MaxDist:'Max dist. C2 (km)', rLinkType:'Link', linkFiber:'Fiber', linkRadio:'Radio',
+    c2HAnt:'Antenna ht',
+    rC2Parent:'Parent C2', rC2None:'None', rC2MaxDist:'Max dist. C2', rLinkType:'Link', linkFiber:'Fiber', linkRadio:'Radio',
     pinTitle:'Pin open',
     altPlaceholder:'Altitude…',
     latLabel:'Lat', lonLabel:'Lon',
-    badgeRadarAGL:(z,a,m)=>`Terrain: ${z}m AMSL · Ant: ${a}m · Mast: ${m}m AGL`,
-    badgeRadarAMSL:(a,m,z)=>`Ant: ${a}m · Mast: ${m}m AMSL (Ground: ${z}m)`,
-    badgeLauncher:(z,m)=>`Terrain: ${z}m AMSL · Mast: ${m}m AGL`,
-    badgeC2:(z,a)=>`Terrain: ${z}m AMSL · Ant: ${a}m AGL`,
+    badgeRadarAGL:(z,a,m)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} · Mast: ${m}${altU()} AGL`,
+    badgeRadarAMSL:(a,m,z)=>`Ant: ${a}${altU()} · Mast: ${m}${altU()} AMSL (Ground: ${z}${altU()})`,
+    badgeLauncher:(z,m)=>`Terrain: ${z}${altU()} AMSL · Mast: ${m}${altU()} AGL`,
+    badgeC2:(z,a)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} AGL`,
     kmlSection:'KML Import / Export',
     kmlExport:'⬇ Export KML',
     kmlExportHint:'Generates a KML file with all units, links and sensor parameters.',
@@ -2654,7 +2710,8 @@ const I18N = {
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
-    demResEstimate:(r,z)=>`Estimated resolution: ~${r} m (zoom ${z})`,
+    demResEstimate:(r,u,z)=>`Estimated resolution: ~${r} ${u} (zoom ${z})`,
+    unitSection:'Display units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
     tabUnits:'Units', tabSensor:'Alt. & Atmo', tabMap:'Map', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
     engThreatBtn:'✈ Threat trajectory', engThreatActive:'Cancel',
@@ -2883,7 +2940,7 @@ function updateDemResEstimate() {
   const autoZoom = Math.round(Math.log2(R_MERC * 2 * Math.PI * cosLat / (256 * 30)));
   const z = Math.max(8, Math.min(demZoomCap, autoZoom));
   const res = Math.round((2 * Math.PI * R_MERC * cosLat) / (256 * Math.pow(2, z)));
-  document.getElementById('dem-res-estimate').textContent = t('demResEstimate', res, z);
+  document.getElementById('dem-res-estimate').textContent = t('demResEstimate', altFmt(res), altU(), z);
 }
 
 document.querySelectorAll('#dem-quality-seg button').forEach(b =>
@@ -2895,6 +2952,26 @@ document.querySelectorAll('#dem-quality-seg button').forEach(b =>
     markCoverageStale();
   })
 );
+
+document.querySelectorAll('#unit-alt-seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#unit-alt-seg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); unitAlt = b.dataset.u;
+  renderAll(); renderAltList(); updateDemResEstimate();
+}));
+document.querySelectorAll('#unit-dist-seg button').forEach(b => b.addEventListener('click', () => {
+  const ringEl = document.getElementById('ring-step');
+  const oldKm = distFromU(parseFloat(ringEl.value) || 10);
+  document.querySelectorAll('#unit-dist-seg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); unitDist = b.dataset.u;
+  ringEl.value = +distV(oldKm).toFixed(2);
+  document.getElementById('ring-step-unit').textContent = distU();
+  renderAll(); updateDemResEstimate();
+}));
+document.querySelectorAll('#unit-time-seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#unit-time-seg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); unitTime = b.dataset.u;
+  renderThreatUI();
+}));
 
 /* =========================================================================
    ENGAGEMENT — Trajectoire menace
@@ -2918,10 +2995,23 @@ function threatRefreshPolyline() {
   }
 }
 
+function computeThreatTOF() {
+  const times = [0];
+  for (let i = 1; i < threatWaypoints.length; i++) {
+    const a = threatWaypoints[i-1], b = threatWaypoints[i];
+    const gndM = haversineKm(a.lat, a.lon, b.lat, b.lon) * 1000;
+    const dAlt = (b.alt||0) - (a.alt||0);
+    const speedMs = Math.max(1, a.speed||1) / 3.6;
+    times.push(times[i-1] + Math.sqrt(gndM*gndM + dAlt*dAlt) / speedMs);
+  }
+  return times;
+}
+
 function renderThreatUI() {
   const container = document.getElementById('threat-wp-list');
   if (!container) return;
   container.innerHTML = '';
+  const tofTimes = computeThreatTOF();
 
   threatWaypoints.forEach((wp, idx) => {
     const n     = idx + 1;
@@ -2934,6 +3024,7 @@ function renderThreatUI() {
       <div class="radar-item-header">
         <button class="radar-item-toggle" onclick="selectThreatWp(${wp.id})" aria-expanded="${isAct || !!wp.pinned}">
           WP ${n}${isAct ? ` <span class="active-badge">${t('pActive')}</span>` : ''}
+          <span style="font-size:10px;color:var(--txt-dim);font-weight:400;margin-left:4px">T+${fmtTime(tofTimes[idx])}</span>
         </button>
         <div class="radar-item-header-actions">
           <button class="btn-pin" onclick="toggleThreatWpPin(${wp.id},event)" title="${t('pinTitle')}">📌</button>
@@ -2949,8 +3040,8 @@ function renderThreatUI() {
         </div>
         <div class="radar-params"><label>${t('engWpAlt')}</label>
           <div class="multi-input">
-            <input type="number" step="100" min="0" value="${wp.alt}" onchange="updateThreatWp(${wp.id},'alt',this.value)" style="flex:1">
-            <span style="font-size:11px;color:var(--txt-dim);flex-shrink:0;padding-left:3px">m</span>
+            <input type="number" step="${altStep()}" min="0" value="${+altV(wp.alt||0).toFixed(unitAlt==='ft'?0:1)}" onchange="updateThreatWp(${wp.id},'alt',this.value)" style="flex:1">
+            <span class="unit-tag">${altU()}</span>
           </div>
         </div>
         <div class="radar-params"><label>${t('engWpSpeed')}</label>
@@ -3004,8 +3095,10 @@ function toggleThreatWpPin(id, event) {
 function updateThreatWp(id, field, val) {
   const wp = threatWaypoints.find(x => x.id === id);
   if (!wp) return;
-  if (field === 'alt' || field === 'speed') {
-    wp[field] = parseFloat(val) || 0;
+  if (field === 'alt') {
+    wp.alt = altFromU(parseFloat(val) || 0);
+  } else if (field === 'speed') {
+    wp.speed = parseFloat(val) || 0;
   } else {
     const deg = parseCoord(val);
     if (!isNaN(deg)) {
