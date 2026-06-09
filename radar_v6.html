@@ -739,12 +739,12 @@
 
     <!-- ========== Barre d'onglets (fr-tabs DSFR) ========== -->
     <nav id="panel-tabs-nav" role="tablist" aria-label="Navigation par sections">
-      <button class="tab-btn active" role="tab" data-tab="entities"
-              aria-selected="true"  aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
+      <button class="tab-btn active" role="tab" data-tab="tools"
+              aria-selected="true"  aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
+      <button class="tab-btn"        role="tab" data-tab="entities"
+              aria-selected="false" aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
       <button class="tab-btn"        role="tab" data-tab="coverage"
               aria-selected="false" aria-controls="tab-coverage"  data-i18n="tabCoverage">COUVERTURE</button>
-      <button class="tab-btn"        role="tab" data-tab="tools"
-              aria-selected="false" aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
       <button class="tab-btn"        role="tab" data-tab="engagement"
               aria-selected="false" aria-controls="tab-engagement" data-i18n="tabEngagement">ENGAGEMENT</button>
     </nav>
@@ -752,7 +752,7 @@
     <!-- ============================================================
          ONGLET 1 — UNITÉS (Radars / Lanceurs / C2)
          ============================================================ -->
-    <div id="tab-entities" class="tab-panel active" role="tabpanel">
+    <div id="tab-entities" class="tab-panel" role="tabpanel">
 
       <!-- Sélecteur de type d'entité -->
       <div id="entity-seg-wrap">
@@ -864,31 +864,10 @@
     <!-- ============================================================
          ONGLET 3 — OUTILS (KML + Sommets + Affichage carte)
          ============================================================ -->
-    <div id="tab-tools" class="tab-panel" role="tabpanel">
+    <div id="tab-tools" class="tab-panel active" role="tabpanel">
       <div class="tab-scroll">
         <div class="tab-section">
-          <h3 data-i18n="kmlSection">Import / Export KML</h3>
-          <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
-          <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
-          <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
-          <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
-          <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
-          <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
-        </div>
-        <div class="tab-section">
-          <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
-          <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
-          <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
-          <div class="row" style="margin-top:12px;">
-            <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
-            <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
-          </div>
-          <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
-          <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
-          <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
-        </div>
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="displayCoords">Affichage</h3>
+          <h3 data-i18n="displayCoords">Affichage &amp; Coordonnées</h3>
           <div class="row row-inline">
             <label for="op-map" data-i18n="transpMap">Opacité carte</label>
             <input type="range" id="op-map" min="0" max="100" value="100" style="max-width:140px;">
@@ -910,6 +889,27 @@
             <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
             <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
           </div>
+        </div>
+        <div class="tab-section">
+          <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
+          <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
+          <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
+          <div class="row" style="margin-top:12px;">
+            <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
+            <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
+          </div>
+          <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
+          <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
+          <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
+        </div>
+        <div class="tab-section" style="border-bottom:0">
+          <h3 data-i18n="kmlSection">Import / Export KML</h3>
+          <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
+          <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
+          <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
+          <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
+          <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
+          <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
         </div>
       </div>
     </div>
