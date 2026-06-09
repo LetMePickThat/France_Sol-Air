@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <!-- Fond bleu DSFR -->
   <rect width="32" height="32" fill="#000091"/>
-  <!-- Bande tricolore (6 px gauche : 2 px bleu / 2 px blanc / 2 px rouge) -->
-  <rect x="0" y="0" width="2" height="32" fill="#002395"/>
-  <rect x="2" y="0" width="2" height="32" fill="#FFFFFF"/>
-  <rect x="4" y="0" width="2" height="32" fill="#E1000F"/>
-  <!-- Radar : centre (19, 27), arcs semi-circulaires vers le haut -->
-  <path d="M13,27 A6,6 0 0,1 25,27"
-        fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M8,27 A11,11 0 0,1 30,27"
-        fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
-  <!-- Balayage à ~45° (sweep) -->
-  <line x1="19" y1="27" x2="26" y2="19"
-        stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Bande tricolore 10 px : 4 bleu / 3 blanc / 3 rouge -->
+  <rect x="0" y="0" width="4" height="32" fill="#002395"/>
+  <rect x="4" y="0" width="3" height="32" fill="#FFFFFF"/>
+  <rect x="7" y="0" width="3" height="32" fill="#E1000F"/>
+  <!-- Radar : centre (21, 26) dans les 22 px restants -->
+  <path d="M16,26 A5,5 0 0,1 26,26"
+        fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13,26 A8,8 0 0,1 29,26"
+        fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <!-- Balayage à ~45° -->
+  <line x1="21" y1="26" x2="27" y2="19"
+        stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
   <!-- Point central -->
-  <circle cx="19" cy="27" r="1.5" fill="#FFFFFF"/>
+  <circle cx="21" cy="26" r="2" fill="#FFFFFF"/>
 </svg>
