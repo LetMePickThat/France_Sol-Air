@@ -2106,6 +2106,22 @@ function kmlC2Balloon(c, isEn) {
 }
 
 /* ---------- Export ---------- */
+/* Génère les coordonnées KML d'un cercle géodésique (N points, rayon en km) */
+function kmlCircleCoords(lat, lon, radiusKm, nPts = 72) {
+  const R    = 6371;
+  const latR = lat * Math.PI / 180;
+  const lonR = lon * Math.PI / 180;
+  const d    = radiusKm / R;
+  const pts  = [];
+  for (let i = 0; i <= nPts; i++) {
+    const θ    = (i % nPts) * 2 * Math.PI / nPts;
+    const lat2 = Math.asin(Math.sin(latR) * Math.cos(d) + Math.cos(latR) * Math.sin(d) * Math.cos(θ));
+    const lon2 = lonR + Math.atan2(Math.sin(θ) * Math.sin(d) * Math.cos(latR), Math.cos(d) - Math.sin(latR) * Math.sin(lat2));
+    pts.push(`${lon2 * 180 / Math.PI},${lat2 * 180 / Math.PI},0`);
+  }
+  return pts.join(' ');
+}
+
 function exportKML() {
   const now     = new Date();
   const dateStr = now.toISOString().slice(0, 16).replace('T', ' ');
@@ -2125,6 +2141,17 @@ ${extDataBlock(fields)}
       <styleUrl>#${styleId}</styleUrl>
 ${extDataBlock(fields)}
       <LineString><coordinates>${lon1},${lat1},0 ${lon2},${lat2},0</coordinates></LineString>
+    </Placemark>`;
+
+  const circlePM = (name, lat, lon, radiusKm, styleId) => `
+    <Placemark>
+      <name>${xmlEsc(name)}</name>
+      <styleUrl>#${styleId}</styleUrl>
+      <Polygon>
+        <outerBoundaryIs><LinearRing>
+          <coordinates>${kmlCircleCoords(lat, lon, radiusKm)}</coordinates>
+        </LinearRing></outerBoundaryIs>
+      </Polygon>
     </Placemark>`;
 
   /* ---- Radars ---- */
@@ -2163,6 +2190,14 @@ ${extDataBlock(fields)}
       'spm:linkType': c.linkType ?? 'fiber',
     }, kmlC2Balloon(c, isEn))
   ).join('');
+
+  /* ---- Cercles de portée max (un polygone par radar actif) ---- */
+  const radarRangePMs = radars
+    .filter(r => r.rmax > 0)
+    .map(r => circlePM(
+      `${r.name} — ${r.rmax} km`,
+      r.lat, r.lon, r.rmax, 'spm-radar-range'
+    )).join('');
 
   /* ---- Liaisons (LineStrings — pour affichage dans outils GIS tiers) ---- */
   const linkPMs = [];
@@ -2226,6 +2261,10 @@ ${extDataBlock(fields)}
     <Style id="spm-link-radio">
       <LineStyle><color>ff1f8d3d</color><width>2</width></LineStyle>
     </Style>
+    <Style id="spm-radar-range">
+      <LineStyle><color>ff910000</color><width>1.5</width></LineStyle>
+      <PolyStyle><fill>0</fill></PolyStyle>
+    </Style>
 
     <!-- ===================== Entités ===================== -->
     <Folder><name>Radars</name>${radarPMs}
@@ -2235,6 +2274,9 @@ ${extDataBlock(fields)}
     </Folder>
 
     <Folder><name>Noeuds C2</name>${c2PMs}
+    </Folder>
+
+    <Folder><name>${isEn ? 'Radar Ranges' : 'Portées Radars'}</name>${radarRangePMs}
     </Folder>
 
     <!-- Liaisons : géométries de liaison (lecture seule dans outils GIS tiers) -->
