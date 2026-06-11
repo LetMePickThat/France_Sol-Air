@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
   /* =========================================================================
@@ -904,7 +905,7 @@
           <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
           <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
         </div>
-        <div class="tab-section" style="border-bottom:0">
+        <div class="tab-section">
           <h3 data-i18n="kmlSection">Import / Export KML</h3>
           <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
           <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
@@ -914,6 +915,25 @@
           <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
           <button class="btn-add" id="btn-export-png" data-i18n="pngExport" style="margin-top:18px">📷 Exporter PNG</button>
           <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
+        </div>
+        <div class="tab-section" style="border-bottom:0">
+          <h3 data-i18n="offlineSection">Carte hors ligne</h3>
+          <p class="hint" data-i18n="offlineHint" style="margin-bottom:8px">…</p>
+          <button class="btn-add" id="btn-offline-zone" data-i18n="offlineDrawZone">⬛ Définir une zone</button>
+          <div id="offline-info" style="display:none; margin-top:12px;">
+            <div class="row row-inline" style="margin-bottom:8px; align-items:center; gap:8px;">
+              <label style="font-size:12px;font-weight:600;" data-i18n="offlineZoom">Zoom</label>
+              <input type="number" id="offline-z-min" value="8" min="0" max="18" style="width:52px;height:28px;text-align:center;">
+              <span style="font-size:12px;color:var(--txt-dim)">–</span>
+              <input type="number" id="offline-z-max" value="13" min="0" max="18" style="width:52px;height:28px;text-align:center;">
+            </div>
+            <div id="offline-tile-count" style="font-size:12px;font-weight:600;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <button class="btn-add" id="btn-offline-download" data-i18n="offlineDownload">⬇ Télécharger</button>
+              <button id="btn-offline-cancel" style="display:none;padding:6px 14px;border-radius:4px;border:0;background:#ce0500;color:#fff;font-size:13px;cursor:pointer;" data-i18n="offlineCancel">✖ Annuler</button>
+            </div>
+            <div id="offline-progress" class="hint" style="margin-top:6px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2828,6 +2848,15 @@ const I18N = {
     pngExport:'📷 Exporter PNG',
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
+    offlineSection:'Carte hors ligne',
+    offlineHint:'Télécharge les tuiles OSM de la zone définie en ZIP pour consultation sans connexion.',
+    offlineDrawZone:'⬛ Définir une zone',
+    offlineZoom:'Zoom',
+    offlineDownload:'⬇ Télécharger',
+    offlineCancel:'✖ Annuler',
+    offlineZipping:'Génération du ZIP…',
+    offlineDone:(d,e)=>`Terminé — ${d} tuile(s) téléchargée(s)${e?`, ${e} erreur(s)`:'.'} `,
+    offlineCancelled:'Téléchargement annulé.',
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
@@ -2897,6 +2926,15 @@ const I18N = {
     pngExport:'📷 Export PNG',
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
+    offlineSection:'Offline map',
+    offlineHint:'Downloads OSM tiles for the selected area as a ZIP for offline use.',
+    offlineDrawZone:'⬛ Define zone',
+    offlineZoom:'Zoom',
+    offlineDownload:'⬇ Download',
+    offlineCancel:'✖ Cancel',
+    offlineZipping:'Generating ZIP…',
+    offlineDone:(d,e)=>`Done — ${d} tile(s) downloaded${e?`, ${e} error(s)`:'.'} `,
+    offlineCancelled:'Download cancelled.',
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
@@ -3145,6 +3183,141 @@ function exportPNG() {
   });
 }
 document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+
+/* =========================================================================
+   Carte hors ligne — Téléchargement de tuiles OSM
+   ========================================================================= */
+let _offlineBounds = null;
+let _offlineRect   = null;
+let _offlineAbort  = false;
+
+function _lon2tile(lon, z) { return Math.floor((lon + 180) / 360 * (1 << z)); }
+function _lat2tile(lat, z) {
+  const r = lat * Math.PI / 180;
+  return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * (1 << z));
+}
+
+function updateOfflineInfo() {
+  if (!_offlineBounds) return;
+  const zMin = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-min').value) || 8));
+  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 13));
+  const el = document.getElementById('offline-tile-count');
+  const btnDl = document.getElementById('btn-offline-download');
+  if (zMax < zMin) { el.textContent = '—'; btnDl.disabled = true; return; }
+  let count = 0;
+  const N = _offlineBounds.getNorth(), S = _offlineBounds.getSouth();
+  const W = _offlineBounds.getWest(),  E = _offlineBounds.getEast();
+  for (let z = zMin; z <= zMax; z++) {
+    count += Math.max(0, _lon2tile(E, z) - _lon2tile(W, z) + 1)
+           * Math.max(0, _lat2tile(S, z) - _lat2tile(N, z) + 1);
+  }
+  const mo = (count * 25 / 1024).toFixed(1);
+  const tooMany = count > 5000;
+  el.style.color = tooMany ? 'var(--danger)' : count > 1000 ? '#b34f00' : 'inherit';
+  el.textContent = `${count.toLocaleString()} tuile${count > 1 ? 's' : ''} — ~${mo} Mo`
+                 + (tooMany ? '  ⚠ limite dépassée (> 5 000)' : '');
+  btnDl.disabled = tooMany;
+}
+
+function startOfflineZone() {
+  if (_offlineRect) { map.removeLayer(_offlineRect); _offlineRect = null; }
+  document.getElementById('offline-info').style.display = 'none';
+  document.getElementById('offline-progress').textContent = '';
+  const btn = document.getElementById('btn-offline-zone');
+  let c1 = null, tmp = null;
+  btn.style.opacity = '0.5';
+  map.getContainer().style.cursor = 'crosshair';
+
+  function onMove(e) {
+    if (tmp) map.removeLayer(tmp);
+    tmp = L.rectangle(L.latLngBounds(c1, e.latlng),
+      { color:'#0050cc', weight:2, fillOpacity:0.06, dashArray:'6 4' }).addTo(map);
+  }
+  function cleanup() {
+    map.off('mousemove', onMove); map.off('click', onClick);
+    document.removeEventListener('keydown', onKey);
+    if (tmp) { map.removeLayer(tmp); tmp = null; }
+    map.getContainer().style.cursor = ''; btn.style.opacity = '';
+  }
+  function onKey(e) { if (e.key === 'Escape') cleanup(); }
+  function onClick(e) {
+    if (!c1) { c1 = e.latlng; map.on('mousemove', onMove); }
+    else {
+      cleanup();
+      _offlineBounds = L.latLngBounds(c1, e.latlng);
+      _offlineRect = L.rectangle(_offlineBounds,
+        { color:'#0050cc', weight:2, fillOpacity:0.06 }).addTo(map);
+      document.getElementById('offline-info').style.display = '';
+      updateOfflineInfo();
+    }
+  }
+  map.on('click', onClick);
+  document.addEventListener('keydown', onKey);
+}
+
+async function downloadOfflineTiles() {
+  if (!_offlineBounds) return;
+  if (typeof JSZip === 'undefined') { alert('JSZip non chargé.'); return; }
+  const zMin = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-min').value) || 8));
+  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 13));
+  if (zMax < zMin) return;
+
+  const btnDl   = document.getElementById('btn-offline-download');
+  const btnCan  = document.getElementById('btn-offline-cancel');
+  const progEl  = document.getElementById('offline-progress');
+  _offlineAbort = false;
+  btnDl.style.display = 'none'; btnCan.style.display = '';
+
+  const zip    = new JSZip();
+  const folder = zip.folder('Tuiles_Hors_Ligne');
+  const N = _offlineBounds.getNorth(), S = _offlineBounds.getSouth();
+  const W = _offlineBounds.getWest(),  E = _offlineBounds.getEast();
+
+  const tasks = [];
+  for (let z = zMin; z <= zMax; z++) {
+    const x0 = _lon2tile(W, z), x1 = _lon2tile(E, z);
+    const y0 = _lat2tile(N, z), y1 = _lat2tile(S, z);
+    for (let x = x0; x <= x1; x++)
+      for (let y = y0; y <= y1; y++)
+        tasks.push({ z, x, y });
+  }
+
+  let done = 0, errors = 0;
+  const total = tasks.length;
+  const BATCH = 6;
+
+  for (let i = 0; i < total && !_offlineAbort; i += BATCH) {
+    await Promise.all(tasks.slice(i, i + BATCH).map(async ({ z, x, y }) => {
+      try {
+        const resp = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+        if (resp.ok) folder.file(`${z}/${x}/${y}.png`, await resp.arrayBuffer());
+        else errors++;
+      } catch { errors++; }
+      done++;
+      progEl.textContent = `${done} / ${total}  (${Math.round(done / total * 100)} %)`
+                         + (errors ? `  — ${errors} erreur(s)` : '');
+    }));
+    await new Promise(r => setTimeout(r, 40));
+  }
+
+  if (!_offlineAbort) {
+    progEl.textContent = t('offlineZipping');
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'Tuiles_Hors_Ligne.zip'; a.click();
+    URL.revokeObjectURL(a.href);
+    progEl.textContent = t('offlineDone', done - errors, errors);
+  } else {
+    progEl.textContent = t('offlineCancelled');
+  }
+  btnDl.style.display = ''; btnCan.style.display = 'none';
+}
+
+document.getElementById('btn-offline-zone').addEventListener('click', startOfflineZone);
+document.getElementById('btn-offline-download').addEventListener('click', downloadOfflineTiles);
+document.getElementById('btn-offline-cancel').addEventListener('click', () => { _offlineAbort = true; });
+document.getElementById('offline-z-min').addEventListener('input', updateOfflineInfo);
+document.getElementById('offline-z-max').addEventListener('input', updateOfflineInfo);
 
 /* Toggle qualité DEM — Rapide (z≤11) / Haute Précision (z≤12) */
 function updateDemResEstimate() {
