@@ -824,39 +824,13 @@
             </select>
           </div>
         </div>
-        <div class="tab-section">
+        <div class="tab-section" style="border-bottom:0">
           <h3 data-i18n="calcSection">Précision DEM</h3>
           <div class="seg" id="dem-quality-seg">
             <button class="on" data-q="11" data-i18n="calcFast">Rapide</button>
             <button data-q="12" data-i18n="calcHD">Haute Précision</button>
           </div>
           <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
-        </div>
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="unitSection">Unités</h3>
-          <div class="row row-inline" style="margin-bottom:8px">
-            <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
-            <div class="seg" id="unit-alt-seg">
-              <button class="on" data-u="m">m</button>
-              <button data-u="ft">ft</button>
-            </div>
-          </div>
-          <div class="row row-inline" style="margin-bottom:8px">
-            <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
-            <div class="seg" id="unit-dist-seg">
-              <button data-u="m">m</button>
-              <button class="on" data-u="km">km</button>
-              <button data-u="nm">nm</button>
-            </div>
-          </div>
-          <div class="row row-inline">
-            <label data-i18n="unitTimeLabel" style="font-size:12px;font-weight:600;width:70px">Temps</label>
-            <div class="seg" id="unit-time-seg">
-              <button data-u="sec">s</button>
-              <button class="on" data-u="min">min</button>
-              <button data-u="hms">h m s</button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -866,6 +840,32 @@
          ============================================================ -->
     <div id="tab-tools" class="tab-panel active" role="tabpanel">
       <div class="tab-scroll">
+        <div class="tab-section">
+          <h3 data-i18n="unitSection">Unités</h3>
+          <div class="row row-inline" style="margin-bottom:8px">
+            <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
+            <div class="seg" id="unit-alt-seg">
+              <button data-u="m">m</button>
+              <button class="on" data-u="ft">ft</button>
+            </div>
+          </div>
+          <div class="row row-inline" style="margin-bottom:8px">
+            <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
+            <div class="seg" id="unit-dist-seg">
+              <button data-u="m">m</button>
+              <button data-u="km">km</button>
+              <button class="on" data-u="nm">nm</button>
+            </div>
+          </div>
+          <div class="row row-inline">
+            <label data-i18n="unitTimeLabel" style="font-size:12px;font-weight:600;width:70px">Temps</label>
+            <div class="seg" id="unit-time-seg">
+              <button class="on" data-u="sec">s</button>
+              <button data-u="min">min</button>
+              <button data-u="hms">h m s</button>
+            </div>
+          </div>
+        </div>
         <div class="tab-section">
           <h3 data-i18n="displayCoords">Affichage &amp; Coordonnées</h3>
           <div class="row row-inline">
@@ -1061,9 +1061,9 @@ let _batchingRenders = false;
    SYSTÈME D'UNITÉS — unités d'affichage + fonctions de conversion
    Stockage interne : altitudes en mètres, distances en km, temps en secondes.
    ========================================================================= */
-let unitAlt  = 'm';   // 'm' | 'ft'
-let unitDist = 'km';  // 'm' | 'km' | 'nm'
-let unitTime = 'min'; // 'sec' | 'min' | 'hms'
+let unitAlt  = 'ft';  // 'm' | 'ft'
+let unitDist = 'nm';  // 'm' | 'km' | 'nm'
+let unitTime = 'sec'; // 'sec' | 'min' | 'hms'
 
 function altV(m)     { return unitAlt === 'ft' ? m / 0.3048 : m; }
 function altU()      { return unitAlt; }
@@ -3114,7 +3114,7 @@ function updateDemResEstimate() {
   const autoZoom = Math.round(Math.log2(R_MERC * 2 * Math.PI * cosLat / (256 * 30)));
   const z = Math.max(8, Math.min(demZoomCap, autoZoom));
   const res = Math.round((2 * Math.PI * R_MERC * cosLat) / (256 * Math.pow(2, z)));
-  document.getElementById('dem-res-estimate').textContent = t('demResEstimate', altFmt(res), altU(), z);
+  document.getElementById('dem-res-estimate').textContent = t('demResEstimate', res, 'm', z);
 }
 
 document.querySelectorAll('#dem-quality-seg button').forEach(b =>
