@@ -8,6 +8,7 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
   /* =========================================================================
@@ -910,6 +911,8 @@
           <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
           <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
           <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
+          <button class="btn-add" id="btn-export-png" data-i18n="pngExport" style="margin-top:18px">📷 Exporter PNG</button>
+          <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
         </div>
       </div>
     </div>
@@ -2821,6 +2824,9 @@ const I18N = {
     kmlImportHint:'Remplace la situation actuelle par le déploiement du fichier KML.',
     kmlDocName:'Déploiement GBAD — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
+    pngExport:'📷 Exporter PNG',
+    pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
+    pngExporting:'Export en cours…',
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
@@ -2887,6 +2893,9 @@ const I18N = {
     kmlImportHint:'Replaces the current situation with the deployment in the KML file.',
     kmlDocName:'GBAD Deployment — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
+    pngExport:'📷 Export PNG',
+    pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
+    pngExporting:'Exporting…',
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
@@ -3114,6 +3123,27 @@ document.getElementById('kfac').addEventListener('change', e => {
 
 document.getElementById('btn-export-kml').addEventListener('click', exportKML);
 document.getElementById('kml-file-input').addEventListener('change', function() { importKMLFile(this); });
+
+function exportPNG() {
+  const btn = document.getElementById('btn-export-png');
+  if (btn) { btn.disabled = true; btn.textContent = t('pngExporting'); }
+  html2canvas(document.getElementById('map'), {
+    useCORS: true,
+    allowTaint: false,
+    logging: false,
+    scale: window.devicePixelRatio || 1
+  }).then(canvas => {
+    const a = document.createElement('a');
+    a.download = 'france-sol-air.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }).catch(() => {
+    alert(t('pngExporting').replace('…', '') + ' — échec (CORS ou canvas teinté)');
+  }).finally(() => {
+    if (btn) { btn.disabled = false; btn.textContent = t('pngExport'); }
+  });
+}
+document.getElementById('btn-export-png').addEventListener('click', exportPNG);
 
 /* Toggle qualité DEM — Rapide (z≤11) / Haute Précision (z≤12) */
 function updateDemResEstimate() {
