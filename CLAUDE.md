@@ -8,22 +8,26 @@ The application is bilingual (French default, English toggle) and complies with 
 
 ## Architecture
 
-- **Single-file SPA**: `radar_v5.html` (~2,750 lines) — all HTML, CSS, and JavaScript in one file
+- **Single-file SPA**: `radar_v6.html` (~4,500 lines) — all HTML, CSS, and JavaScript in one file
+- **Engagement proto**: `radarV6_eng_proto.html` — full copy of `radar_v6.html` with the ENGAGEMENT tab enabled; used for development and testing of the kinematic reachability engine
 - **Standalone help page**: `aide.html` — separate DSFR-styled page, bilingual (FR/EN toggle)
 - **No build system**: open the file directly in a browser or serve it statically
 - **No backend**: all computation is client-side
-- **`index.html`**: minimal redirect page to `radar_v5.html` (for GitHub Pages)
+- **`index.html`**: minimal redirect page to `radar_v6.html` (for GitHub Pages)
 
 ## File Structure
 
 ```
 France_Sol-Air/
-├── radar_v5.html       # Main application (single-file SPA)
-├── aide.html           # Standalone help page (FR/EN)
-├── index.html          # GitHub Pages redirect
+├── radar_v6.html           # Main application (single-file SPA) — engagement tab hidden
+├── radarV6_eng_proto.html  # Dev proto — engagement tab enabled
+├── aide.html               # Standalone help page (FR/EN)
+├── index.html              # GitHub Pages redirect → radar_v6.html
+├── missiles/
+│   └── generic_mrm.json    # External missile config (medium range, ~10 km)
 └── images/
-    ├── favicon.svg         # DSFR-compliant SVG favicon
-    └── Aide_image_IHM.png  # Interface screenshot used in aide.html
+    ├── favicon.svg             # DSFR-compliant SVG favicon
+    └── Aide_image_IHM.png      # Interface screenshot used in aide.html
 ```
 
 ## Tech Stack
@@ -51,26 +55,28 @@ France_Sol-Air/
 - **Theme toggle**: light/dark per DSFR spec
 - **Compact UI mode**: `@media (max-height: 820px)` reduces chrome to preserve form space on low-res screens
 - **Help page**: `aide.html` with 14 sections, sidebar scroll-spy, FR/EN toggle, DSFR styling
+- **Threat simulation**: waypoint-based target trajectory, configurable speed/altitude per segment, simulation player with speed control
+- **Kinematic reachability (Phase 1)**: PIP engine, engagement windows, 4 event instants per (radar, launcher) pair — see engagement section below
 
 ## Running the App
 
 ```bash
 # Simplest — open directly:
-start radar_v5.html
+start radar_v6.html
 
 # Or serve locally (avoids CORS issues with some browsers):
 python -m http.server 8000
-# then visit http://localhost:8000/radar_v5.html
+# then visit http://localhost:8000/radar_v6.html
 ```
 
 No `npm install`, no build step, no backend needed. Internet access required for CDN assets and AWS elevation tiles.
 
-## Code Organization (inside `radar_v5.html`)
+## Code Organization (inside `radar_v6.html`)
 
 The file is structured as a single HTML document with embedded `<style>` and `<script>` blocks:
 
 - **Globals / constants**: map config, tile cache, entity stores (`radars`, `launchers`, `c2nodes`), `demZoomCap` (DEM quality toggle)
-- **i18n**: `translations` object + `t()` helper; keys include `calcSection`, `calcFast`, `calcHD`, `demResEstimate`
+- **i18n**: `translations` object + `t()` helper
 - **Geospatial math**: `haversine`, `latlngToTile`, `bilinearElevation`, `checkLOSAsync`, `buildDEM`
 - **Entity management**: add/remove/update functions per entity type, C2 hierarchy cycle detection
 - **UI**: tab panels, accordion sections, entity forms, map tooltip, result badge
@@ -78,6 +84,62 @@ The file is structured as a single HTML document with embedded `<style>` and `<s
 - **DEM quality**: `updateDemResEstimate()` — estimates resolution in metres for current deployment centroid
 - **KML**: `exportKML()` / `importKML()` with full SPM namespace serialization
 - **Summit search**: `startPeakSearch()`, `findPeaksInPolygon()`
+- **Threat simulation**: `simPlay()`, `simTick()`, `interpTargetPosAt()`, waypoint editor, progress bar
+- **Missile kinematics**: `missileTimeToReach()`, `interpMissileV()`, `BUNDLED_MISSILE_CONFIGS`, velocity-profile integration
+- **PIP engine**: `solvePIP()`, `solvePIPScan()`, `solvePIPLive()` — see engagement section
+- **Engagement windows**: `computeEngWinForLauncher()`, `computeAllEngWindows()` — async, version-guarded
+- **Real-time display**: `updateRealtimePIPs()`, `renderPIPOverlay()`, `renderProgressGradient()`
+
+## Engagement / Kinematic Reachability Engine (Phase 1)
+
+Implements spec "FSA — Spécification : Atteignabilité cinétique & fenêtre d'engagement".
+
+### Four event instants per (radar, launcher) pair
+
+| Instant | Meaning |
+|---------|---------|
+| `t_det` | First detection sample |
+| `t_tir_min` | `fo.t` — earliest fire authorisation (= t_det + C2 chain delay) |
+| `t_tir_first` | First feasible t_tir ≥ t_tir_min (kinematic check passes) |
+| `t_tir_last` | Last feasible t_tir; `close_reason`: `envelope_exhausted` or `data_exhausted` |
+
+### PIP solver variants
+
+Three variants, all using the same scan + bisect approach on `g(T) = (T − T_avail) − tof`:
+
+| Function | Velocity reference | dt | Use |
+|----------|-------------------|----|-----|
+| `solvePIP(launcher, cfg, T_fire)` | Constant velocity estimated at `T_avail` (look-back 3s) | 0.05 s | Fire order result, missile animation target |
+| `solvePIPScan(launcher, cfg, T_fire)` | Oracle `interpTargetPosAt(T)` | 0.5 s | Engagement window sweep — planning tool only |
+| `solvePIPLive(launcher, cfg, T_fire, tCurrent)` | Constant velocity estimated at `tCurrent` (look-back 3s) | 0.5 s | Per-tick live PIP update during simulation |
+
+**Tactical vs oracle split (spec §4):**
+- `solvePIP` / `solvePIPLive` = "chemin rapide" — constant-velocity extrapolation from observed track; models what the real ground system computes without knowledge of future maneuvers
+- `solvePIPScan` = "chemin complet" — oracle; used only for the engagement window planner where full trajectory knowledge is acceptable
+
+### Live PIP tracking
+
+`updateRealtimePIPs(tCurrent)` calls `solvePIPLive` on every simulation tick once a missile is in flight. The PIP diamond marker, launcher→PIP line, and missile position all update in real time as target maneuvers become visible on the radar track.
+
+### Missile configs
+
+Missile configs are defined in `BUNDLED_MISSILE_CONFIGS` (inline JS) and optionally in external JSON files under `missiles/`. Format: `{ id, label, kinematics: { launchDelay_s, boostEnd_s, maxFlightTime_s, velocityProfile[] }, envelope: { slantRangeMin_m, slantRangeMax_m, altMin_m, altMax_m, vFloor_ms, tofMax_s }, warhead: { lethalRadius_m } }`.
+
+Current bundled configs:
+- `generic_mrm` — MSAM portée moyenne (~10 km, tofMax 20 s)
+- `generic_mk1` — MSAM longue portée notionnel (~35 km, tofMax 120 s)
+
+### State variables
+
+```javascript
+let _engWindows      = [];   // parallel to _fireOrders
+let _engWindowsReady = false;
+let _detVersion      = 0;    // incremented on scenario invalidation; async loops abort on mismatch
+```
+
+### Engagement tab visibility
+
+The ENGAGEMENT tab button has `style="display:none"` in `radar_v6.html` (public GitHub Pages build). It is fully visible in `radarV6_eng_proto.html` (dev proto). To re-enable it in the main file, remove the `style="display:none" aria-hidden="true"` attributes from the tab button at line ~749.
 
 ## Important Technical Details
 
@@ -90,6 +152,7 @@ The file is structured as a single HTML document with embedded `<style>` and `<s
 - KML export uses SVG balloon content to render azimuth/elevation sector diagrams inline
 - Cycle detection in C2 hierarchy uses iterative parent-chain traversal to prevent infinite loops
 - Range rings "Tous" checkbox is checked by default at startup
+- `runDetectionAnalysis(onProgress, doEngWindows)` — second arg `true` only when called from `runSequenceCalc`; prevents slow window computation during `simPlay`'s per-tick silent re-runs
 
 ## Help Page (`aide.html`)
 
