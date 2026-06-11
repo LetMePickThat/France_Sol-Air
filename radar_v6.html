@@ -846,16 +846,16 @@
           <div class="row row-inline" style="margin-bottom:8px">
             <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
             <div class="seg" id="unit-alt-seg">
-              <button data-u="m">m</button>
-              <button class="on" data-u="ft">ft</button>
+              <button class="on" data-u="m">m</button>
+              <button data-u="ft">ft</button>
             </div>
           </div>
           <div class="row row-inline" style="margin-bottom:8px">
             <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
             <div class="seg" id="unit-dist-seg">
               <button data-u="m">m</button>
-              <button data-u="km">km</button>
-              <button class="on" data-u="nm">nm</button>
+              <button class="on" data-u="km">km</button>
+              <button data-u="nm">nm</button>
             </div>
           </div>
           <div class="row row-inline">
@@ -1062,8 +1062,8 @@ let _batchingRenders = false;
    SYSTÈME D'UNITÉS — unités d'affichage + fonctions de conversion
    Stockage interne : altitudes en mètres, distances en km, temps en secondes.
    ========================================================================= */
-let unitAlt  = 'ft';  // 'm' | 'ft'
-let unitDist = 'nm';  // 'm' | 'km' | 'nm'
+let unitAlt  = 'm';   // 'm' | 'ft'
+let unitDist = 'km';  // 'm' | 'km' | 'nm'
 let unitTime = 'sec'; // 'sec' | 'min' | 'hms'
 
 function altV(m)     { return unitAlt === 'ft' ? m / 0.3048 : m; }
