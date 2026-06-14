@@ -125,7 +125,6 @@
     margin: 0; font-size: 11px; font-weight: 400;
     color: var(--txt-dim); line-height: 1.4;
   }
-  /* (supprimé: basemap seg n'est plus dans le header) */
 
   /* =========================================================================
      NAVIGATION PAR ONGLETS (inspiré fr-tabs DSFR v1.14)
@@ -158,7 +157,7 @@
     transition: color .12s, border-color .12s, background .12s;
     white-space: normal;
     text-align: center;
-    min-width: max-content;
+    min-width: 0;
     line-height: 1.2;
     user-select: none;
   }
@@ -642,7 +641,7 @@
     color: #333; white-space: nowrap; padding: 0 2px;
     pointer-events: none; text-shadow: 0 0 3px #fff, 0 0 3px #fff;
   }
-  [data-theme="dark"] .leaflet-tooltip.ne-label { color: #ccc; text-shadow: 0 0 3px #111, 0 0 3px #111; }
+  html[data-fr-theme="dark"] .leaflet-tooltip.ne-label { color: #ccc; text-shadow: 0 0 3px #111, 0 0 3px #111; }
 
   /* Écran d'attente (fr-modal-like) */
   #busy {
@@ -719,7 +718,6 @@
     #panel header .marianne-bloc { display: none; }
     #panel header p { display: none; }
     #panel header { padding: 8px 20px 6px; gap: 0; }
-    /* (supprimé: basemap seg n'est plus dans le header) */
 
     /* Onglets de navigation plus compacts */
     .tab-btn { padding: 6px 4px 4px; }
@@ -865,6 +863,15 @@
   body.sim-active #sim-progress { pointer-events: auto !important; opacity: 1 !important; cursor: pointer; }
   body.sim-active #sim-pause:disabled,
   body.sim-active #sim-stop:disabled { pointer-events: none !important; opacity: .4 !important; }
+
+  /* ---- Sauvegardes locales ---- */
+  .fsa-slot { border-bottom:1px solid var(--line); padding:10px 0; }
+  .fsa-slot:last-child { border-bottom:0; }
+  .fsa-slot-name { width:100%; box-sizing:border-box; font-size:12px; padding:3px 6px; border:1px solid var(--line); border-radius:3px; background:var(--panel2); color:var(--txt); margin-bottom:4px; }
+  .fsa-slot-info { font-size:11px; color:var(--txt-dim); margin-bottom:6px; min-height:14px; }
+  .btn-add:disabled { opacity:.4; cursor:not-allowed; }
+  #fsa-autosave-banner { background:var(--badge-bg); border-left:3px solid var(--accent); border-radius:3px; padding:8px 10px; font-size:12px; margin-bottom:10px; }
+  #fsa-autosave-banner button { margin-top:6px; padding:4px 10px; font-size:12px; border:1px solid var(--accent); border-radius:3px; background:transparent; color:var(--accent); cursor:pointer; }
 </style>
 </head>
 <body>
@@ -886,8 +893,7 @@
       <button class="tab-btn"        role="tab" data-tab="coverage"
               aria-selected="false" aria-controls="tab-coverage"  data-i18n="tabCoverage">COUVERTURE</button>
       <button class="tab-btn"        role="tab" data-tab="engagement"
-              aria-selected="false" aria-controls="tab-engagement" data-i18n="tabEngagement"
-              style="display:none" aria-hidden="true">ENGAGEMENT</button>
+              aria-selected="false" aria-controls="tab-engagement" data-i18n="tabEngagement">ENGAGEMENT</button>
     </nav>
 
     <!-- ============================================================
@@ -1057,11 +1063,19 @@
                 <option value="DD"  data-i18n-opt="coordDD">Décimales (DD)</option>
               </select>
             </div>
-            <div class="row" style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:0">
-              <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
-              <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
-              <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
-              <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
+            <div style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:6px">
+              <div style="display:flex; flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center">
+                <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marque portée senseur</span></label>
+                <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous senseurs</span></label>
+                <div style="display:flex; align-items:center; gap:4px; flex-shrink:0">
+                  <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
+                  <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center">
+                <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-missile-rings"> <span data-i18n="marksMissile">Marque portée missile</span></label>
+                <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="missile-rings-all"> <span data-i18n="allLaunchers">Tous lanceurs</span></label>
+              </div>
             </div>
           </div>
         </div>
@@ -1083,6 +1097,40 @@
             <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
           </div>
         </div>
+        <!-- Sauvegardes locales — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-save">
+            <span data-i18n="saveSection">Sauvegardes</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-save">
+            <div id="fsa-autosave-banner" style="display:none"></div>
+            <!-- Slot 1 -->
+            <div class="fsa-slot">
+              <input class="fsa-slot-name" id="fsa-slot-name-1" type="text" placeholder="Slot 1" maxlength="40">
+              <div class="fsa-slot-info" id="fsa-slot-info-1"></div>
+              <button class="btn-add" onclick="fsaSave(1)" data-i18n="saveBtnSave">Sauvegarder</button>
+              <button class="btn-add" id="fsa-slot-load-1" onclick="fsaLoad(1)" style="margin-top:6px" data-i18n="saveBtnLoad">Charger</button>
+              <button class="btn-add" id="fsa-slot-del-1"  onclick="fsaDelete(1)" style="margin-top:6px;border-color:var(--line);color:var(--txt-dim)" data-i18n="saveBtnDel">Supprimer</button>
+            </div>
+            <!-- Slot 2 -->
+            <div class="fsa-slot">
+              <input class="fsa-slot-name" id="fsa-slot-name-2" type="text" placeholder="Slot 2" maxlength="40">
+              <div class="fsa-slot-info" id="fsa-slot-info-2"></div>
+              <button class="btn-add" onclick="fsaSave(2)" data-i18n="saveBtnSave">Sauvegarder</button>
+              <button class="btn-add" id="fsa-slot-load-2" onclick="fsaLoad(2)" style="margin-top:6px" data-i18n="saveBtnLoad">Charger</button>
+              <button class="btn-add" id="fsa-slot-del-2"  onclick="fsaDelete(2)" style="margin-top:6px;border-color:var(--line);color:var(--txt-dim)" data-i18n="saveBtnDel">Supprimer</button>
+            </div>
+            <!-- Slot 3 -->
+            <div class="fsa-slot">
+              <input class="fsa-slot-name" id="fsa-slot-name-3" type="text" placeholder="Slot 3" maxlength="40">
+              <div class="fsa-slot-info" id="fsa-slot-info-3"></div>
+              <button class="btn-add" onclick="fsaSave(3)" data-i18n="saveBtnSave">Sauvegarder</button>
+              <button class="btn-add" id="fsa-slot-load-3" onclick="fsaLoad(3)" style="margin-top:6px" data-i18n="saveBtnLoad">Charger</button>
+              <button class="btn-add" id="fsa-slot-del-3"  onclick="fsaDelete(3)" style="margin-top:6px;border-color:var(--line);color:var(--txt-dim)" data-i18n="saveBtnDel">Supprimer</button>
+            </div>
+          </div>
+        </div>
         <!-- Import / Export KML — accordéon -->
         <div class="acc-item">
           <button class="acc-btn" aria-expanded="false" aria-controls="acc-kml">
@@ -1090,9 +1138,9 @@
             <span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body" id="acc-kml">
-            <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
+            <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">Exporter KML</button>
             <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
-            <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
+            <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">Importer KML</label>
             <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
             <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
             <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
@@ -1110,7 +1158,7 @@
               <input type="number" id="png-ppi" value="150" min="72" max="600" step="1"
                      style="width:72px;padding:3px 6px;font-size:12px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--txt)">
             </div>
-            <button class="btn-add" id="btn-export-png" data-i18n="pngExport">📷 Exporter PNG</button>
+            <button class="btn-add" id="btn-export-png" data-i18n="pngExport">Exporter PNG</button>
             <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
           </div>
         </div>
@@ -1129,7 +1177,7 @@
                 <span data-i18n="offlineShowZones">Afficher les zones stockées sur la carte</span>
               </label>
             </div>
-            <button class="btn-add" id="btn-offline-zone" data-i18n="offlineDrawZone">⬛ Définir une zone</button>
+            <button class="btn-add" id="btn-offline-zone" data-i18n="offlineDrawZone">Définir une zone</button>
             <div id="offline-info" style="display:none; margin-top:12px;">
               <div class="row row-inline" style="margin-bottom:8px; align-items:center; gap:8px;">
                 <label style="font-size:12px;font-weight:600;" data-i18n="offlineZoom">Zoom</label>
@@ -1139,61 +1187,101 @@
               </div>
               <div id="offline-tile-count" style="font-size:12px;font-weight:600;margin-bottom:10px;"></div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                <button class="btn-add" id="btn-offline-download" data-i18n="offlineDownload">⬇ Stocker localement</button>
+                <button class="btn-add" id="btn-offline-download" data-i18n="offlineDownload">Stocker localement</button>
                 <button id="btn-offline-cancel" style="display:none;padding:6px 14px;border-radius:4px;border:0;background:#ce0500;color:#fff;font-size:13px;cursor:pointer;" data-i18n="offlineCancel">✖ Annuler</button>
               </div>
               <div id="offline-progress" class="hint" style="margin-top:6px;"></div>
             </div>
-            <button class="btn-add" id="btn-offline-clear" style="margin-top:12px; border-color:var(--line); color:var(--txt-dim);" data-i18n="offlineClear">🗑 Vider le cache local</button>
+            <button class="btn-add" id="btn-offline-clear" style="margin-top:12px; border-color:var(--line); color:var(--txt-dim);" data-i18n="offlineClear">Vider le cache local</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ============================================================
-         ONGLET 4 — ENGAGEMENT (Trajectoire menace)
+         ONGLET 4 — ENGAGEMENT (Trajectoire menace 2 points)
          ============================================================ -->
     <div id="tab-engagement" class="tab-panel" role="tabpanel">
       <div class="entity-pane active" id="pane-threat">
-        <div id="sim-lock-banner">⚠ <span data-i18n="simLockBanner">Simulation en cours — édition suspendue</span></div>
-        <div class="entity-list-scroll">
-          <div id="threat-wp-list"></div>
+
+        <!-- Formulaire 2-points -->
+        <div class="entity-list-scroll" style="overflow-y:auto;flex:1">
+
+          <!-- Point A -->
+          <div style="border-bottom:1px solid var(--line);padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointA">Point de départ (A)</div>
+            <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
+              <input type="text" id="eng-a-lat" placeholder="Lat" onchange="_engUpdateCoordA()">
+              <input type="text" id="eng-a-lon" placeholder="Lon" onchange="_engUpdateCoordA()">
+            </div></div>
+            <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
+              <input type="number" id="eng-a-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+              <span class="unit-tag">km/h</span>
+            </div></div>
+            <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
+              <input type="number" id="eng-a-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
+              <span class="unit-tag">m</span>
+            </div></div>
+          </div>
+
+          <!-- Point B -->
+          <div style="border-bottom:1px solid var(--line);padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointB">Point d'arrivée (B)</div>
+            <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
+              <input type="text" id="eng-b-lat" placeholder="Lat" onchange="_engUpdateCoordB()">
+              <input type="text" id="eng-b-lon" placeholder="Lon" onchange="_engUpdateCoordB()">
+            </div></div>
+            <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
+              <input type="number" id="eng-b-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+              <span class="unit-tag">km/h</span>
+            </div></div>
+            <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
+              <input type="number" id="eng-b-alt" value="500" min="0" max="30000" step="100" style="flex:1">
+              <span class="unit-tag">m</span>
+            </div></div>
+          </div>
+
+          <!-- Résultats -->
+          <div style="padding:8px 14px">
+            <div id="sim-det-status" style="display:none"></div>
+          </div>
         </div>
-        <!-- Simulation panel : caché si aucun waypoint -->
-        <div id="sim-panel" style="display:none">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:12px;font-weight:700;flex:1" data-i18n="simSection">Simulation</span>
-            <div class="seg" id="sim-speed-seg">
-              <button class="on" data-spd="1">×1</button>
-              <button data-spd="5">×5</button>
-              <button data-spd="10">×10</button>
-              <button data-spd="100">×100</button>
+
+        <!-- Bannière mode dessin carte -->
+        <div id="eng-pick-banner" style="display:none;padding:7px 18px;background:var(--accent-light);border-top:2px solid var(--accent);font-size:12px;color:var(--accent);text-align:center;font-weight:600"></div>
+
+        <div class="entity-pane-footer">
+          <button class="btn-add" id="btn-eng-draw" style="border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engDrawBtn">Tracer la trajectoire</button>
+          <button class="btn-add" id="btn-eng-calc" style="margin-top:6px;border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engCalcBtn">Calculer</button>
+          <button class="btn-add" id="btn-eng-clear" style="margin-top:6px;border-color:var(--line);color:var(--txt-dim)" data-i18n="engClear">Effacer</button>
+        </div>
+
+        <!-- Éléments legacy conservés dans le DOM pour les event listeners existants -->
+        <div style="display:none" aria-hidden="true">
+          <div id="sim-lock-banner"></div>
+          <div id="threat-wp-list"></div>
+          <div id="sim-panel">
+            <div id="sim-speed-seg">
+              <button class="on" data-spd="1">×1</button><button data-spd="5">×5</button>
+              <button data-spd="10">×10</button><button data-spd="100">×100</button>
             </div>
-          </div>
-          <div style="display:flex;gap:5px">
-            <button id="sim-play"  class="sim-btn sim-btn-primary" style="flex:1" data-i18n="simPlay">▶ Jouer</button>
-            <button id="sim-pause" class="sim-btn" style="flex:1" disabled data-i18n="simPause">⏸ Pause</button>
-            <button id="sim-stop"  class="sim-btn" style="flex:0 0 40px">⏹</button>
-          </div>
-          <div id="sim-det-status" style="display:none;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line)"></div>
-          <div>
+            <button id="sim-play"></button>
+            <button id="sim-pause"></button>
+            <button id="sim-stop"></button>
             <div id="sim-progress-wrap">
               <div id="sim-progress-bg"></div>
               <div id="sim-progress-ticks"></div>
               <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt-dim);margin-top:2px">
-              <span id="sim-time-elapsed">T+—</span>
-              <span id="sim-time-total">—</span>
-            </div>
+            <span id="sim-time-elapsed"></span>
+            <span id="sim-time-total"></span>
           </div>
+          <div id="threat-hint"></div>
+          <button id="btn-draw-threat"></button>
+          <button id="btn-calc-seq"></button>
+          <button id="btn-clear-threat"></button>
         </div>
-        <div class="entity-pane-footer">
-          <button class="btn-add" id="btn-draw-threat" data-i18n="engThreatBtn">✈ Trajectoire menace</button>
-          <div class="hint" id="threat-hint" style="display:none; color:var(--warning); margin-top:6px;" data-i18n="engThreatHint">…</div>
-          <button class="btn-add" id="btn-calc-seq" style="margin-top:6px;display:none" data-i18n="calcSeqBtn">⚡ Calculer la séquence</button>
-          <button class="btn-add" id="btn-clear-threat" style="margin-top:6px; border-color:var(--line); color:var(--txt-dim);" data-i18n="engClear">Effacer la trajectoire</button>
-        </div>
+
       </div>
     </div>
 
@@ -1378,6 +1466,7 @@ function renderAll(skipLines = false) {
   _batchingRenders = false;
   if (!skipLines) updateEntityLines();
   renderThreatUI();
+  _fsaScheduleAuto();
 }
 const R_E = 6371000;
 const R_MERC = 6378137;
@@ -1580,7 +1669,36 @@ function clearCoverage() {
   document.getElementById('btn-clear-coverage').style.display = 'none';
   document.getElementById('results').style.display = 'none';
 }
-let ringsLayer = null;
+let ringsLayer        = null;
+let missileRingsLayer = null;
+
+function drawMissileRings() {
+  if (missileRingsLayer) { map.removeLayer(missileRingsLayer); missileRingsLayer = null; }
+  if (!document.getElementById('show-missile-rings')?.checked) return;
+  const allMode = document.getElementById('missile-rings-all').checked;
+  const targets  = allMode ? launchers : launchers.filter(l => l.id === activeLauncherId);
+  const layer    = L.featureGroup();
+  let   hasAny   = false;
+  for (const l of targets) {
+    if (!l.missileType || !_missileConfigs[l.missileType]) continue;
+    const rangeM = _missileConfigs[l.missileType].envelope?.slantRangeMax_m;
+    if (!rangeM || rangeM <= 0) continue;
+    const isAct = l.id === activeLauncherId;
+    L.circle([l.lat, l.lon], {
+      color: '#d64d00', weight: isAct ? 2.5 : 1.5,
+      fill: false,
+      opacity: isAct ? 0.85 : 0.35,
+      radius: rangeM, interactive: false
+    }).addTo(layer);
+    hasAny = true;
+  }
+  if (!hasAny) return;
+  layer.addTo(map);
+  missileRingsLayer = layer;
+  if (coverageLayer) coverageLayer.bringToFront();
+  if (ringsLayer) ringsLayer.bringToFront();
+  missileRingsLayer.bringToFront();
+}
 
 document.querySelectorAll('#basemap button').forEach(b=>b.addEventListener('click', ()=>{
   if(b.dataset.v===baseMap) return;
@@ -1802,6 +1920,7 @@ function makeDraggable(marker, type, id, entityList) {
     const ent = entityList.find(x => x.id === id); if (!ent) return;
     const ll = e.target.getLatLng(); ent.lat = ll.lat; ent.lon = ll.lng;
     if (type === 'radar') drawRings();
+    if (type === 'launcher') drawMissileRings();
     updateEntityLines();
   });
   marker.on('dragend', e => {
@@ -1896,6 +2015,7 @@ document.getElementById('btn-add-radar').addEventListener('click', () => { markC
 map.on('click', e => {
   if (peakDrawing)   { peakHandleClick(e);   return; }
   if (threatDrawing) { threatHandleClick(e); return; }
+  if (typeof _engDrawState !== 'undefined' && _engDrawState) { engHandleMapClick(e); return; }
   deselectAll();
 });
 document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); }));
@@ -1950,7 +2070,6 @@ function renderLaunchersUI() {
           <span class="unit-tag">${altU()}</span>
         </div></div>
         <div class="radar-params"><label>${t('launcherMissileType')}</label><div class="multi-input"><select onchange="updateLauncher(${l.id},'missileType',this.value)" style="flex:1"><option value="" ${!l.missileType?'selected':''}>${t('launcherMissileNone')}</option>${Object.values(_missileConfigs).map(cfg=>`<option value="${cfg.id}" ${l.missileType===cfg.id?'selected':''}>${escapeHtml(document.documentElement.dataset.lang==='en'?cfg.label.en:cfg.label.fr)}</option>`).join('')}</select></div></div>
-        <div class="radar-params"><label>${t('launcherMissileCount')}</label><div class="multi-input"><input type="number" min="0" step="1" value="${l.missileCount||0}" onchange="updateLauncher(${l.id},'missileCount',this.value)" style="flex:1"></div></div>
         <div class="elev-badge" data-lid="${l.id}">${l.terrAlt !== null ? formatLauncherBadge(l) : '…'}</div>
       </div>`;
     container.appendChild(div);
@@ -1967,6 +2086,7 @@ function renderLaunchersUI() {
       l.marker.setTooltipContent(l.name);
     }
   }
+  drawMissileRings();
   if (!_batchingRenders) updateEntityLines();
   _renderingLaunchersUI = false;
   updateEntityCounts();
@@ -1995,14 +2115,13 @@ function updateLauncher(id, field, val) {
   else if (field === 'linkType') { l.linkType = val; }
   else if (field === 'hant') { l.hant = altFromU(parseFloat(val)||0); }
   else if (field === 'missileType') { l.missileType = val; }
-  else if (field === 'missileCount') { l.missileCount = parseInt(val)||0; }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { l[field] = deg; l.terrAlt = null; } }
   renderLaunchersUI();
 }
 
 document.getElementById('btn-add-launcher').addEventListener('click', () => {
   const center = map.getCenter(); const id = nextLauncherId++;
-  launchers.push({id, name: `${t('launcherDefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', hant: 10, missileType: '', missileCount: 0, pinned: false});
+  launchers.push({id, name: `${t('launcherDefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', hant: 10, missileType: '', pinned: false});
   selectEntity('launcher', id);
 });
 
@@ -2139,22 +2258,38 @@ async function updateEntityLines(){
 
   if(myVer!==_entityLinesVersion) return;
 
-  const circStyle={color:'#c9191e',weight:1.5,fill:true,fillColor:'#c9191e',fillOpacity:.05,opacity:.6,interactive:false};
-  if(activeEntityType==='radar'&&activeRadarId){
-    const r=radars.find(x=>x.id===activeRadarId);
-    if(r?.parentC2Id&&r.maxDistC2>0){const c=c2nodes.find(x=>x.id===r.parentC2Id);if(c) distCircles.push(L.circle([c.lat,c.lon],{...circStyle,radius:r.maxDistC2*1000}).addTo(map));}
-  } else if(activeEntityType==='launcher'&&activeLauncherId){
-    const l=launchers.find(x=>x.id===activeLauncherId);
-    if(l?.parentC2Id&&l.maxDistC2>0){const c=c2nodes.find(x=>x.id===l.parentC2Id);if(c) distCircles.push(L.circle([c.lat,c.lon],{...circStyle,radius:l.maxDistC2*1000}).addTo(map));}
-  } else if(activeEntityType==='c2'&&activeC2Id){
-    radars.filter(r=>r.parentC2Id===activeC2Id&&r.maxDistC2>0).forEach(r=>
-      distCircles.push(L.circle([r.lat,r.lon],{...circStyle,radius:r.maxDistC2*1000}).addTo(map)));
-    launchers.filter(l=>l.parentC2Id===activeC2Id&&l.maxDistC2>0).forEach(l=>
-      distCircles.push(L.circle([l.lat,l.lon],{...circStyle,radius:l.maxDistC2*1000}).addTo(map)));
-    c2nodes.filter(n=>n.parentC2Id===activeC2Id&&n.maxDistC2>0).forEach(n=>
-      distCircles.push(L.circle([n.lat,n.lon],{...circStyle,radius:n.maxDistC2*1000}).addTo(map)));
-    const self=c2nodes.find(x=>x.id===activeC2Id);
-    if(self?.parentC2Id&&self.maxDistC2>0){const p=c2nodes.find(x=>x.id===self.parentC2Id);if(p) distCircles.push(L.circle([p.lat,p.lon],{...circStyle,radius:self.maxDistC2*1000}).addTo(map));}
+  // Aire translucide (sans trait) montrant la distance max autorisée vers le C2 parent
+  // Affichée uniquement pour l'entité sélectionnée et ses subordonnés directs
+  const distFillStyle = { stroke: false, fill: true, fillColor: '#c9191e', fillOpacity: 0.06, interactive: false };
+  const addDistCircle = (centerLat, centerLon, radiusKm) => {
+    if (radiusKm > 0) distCircles.push(L.circle([centerLat, centerLon], { ...distFillStyle, radius: radiusKm * 1000 }).addTo(map));
+  };
+
+  if (activeRadarId !== null) {
+    const r = radars.find(x => x.id === activeRadarId);
+    if (r && r.maxDistC2 > 0 && r.parentC2Id) {
+      const c = c2nodes.find(x => x.id === r.parentC2Id);
+      if (c) addDistCircle(c.lat, c.lon, r.maxDistC2);
+    }
+  } else if (activeLauncherId !== null) {
+    const l = launchers.find(x => x.id === activeLauncherId);
+    if (l && l.maxDistC2 > 0 && l.parentC2Id) {
+      const c = c2nodes.find(x => x.id === l.parentC2Id);
+      if (c) addDistCircle(c.lat, c.lon, l.maxDistC2);
+    }
+  } else if (activeC2Id !== null) {
+    const sel = c2nodes.find(x => x.id === activeC2Id);
+    if (sel) {
+      // Cercles des subordonnés directs (centrés sur le C2 sélectionné)
+      for (const r of radars)    { if (r.parentC2Id    === activeC2Id) addDistCircle(sel.lat, sel.lon, r.maxDistC2); }
+      for (const l of launchers)  { if (l.parentC2Id    === activeC2Id) addDistCircle(sel.lat, sel.lon, l.maxDistC2); }
+      for (const c of c2nodes)    { if (c.parentC2Id    === activeC2Id) addDistCircle(sel.lat, sel.lon, c.maxDistC2); }
+      // Cercle du C2 sélectionné lui-même vers son parent
+      if (sel.maxDistC2 > 0 && sel.parentC2Id) {
+        const parent = c2nodes.find(x => x.id === sel.parentC2Id);
+        if (parent) addDistCircle(parent.lat, parent.lon, sel.maxDistC2);
+      }
+    }
   }
 }
 
@@ -2275,8 +2410,9 @@ document.getElementById('btn-add-c2').addEventListener('click', () => {
 });
 document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); satLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
 document.getElementById('op-cov').addEventListener('input', (e) => { if(coverageLayer) coverageLayer.setOpacity(e.target.value / 100); });
-['show-rings', 'rings-all', 'ring-step'].forEach(id => document.getElementById(id).addEventListener('change', drawRings));
+['show-rings', 'rings-all'].forEach(id => document.getElementById(id).addEventListener('change', drawRings));
 document.getElementById('ring-step').addEventListener('input', drawRings);
+['show-missile-rings', 'missile-rings-all'].forEach(id => document.getElementById(id).addEventListener('change', drawMissileRings));
 
 const tooltip = document.getElementById('cursor-tooltip'); let _elevReqId = 0, _rafId = null;
 map.on('mousemove', e => {
@@ -2686,7 +2822,6 @@ function kmlLauncherBalloon(l, isEn) {
     <tr><th colspan="2">${isEn ? 'Launcher parameters' : 'Paramètres lanceur'}</th></tr>
     <tr><td>${isEn ? 'Comm. mast' : 'Mât comm.'}</td><td>${l.hant ?? 0} m AGL</td></tr>
     <tr><td>${isEn ? 'Missile type' : 'Type de missile'}</td><td>${l.missileType || (isEn ? '— (not configured)' : '— (non configuré)')}</td></tr>
-    <tr><td>${isEn ? 'Missiles' : 'Nb missiles'}</td><td>${l.missileCount ?? 0}</td></tr>
   </table>
   ${kmlC2Table(l.parentC2Id, l.maxDistC2, l.linkType, isEn, c2nodes)}`;
 }
@@ -2700,7 +2835,7 @@ function kmlC2Balloon(c, isEn) {
   ];
   const childRows = children.length
     ? children.map(e => `<tr><td>${xmlEsc(e.name)}</td><td>${
-        radars.includes(e) ? (isEn ? 'Radar' : 'Radar') :
+        radars.includes(e) ? 'Radar' :
         launchers.includes(e) ? (isEn ? 'Launcher' : 'Lanceur') : 'C2'
       }</td></tr>`).join('')
     : `<tr><td colspan="2" style="color:#999;font-style:italic">${isEn ? 'No subordinate units' : 'Aucune unité subordonnée'}</td></tr>`;
@@ -2736,7 +2871,7 @@ function kmlCircleCoords(lat, lon, radiusKm, nPts = 72) {
   return pts.join(' ');
 }
 
-function exportKML() {
+async function exportKML() {
   const now     = new Date();
   const dateStr = now.toISOString().slice(0, 16).replace('T', ' ');
 
@@ -2792,7 +2927,6 @@ ${extDataBlock(fields)}
       'spm:maxDistC2': l.maxDistC2 ?? 0,
       'spm:linkType': l.linkType ?? 'fiber',
       'spm:missileType': l.missileType || '',
-      'spm:missileCount': l.missileCount ?? 0,
     }, kmlLauncherBalloon(l, isEn))
   ).join('');
 
@@ -2905,14 +3039,188 @@ ${extDataBlock(fields)}
   </Document>
 </kml>`;
 
-  const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `spm_gbad_${now.toISOString().slice(0,10).replace(/-/g,'')}.kml`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const blob          = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+  const suggestedName = `spm_gbad_${now.toISOString().slice(0,10).replace(/-/g,'')}.kml`;
+  // isEn déjà déclaré plus haut dans cette fonction
+
+  if (window.showSaveFilePicker) {
+    // Chrome / Edge : explorateur natif "Enregistrer sous"
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description: 'KML', accept: { 'application/vnd.google-earth.kml+xml': ['.kml'] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error('KML export error', e);
+      // AbortError = annulation utilisateur, on ignore silencieusement
+    }
+  } else {
+    // Firefox : saisie du nom via prompt puis téléchargement
+    const name = prompt(isEn ? 'File name:' : 'Nom du fichier :', suggestedName);
+    if (!name) return;
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = name.endsWith('.kml') ? name : name + '.kml';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 }
+
+/* =========================================================================
+   SAUVEGARDES LOCALES (localStorage)
+   ========================================================================= */
+
+const _FSA_SLOT  = i => `fsa_slot_${i}`;
+const _FSA_NAME  = i => `fsa_slot_${i}_name`;
+const _FSA_AUTO  = 'fsa_autosave';
+const _FSA_N     = 3;
+
+function _fsaSerialize() {
+  const strip = e => { const { marker, ...rest } = e; return rest; };
+  return JSON.stringify({
+    version: 1,
+    ts: Date.now(),
+    mapCenter: map.getCenter(),
+    mapZoom:   map.getZoom(),
+    radars:    radars.map(strip),
+    launchers: launchers.map(strip),
+    c2nodes:   c2nodes.map(strip),
+    altEntries,
+    nextRadarId, nextLauncherId, nextC2Id,
+  });
+}
+
+function _fsaParse(json) {
+  try { const d = JSON.parse(json); return d?.version === 1 ? d : null; } catch { return null; }
+}
+
+function _fsaApply(data, skipConfirm) {
+  if (!skipConfirm) {
+    const isEn = document.documentElement.dataset.lang === 'en';
+    if (!confirm(isEn ? 'Replace current deployment with this save?' : 'Remplacer le déploiement actuel par cette sauvegarde ?')) return;
+  }
+  radars.forEach(r    => { if (r.marker)  map.removeLayer(r.marker); });
+  launchers.forEach(l => { if (l.marker)  map.removeLayer(l.marker); });
+  c2nodes.forEach(c   => { if (c.marker)  map.removeLayer(c.marker); });
+  for (const l of radarLines.values())    map.removeLayer(l); radarLines.clear();
+  for (const l of launcherLines.values()) map.removeLayer(l); launcherLines.clear();
+  for (const l of c2c2Lines.values())     map.removeLayer(l); c2c2Lines.clear();
+  losMarkers.splice(0).forEach(m => map.removeLayer(m));
+  if (distCircles.length) { distCircles.forEach(c => map.removeLayer(c)); distCircles = []; }
+  clearCoverage();
+
+  radars.length    = 0; radars.push(...(data.radars    || []).map(r => ({ ...r, marker: null })));
+  launchers.length = 0; launchers.push(...(data.launchers || []).map(l => ({ ...l, marker: null })));
+  c2nodes.length   = 0; c2nodes.push(...(data.c2nodes   || []).map(c => ({ ...c, marker: null })));
+
+  nextRadarId    = data.nextRadarId    ?? ((radars.length    ? Math.max(...radars.map(r=>r.id))    : 0) + 1);
+  nextLauncherId = data.nextLauncherId ?? ((launchers.length ? Math.max(...launchers.map(l=>l.id)) : 0) + 1);
+  nextC2Id       = data.nextC2Id       ?? ((c2nodes.length   ? Math.max(...c2nodes.map(c=>c.id))   : 0) + 1);
+
+  if (Array.isArray(data.altEntries)) { altEntries.length = 0; altEntries.push(...data.altEntries); }
+
+  if (data.mapCenter && data.mapZoom != null) map.setView([data.mapCenter.lat, data.mapCenter.lng], data.mapZoom);
+
+  if      (radars.length)    { activeEntityType='radar';    activeRadarId=radars[0].id;       activeLauncherId=null; activeC2Id=null; }
+  else if (launchers.length) { activeEntityType='launcher'; activeLauncherId=launchers[0].id; activeRadarId=null;    activeC2Id=null; }
+  else if (c2nodes.length)   { activeEntityType='c2';       activeC2Id=c2nodes[0].id;         activeRadarId=null;    activeLauncherId=null; }
+  else                       { activeEntityType=null; activeRadarId=null; activeLauncherId=null; activeC2Id=null; }
+
+  renderAltList(); renderAll();
+}
+
+// --- Slots publics ---
+function fsaSave(i) {
+  const name = (document.getElementById(`fsa-slot-name-${i}`)?.value || '').trim() || `Slot ${i}`;
+  try {
+    localStorage.setItem(_FSA_SLOT(i), _fsaSerialize());
+    localStorage.setItem(_FSA_NAME(i), name);
+  } catch { alert(t('storageFull')); return; }
+  fsaRenderSlots();
+}
+
+function fsaLoad(i) {
+  const data = _fsaParse(localStorage.getItem(_FSA_SLOT(i)));
+  if (!data) return;
+  _fsaApply(data, false);
+}
+
+function fsaDelete(i) {
+  const isEn = document.documentElement.dataset.lang === 'en';
+  if (!confirm(isEn ? 'Delete this save?' : 'Supprimer cette sauvegarde ?')) return;
+  localStorage.removeItem(_FSA_SLOT(i));
+  localStorage.removeItem(_FSA_NAME(i));
+  fsaRenderSlots();
+}
+
+function fsaRenderSlots() {
+  const isEn = document.documentElement.dataset.lang === 'en';
+  for (let i = 1; i <= _FSA_N; i++) {
+    const json  = localStorage.getItem(_FSA_SLOT(i));
+    const name  = localStorage.getItem(_FSA_NAME(i)) || `Slot ${i}`;
+    const nameEl = document.getElementById(`fsa-slot-name-${i}`);
+    const infoEl = document.getElementById(`fsa-slot-info-${i}`);
+    const loadBtn = document.getElementById(`fsa-slot-load-${i}`);
+    const delBtn  = document.getElementById(`fsa-slot-del-${i}`);
+    if (nameEl) nameEl.value = name;
+    if (json) {
+      const d = _fsaParse(json);
+      const ts = d?.ts ? new Date(d.ts).toLocaleString(isEn ? 'en-GB' : 'fr-FR', { dateStyle:'short', timeStyle:'short' }) : '?';
+      const r = d?.radars?.length ?? 0, l = d?.launchers?.length ?? 0, c = d?.c2nodes?.length ?? 0;
+      if (infoEl)  infoEl.textContent  = `${ts} — R:${r} L:${l} C2:${c}`;
+      if (loadBtn) loadBtn.disabled = false;
+      if (delBtn)  delBtn.disabled  = false;
+    } else {
+      if (infoEl)  infoEl.textContent  = isEn ? '(empty)' : '(vide)';
+      if (loadBtn) loadBtn.disabled = true;
+      if (delBtn)  delBtn.disabled  = true;
+    }
+  }
+}
+
+// --- Auto-save ---
+let _fsaAutoTimer = null;
+function _fsaScheduleAuto() {
+  clearTimeout(_fsaAutoTimer);
+  _fsaAutoTimer = setTimeout(() => {
+    if (!radars.length && !launchers.length && !c2nodes.length) return;
+    try { localStorage.setItem(_FSA_AUTO, _fsaSerialize()); } catch {}
+  }, 600);
+}
+
+// --- Bannière restauration ---
+function _fsaInitAutosaveBanner() {
+  const json = localStorage.getItem(_FSA_AUTO);
+  if (!json) return;
+  const data = _fsaParse(json);
+  if (!data) return;
+  const isEn = document.documentElement.dataset.lang === 'en';
+  const r = data.radars?.length ?? 0, l = data.launchers?.length ?? 0, c = data.c2nodes?.length ?? 0;
+  if (!r && !l && !c) return;
+  const ts = new Date(data.ts).toLocaleString(isEn ? 'en-GB' : 'fr-FR', { dateStyle:'short', timeStyle:'short' });
+  const banner = document.getElementById('fsa-autosave-banner');
+  if (!banner) return;
+  banner.innerHTML = isEn
+    ? `<strong>Unsaved session found</strong> (${ts} — R:${r} L:${l} C2:${c})<br>
+       <button onclick="_fsaApply(_fsaParse(localStorage.getItem('fsa_autosave')),false);this.closest('#fsa-autosave-banner').style.display='none'">Restore</button>
+       <button onclick="this.closest('#fsa-autosave-banner').style.display='none'" style="margin-left:6px;border-color:var(--line);color:var(--txt-dim);">Dismiss</button>`
+    : `<strong>Session non sauvegardée trouvée</strong> (${ts} — R:${r} L:${l} C2:${c})<br>
+       <button onclick="_fsaApply(_fsaParse(localStorage.getItem('fsa_autosave')),false);this.closest('#fsa-autosave-banner').style.display='none'">Restaurer</button>
+       <button onclick="this.closest('#fsa-autosave-banner').style.display='none'" style="margin-left:6px;border-color:var(--line);color:var(--txt-dim);">Ignorer</button>`;
+  banner.style.display = 'block';
+}
+
+// --- Protection F5 ---
+window.addEventListener('beforeunload', e => {
+  if (radars.length || launchers.length || c2nodes.length) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 /* ---------- Import ---------- */
 function importKMLFile(input) {
@@ -3036,7 +3344,6 @@ function importKMLString(xmlStr) {
       maxDistC2:   getNum(pm, 'spm:maxDistC2', 0),
       linkType:    getStr(pm, 'spm:linkType', 'fiber'),
       missileType: getStr(pm, 'spm:missileType', ''),
-      missileCount:getNum(pm, 'spm:missileCount', 0),
       _origId:     getInt(pm, 'spm:id'),
       marker: null, terrAlt: null, pinned: false,
     });
@@ -3136,7 +3443,6 @@ const I18N = {
     appTitle:'Intervisibilité Radar', cartoLight:'Plan clair', cartoDark:'Plan sombre', elevBtn:'Élévation',
     displayCoords:'Affichage & Coordonnées', transpMap:'Opacité de la carte', transpRadar:'Opacité de la couverture',
     coordFormat:'Format des coordonnées', coordDD:'Décimales (DD)', coordDMS:'Degrés Minutes Secondes (DMS)',
-    marksDist:'Marques dist.', allRadars:'Tous',
     radarNetwork:'Maillage de radars tactiques', addRadar:'+ Ajouter un radar',
     clickHint:'Glisser-déposer pour repositionner. Clic carte = désélection.',
     pName:'Nom', pPos:'Position', pHeight:'Hauteur radar', pRange:'Portée maximale',
@@ -3162,9 +3468,9 @@ const I18N = {
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Couverture Totale', resCovVal:(k)=>`~${k} km²`,
     noData:'Hors données',
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
-    launcherHAnt:'H. mat comm.', launcherMissileType:'Type de missile', launcherMissileCount:'Nb missiles', launcherMissileNone:'— (non configuré)',
+    launcherHAnt:'H. mat comm.', launcherMissileType:'Type de missile', launcherMissileNone:'— (non configuré)',
+    marksDist:'Marque portée senseur', allRadars:'Tous senseurs', marksMissile:'Marque portée missile', allLaunchers:'Tous lanceurs',
     c2Network:'Nœuds C2', addC2:'+ Ajouter un nœud C2', c2Hint:'Glisser-déposer pour repositionner. Clic carte = désélection.', c2DefaultName:'C2',
-    calcSeqBtn:'⚡ Calculer la séquence',
     c2HAnt:'H. antenne', c2EngDelay:'Temps de réaction', c2EngDecision:'Décision engagement', c2EngDecYes:'Oui', c2EngDecNo:'Non',
     rC2Parent:'C2 parent', rC2None:'Aucun', rC2MaxDist:'Dist. max C2', rLinkType:'Liaison', linkFiber:'Fibre', linkRadio:'Radio',
     pinTitle:'Épingler ouvert',
@@ -3174,34 +3480,46 @@ const I18N = {
     badgeRadarAMSL:(a,m,z)=>`Ant: ${a}${altU()} · Mat: ${m}${altU()} AMSL (Sol: ${z}${altU()})`,
     badgeLauncher:(z,m)=>`Terrain: ${z}${altU()} AMSL · Mat: ${m}${altU()} AGL`,
     badgeC2:(z,a)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} AGL`,
+    engDrawBtn:'Tracer la trajectoire',
+    engDrawCancel:'Annuler',
+    engPickHintA:'Cliquer pour placer le point de départ (A)',
+    engPickHintB:'Cliquer pour placer le point d\'arrivée (B)',
+    storageFull:'Stockage local plein ou inaccessible.',
+    pngExportFailed:msg=>`Export PNG échoué : ${msg}`,
+    offlineTileLimit:'  ⚠ limite dépassée (> 5 000)',
+    offlineErrCount:n=>`  — ${n} erreur(s)`,
+    saveSection:'Sauvegardes',
+    saveBtnSave:'Sauvegarder',
+    saveBtnLoad:'Charger',
+    saveBtnDel:'Supprimer',
     kmlSection:'Import / Export KML',
-    kmlExport:'⬇ Exporter KML',
+    kmlExport:'Exporter KML',
     kmlExportHint:'Génère un fichier KML avec toutes les unités, liaisons et paramètres capteurs.',
-    kmlImport:'⬆ Importer KML',
+    kmlImport:'Importer KML',
     kmlImportHint:'Remplace la situation actuelle par le déploiement du fichier KML.',
     kmlDocName:'Déploiement GBAD — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
     pngSection:'Export image',
     pngPPILabel:'Résolution (PPI)',
-    pngExport:'📷 Exporter PNG',
+    pngExport:'Exporter PNG',
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
     geocodePh:'Rechercher un lieu…',
     offlineSection:'Carte hors ligne',
     offlineHint:'Stocke les tuiles d\'élévation (AWS Terrarium, zoom 8–12) dans le navigateur. Permet le calcul LOS et couverture radar sans connexion internet. La carte de fond reste en ligne.',
-    offlineDrawZone:'⬛ Définir une zone',
+    offlineDrawZone:'Définir une zone',
     offlineZoom:'Zoom',
-    offlineDownload:'⬇ Stocker localement',
-    offlineCancel:'✖ Annuler',
+    offlineDownload:'Stocker localement',
+    offlineCancel:'Annuler',
     offlineDone:(d,e)=>`${d} tuile(s) stockée(s) localement${e?`, ${e} erreur(s)`:'.'} `,
     offlineCancelled:'Stockage annulé.',
-    offlineClear:'🗑 Vider le cache local',
+    offlineClear:'Vider le cache local',
     offlineCacheCleared:'Cache local vidé.',
     offlineCacheStatus:(n,mb)=>`Cache local : ${n} tuile(s) — ${mb} Mo`,
     offlineShowZones:'Afficher les zones stockées sur la carte',
     offlineZoneTooltip:(z,n)=>`${z} · ${n} tuile(s)`,
     offlineNEHint:'Carte vectorielle Natural Earth (domaine public) — fond de carte minimal fonctionnel sans connexion internet.',
-    offlineNEDownload:'⬇ Stocker la carte vectorielle',
+    offlineNEDownload:'Stocker la carte vectorielle',
     offlineNEDownloading:(n,t)=>`Couche ${n}/${t}`,
     offlineNEDone:'Carte vectorielle stockée.',
     offlineNEStatus:mb=>`Carte vectorielle : ${mb} Mo`,
@@ -3214,10 +3532,13 @@ const I18N = {
     unitSection:'Unités de mesure', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
     tabUnits:'Déploiement', tabCoverage:'Couverture', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
-    engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
+    engThreatBtn:'Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
     engWpAlt:'Altitude', engWpSpeed:'Vitesse',
-    engClear:'Effacer la trajectoire',
+    engClear:'Effacer', engCalcBtn:'Calculer',
+    engPointA:'Point de départ (A)', engPointB:"Point d'arrivée (B)",
+    engPickHint:'Cliquer sur la carte pour placer le point',
+    engPointsRequired:'Définissez les points A et B avant de calculer.',
     simSection:'Simulation', simPlay:'▶ Jouer', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation en cours — édition suspendue',
     detAnalyzing: pct => `Analyse détection… ${pct} %`,
@@ -3228,7 +3549,7 @@ const I18N = {
     appTitle:'Radar Intervisibility', cartoLight:'Map (light)', cartoDark:'Map (dark)', elevBtn:'Elevation',
     displayCoords:'Display & Coordinates', transpMap:'Map opacity', transpRadar:'Radar opacity',
     coordFormat:'Coord. format', coordDD:'Decimal (DD)', coordDMS:'Deg Min Sec (DMS)',
-    marksDist:'Range marks', allRadars:'All',
+    marksDist:'Sensor range mark', allRadars:'All sensors', marksMissile:'Missile range mark', allLaunchers:'All launchers',
     radarNetwork:'Tactical radar network', addRadar:'+ Add radar',
     clickHint:'Drag and drop the unit to reposition. Click the map to deselect.',
     pName:'Name', pPos:'Position', pHeight:'Radar height', pRange:'Max range',
@@ -3254,9 +3575,8 @@ const I18N = {
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Total Coverage', resCovVal:(k)=>`~${k} km²`,
     noData:'No data',
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
-    launcherHAnt:'Mast ht', launcherMissileType:'Missile type', launcherMissileCount:'Missiles', launcherMissileNone:'— (not configured)',
+    launcherHAnt:'Mast ht', launcherMissileType:'Missile type', launcherMissileNone:'— (not configured)',
     c2Network:'C2 nodes', addC2:'+ Add C2 node', c2Hint:'Drag and drop the unit to reposition.', c2DefaultName:'C2',
-    calcSeqBtn:'⚡ Calculate sequence',
     c2HAnt:'Antenna ht', c2EngDelay:'Reaction time', c2EngDecision:'Engagement decision', c2EngDecYes:'Yes', c2EngDecNo:'No',
     rC2Parent:'Parent C2', rC2None:'None', rC2MaxDist:'Max dist. C2', rLinkType:'Link', linkFiber:'Fiber', linkRadio:'Radio',
     pinTitle:'Pin open',
@@ -3266,34 +3586,46 @@ const I18N = {
     badgeRadarAMSL:(a,m,z)=>`Ant: ${a}${altU()} · Mast: ${m}${altU()} AMSL (Ground: ${z}${altU()})`,
     badgeLauncher:(z,m)=>`Terrain: ${z}${altU()} AMSL · Mast: ${m}${altU()} AGL`,
     badgeC2:(z,a)=>`Terrain: ${z}${altU()} AMSL · Ant: ${a}${altU()} AGL`,
+    engDrawBtn:'Draw trajectory',
+    engDrawCancel:'Cancel',
+    engPickHintA:'Click to place departure point (A)',
+    engPickHintB:'Click to place arrival point (B)',
+    storageFull:'Local storage full or unavailable.',
+    pngExportFailed:msg=>`PNG export failed: ${msg}`,
+    offlineTileLimit:'  ⚠ limit exceeded (> 5,000)',
+    offlineErrCount:n=>`  — ${n} error(s)`,
+    saveSection:'Saves',
+    saveBtnSave:'Save',
+    saveBtnLoad:'Load',
+    saveBtnDel:'Delete',
     kmlSection:'KML Import / Export',
-    kmlExport:'⬇ Export KML',
+    kmlExport:'Export KML',
     kmlExportHint:'Generates a KML file with all units, links and sensor parameters.',
-    kmlImport:'⬆ Import KML',
+    kmlImport:'Import KML',
     kmlImportHint:'Replaces the current situation with the deployment in the KML file.',
     kmlDocName:'GBAD Deployment — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
     pngSection:'Image export',
     pngPPILabel:'Resolution (PPI)',
-    pngExport:'📷 Export PNG',
+    pngExport:'Export PNG',
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
     geocodePh:'Search a place…',
     offlineSection:'Offline map',
     offlineHint:'Stores elevation tiles (AWS Terrarium, zoom 8–12) in the browser. Enables LOS and radar coverage computation without internet. The base map remains online.',
-    offlineDrawZone:'⬛ Define zone',
+    offlineDrawZone:'Define zone',
     offlineZoom:'Zoom',
-    offlineDownload:'⬇ Store locally',
-    offlineCancel:'✖ Cancel',
+    offlineDownload:'Store locally',
+    offlineCancel:'Cancel',
     offlineDone:(d,e)=>`${d} tile(s) stored locally${e?`, ${e} error(s)`:'.'} `,
     offlineCancelled:'Storage cancelled.',
-    offlineClear:'🗑 Clear local cache',
+    offlineClear:'Clear local cache',
     offlineCacheCleared:'Local cache cleared.',
     offlineCacheStatus:(n,mb)=>`Local cache: ${n} tile(s) — ${mb} MB`,
     offlineShowZones:'Show stored zones on the map',
     offlineZoneTooltip:(z,n)=>`${z} · ${n} tile(s)`,
     offlineNEHint:'Natural Earth vector map (public domain) — minimal base map available without internet connection.',
-    offlineNEDownload:'⬇ Store vector map',
+    offlineNEDownload:'Store vector map',
     offlineNEDownloading:(n,t)=>`Layer ${n}/${t}`,
     offlineNEDone:'Vector map stored.',
     offlineNEStatus:mb=>`Vector map: ${mb} MB`,
@@ -3306,10 +3638,13 @@ const I18N = {
     unitSection:'Measurement units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
     tabUnits:'Deployment', tabCoverage:'Coverage', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
-    engThreatBtn:'✈ Threat trajectory', engThreatActive:'Done editing trajectory',
+    engThreatBtn:'Threat trajectory', engThreatActive:'Done editing trajectory',
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
     engWpAlt:'Altitude', engWpSpeed:'Speed',
-    engClear:'Clear trajectory',
+    engClear:'Clear', engCalcBtn:'Calculate',
+    engPointA:'Starting point (A)', engPointB:'Arrival point (B)',
+    engPickHint:'Click on the map to place the point',
+    engPointsRequired:'Define points A and B before calculating.',
     simSection:'Simulation', simPlay:'▶ Play', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation running — editing suspended',
     detAnalyzing: pct => `Detection analysis… ${pct} %`,
@@ -3328,7 +3663,7 @@ function applyLang() {
 }
 document.querySelectorAll('#lang-toggle button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#lang-toggle button').forEach(x => x.classList.remove('on'));
-  b.classList.add('on'); lang = b.dataset.l; applyLang();
+  b.classList.add('on'); lang = b.dataset.l; applyLang(); fsaRenderSlots();
 }));
 
 document.querySelectorAll('#theme-toggle button').forEach(b => b.addEventListener('click', () => {
@@ -3355,7 +3690,7 @@ let threatPolyline   = null;
 
 function peakVertIcon() {
   return L.divIcon({
-    html:'<div style="width:12px;height:12px;border-radius:50%;background:#d64d00;border:2px solid white;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.5);margin:-6px 0 0 -6px"></div>',
+    html:'<div style="width:12px;height:12px;border-radius:50%;background:#d64d00;border:2px solid white;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>',
     className:'', iconSize:[12,12], iconAnchor:[6,6]
   });
 }
@@ -3652,13 +3987,29 @@ async function exportPNG() {
     }
     ctx.restore();
 
-    const a = document.createElement('a');
-    a.download = 'france-sol-air-' + new Date().toISOString().slice(0, 10) + '.png';
-    a.href = out.toDataURL('image/png');
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const suggestedName = 'france-sol-air-' + new Date().toISOString().slice(0, 10) + '.png';
+    const isEn          = document.documentElement.dataset.lang === 'en';
+
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description: 'PNG', accept: { 'image/png': ['.png'] } }],
+      });
+      const writable = await handle.createWritable();
+      await new Promise((resolve, reject) => out.toBlob(async blob => {
+        try { await writable.write(blob); await writable.close(); resolve(); }
+        catch (e) { reject(e); }
+      }, 'image/png'));
+    } else {
+      const name = prompt(isEn ? 'File name:' : 'Nom du fichier :', suggestedName);
+      if (!name) return;
+      const a = document.createElement('a');
+      a.download = name.endsWith('.png') ? name : name + '.png';
+      a.href = out.toDataURL('image/png');
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
   } catch(e) {
-    console.error('exportPNG:', e);
-    alert('Export PNG échoué : ' + e.message);
+    if (e.name !== 'AbortError') { console.error('exportPNG:', e); alert(t('pngExportFailed', e.message)); }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t('pngExport'); }
   }
@@ -3824,7 +4175,7 @@ async function downloadNaturalEarth(progEl) {
 
 
 async function buildNaturalEarthLayer() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const isDark = document.documentElement.getAttribute('data-fr-theme') === 'dark';
   const pane   = 'nePane';
   const lg     = L.layerGroup();
 
@@ -3949,7 +4300,7 @@ function updateOfflineInfo() {
   const tooMany = count > 5000;
   el.style.color = tooMany ? 'var(--danger)' : count > 1000 ? '#b34f00' : 'inherit';
   el.textContent = `${count.toLocaleString()} tuile${count > 1 ? 's' : ''} — ~${mo} Mo`
-                 + (tooMany ? '  ⚠ limite dépassée (> 5 000)' : '');
+                 + (tooMany ? t('offlineTileLimit') : '');
   btnDl.disabled = tooMany;
 }
 
@@ -4043,7 +4394,7 @@ async function downloadOfflineTiles() {
       } catch { errors++; }
       done++;
       progEl.textContent = `${done} / ${total}  (${Math.round(done / total * 100)} %)`
-                         + (errors ? `  — ${errors} erreur(s)` : '');
+                         + (errors ? t('offlineErrCount', errors) : '');
     }));
     await new Promise(r => setTimeout(r, 20));
   }
@@ -4155,8 +4506,9 @@ function computeThreatTOF() {
     const a = threatWaypoints[i-1], b = threatWaypoints[i];
     const gndM = haversineKm(a.lat, a.lon, b.lat, b.lon) * 1000;
     const dAlt = (b.alt||0) - (a.alt||0);
-    const speedMs = Math.max(1, a.speed||1) / 3.6;
-    times.push(times[i-1] + Math.sqrt(gndM*gndM + dAlt*dAlt) / speedMs);
+    // Vitesse moyenne pour interpolation linéaire entre départ et arrivée
+    const avgSpeedMs = Math.max(1, ((a.speed||1) + (b.speed||1)) / 2) / 3.6;
+    times.push(times[i-1] + Math.sqrt(gndM*gndM + dAlt*dAlt) / avgSpeedMs);
   }
   return times;
 }
@@ -4342,6 +4694,15 @@ let _detVersion     = 0;      // incrémenté à chaque invalidation pour annule
 let _fireOrders     = [];     // [{t, lat, lon, radarId, tDet, c2Name}]
 let _fireOrderMarkers = [];   // L.marker[] sur la carte
 let _detAnalyzing   = false;
+
+/* ---- Mode dessin carte (engagement 2-points) ---- */
+let _engDrawState = null;   // null | 'A' (attente 1er clic) | 'A->B' (rubber-band actif)
+let _engAMarker   = null;   // L.marker point A
+let _engBMarker   = null;   // L.marker point B
+let _engRubberLine  = null;  // L.polyline caoutchouc A→curseur
+let _engPreviewLine = null;  // L.polyline grise A→B affichée avant calcul
+let _engALatLon    = null;   // {lat, lon} du point A placé
+let _validLauncherIds = null; // null = pas de filtre ; Set<id> = lanceurs avec liaison C2 valide
 let _seqCalculated  = false;  // séquence pré-calculée + overlay statique affiché
 let _traceSegs      = [];     // [{det, poly}] — trace temps réel derrière le marqueur
 let _traceIdx       = -1;     // dernier indice _detSamples traité pour la trace
@@ -4492,20 +4853,41 @@ function showDetSummary() {
   }
   const detPct = Math.round(_detSamples.filter(s => s.detected).length / _detSamples.length * 100);
   const radar  = radars.find(r => r.id === firstDet.radarId);
-  const lines  = [t('detResult', fmtTime(firstDet.t), radar ? radar.name : '?', detPct)];
+  const lines  = [t('detResult', fmtTime(firstDet.t), escapeHtml(radar ? radar.name : '?'), detPct)];
   // Ordres de tir + fenêtres d'engagement
   for (let i = 0; i < _fireOrders.length; i++) {
     const fo = _fireOrders[i];
     const inTraj  = fo.t <= simTotalT;
     const timeStr = fmtTime(fo.t);
     lines.push(isEn
-      ? `⚡ Fire order T+${timeStr} (${fo.c2Name})${inTraj ? '' : ' — beyond trajectory'}`
-      : `⚡ Ordre de tir T+${timeStr} (${fo.c2Name})${inTraj ? '' : ' — hors trajectoire'}`);
+      ? `⚡ Fire order T+${timeStr} (${escapeHtml(fo.c2Name)})${inTraj ? '' : ' — beyond trajectory'}`
+      : `⚡ Ordre de tir T+${timeStr} (${escapeHtml(fo.c2Name)})${inTraj ? '' : ' — hors trajectoire'}`);
+    /* PIP (affiché si _pipResults est peuplé) */
+    if (i < _pipResults.length && _pipResults[i]) {
+      const pr = _pipResults[i];
+      if (pr.valid) {
+        const t_tir  = pr.t_tir ?? fo.t;
+        const lDel   = _missileConfigs[launchers.find(l => l.id === pr.launcherId)?.missileType]?.kinematics?.launchDelay_s || 0;
+        const tofS   = Math.max(0, Math.round(pr.T_intercept - t_tir - lDel));
+        const distK  = (pr.D_m / 1000).toFixed(1);
+        const delay  = t_tir - fo.t;
+        const delStr = delay > 0.5
+          ? (isEn ? ` — fire delay +${Math.round(delay)}s` : ` — tir retardé +${Math.round(delay)}s`)
+          : '';
+        lines.push(isEn
+          ? `  ↳ PIP T+${fmtTime(pr.T_intercept)} — ${distK} km — TOF ${tofS}s (${escapeHtml(pr.launcherName)})${delStr}`
+          : `  ↳ PIP T+${fmtTime(pr.T_intercept)} — ${distK} km — TDV ${tofS}s (${escapeHtml(pr.launcherName)})${delStr}`);
+      } else {
+        lines.push(isEn
+          ? `  ↳ No intercept possible (${escapeHtml(pr.launcherName || '—')})`
+          : `  ↳ Interception impossible (${escapeHtml(pr.launcherName || '—')})`);
+      }
+    }
     /* Fenêtre d'engagement (affichée seulement si le calcul est terminé) */
     if (_engWindowsReady && i < _engWindows.length) {
       const win = _engWindows[i];
       if (!win || !win.feasible) {
-        const lName = win ? win.launcherName : (isEn ? 'no launcher' : 'aucun lanceur');
+        const lName = win ? escapeHtml(win.launcherName) : (isEn ? 'no launcher' : 'aucun lanceur');
         lines.push(isEn ? `  ↳ No engagement window (${lName})` : `  ↳ Hors fenêtre (${lName})`);
       } else {
         const tF = fmtTime(win.t_tir_first), tL = fmtTime(win.t_tir_last);
@@ -4515,7 +4897,7 @@ function showDetSummary() {
         const closeStr = win.close_reason === 'data_exhausted'
           ? (isEn ? 'data end ⚠' : 'fin données ⚠') : (isEn ? 'envelope' : 'enveloppe');
         const segStr = win.segments.length > 1 ? ` (${win.segments.length} seg.)` : '';
-        lines.push(`  ↳ ${win.launcherName}: T+${tF} → T+${tL} [${durStr}] ${closeStr}${segStr}`);
+        lines.push(`  ↳ ${escapeHtml(win.launcherName)}: T+${tF} → T+${tL} [${durStr}] ${closeStr}${segStr}`);
       }
     }
   }
@@ -4793,17 +5175,40 @@ function solvePIP(launcher, cfg, T_fire) {
   return { ...base, valid: true, margins };
 }
 
-/* Meilleur lanceur pour un ordre de tir (PIP valide le plus précoce ; sinon moins mauvais) */
+/* Meilleur lanceur pour un ordre de tir.
+   1) Essai à fo.t (solvePIP, vitesse constante).
+   2) Si aucun valide → balayage en avant (solvePIPScan, oracle) jusqu'à simTotalT.
+   3) Champ t_tir : instant de tir effectif utilisé (peut dépasser fo.t si délai d'entrée enveloppe). */
 function bestPIPForFO(fo) {
-  const results = [];
-  for (const l of launchers) {
-    if (!l.missileType || !_missileConfigs[l.missileType]) continue;
-    results.push(solvePIP(l, _missileConfigs[l.missileType], fo.t));
+  const cfgList = launchers
+    .filter(l => l.missileType && _missileConfigs[l.missileType]
+              && (_validLauncherIds === null || _validLauncherIds.has(l.id)))
+    .map(l => ({ l, cfg: _missileConfigs[l.missileType] }));
+  if (!cfgList.length) return null;
+
+  /* Essai à fo.t */
+  const atFoT = cfgList.map(({ l, cfg }) => solvePIP(l, cfg, fo.t));
+  const validNow = atFoT.filter(r => r.valid);
+  if (validNow.length)
+    return { ...validNow.reduce((a, b) => a.T_intercept <= b.T_intercept ? a : b), t_tir: fo.t };
+
+  /* Balayage en avant : premier instant valide par lanceur, meilleur T_intercept global */
+  const STEP = 1.0;
+  let earliest = null;
+  for (const { l, cfg } of cfgList) {
+    for (let t_tir = fo.t + STEP; t_tir <= simTotalT + 0.01; t_tir += STEP) {
+      const res = solvePIPScan(l, cfg, t_tir);
+      if (res.valid) {
+        const cand = { ...res, launcherId: l.id, launcherName: l.name, t_tir };
+        if (!earliest || cand.T_intercept < earliest.T_intercept) earliest = cand;
+        break;
+      }
+    }
   }
-  if (!results.length) return null;
-  const valid = results.filter(r => r.valid);
-  if (valid.length) return valid.reduce((a, b) => a.T_intercept <= b.T_intercept ? a : b);
-  return results.reduce((a, b) => ((a.D_m || Infinity) <= (b.D_m || Infinity) ? a : b));
+  if (earliest) return earliest;
+
+  /* Repli absolu : résultat invalide avec distance minimale */
+  return { ...atFoT.reduce((a, b) => ((a.D_m || Infinity) <= (b.D_m || Infinity) ? a : b)), t_tir: fo.t };
 }
 
 function computeAllPIPs() {
@@ -5019,9 +5424,11 @@ function renderPIPOverlay() {
     const color = res.valid ? '#e65100' : '#757575';
     const line = L.polyline([[l.lat, l.lon], [res.pip.lat, res.pip.lon]], { color, weight:2, dashArray: res.valid ? '6 4':'3 5', opacity:0.75 }).addTo(map);
     _pipMapLines.push(line);
+    const delayS = res.t_tir != null ? res.t_tir - fo.t : 0;
+    const delStr = delayS > 0.5 ? (isEn ? ` — fire delay +${Math.round(delayS)}s` : ` — tir retardé +${Math.round(delayS)}s`) : '';
     const tip = res.valid
-      ? `PIP T+${fmtTime(res.T_intercept)} — ${(res.D_m/1000).toFixed(1)} km (${res.launcherName})`
-      : `PIP ${pipReasonLabel(res.reason, isEn)} (${res.launcherName})`;
+      ? `PIP T+${fmtTime(res.T_intercept)} — ${(res.D_m/1000).toFixed(1)} km (${res.launcherName})${delStr}`
+      : `PIP — ${pipReasonLabel(res.reason, isEn)} (${res.launcherName || '—'})`;
     const m = L.marker([res.pip.lat, res.pip.lon], { icon:pipIcon(res.valid), interactive:true, zIndexOffset:600 }).addTo(map);
     m.bindTooltip(tip, { permanent:false, className:'radar-tooltip' });
     _pipMapMarkers.push(m);
@@ -5122,7 +5529,8 @@ function updateRealtimePIPs(tCurrent) {
         st.marker.setIcon(pipIcon(pipOk));
         st.lastValid = pipOk;
       }
-      st.marker.bindTooltip(tip, { permanent:false, className:'radar-tooltip' });
+      if (st.marker.getTooltip()) { st.marker.setTooltipContent(tip); }
+      else { st.marker.bindTooltip(tip, { permanent:false, className:'radar-tooltip' }); }
     }
 
     if (st.missileMarker && tEnd > tLaunch) {
@@ -5524,10 +5932,227 @@ document.getElementById('sim-progress').addEventListener('input', function() {
   if (simState === 'stopped' && simCurrentT > 0) simUpdateMarker();
 });
 
+/* =========================================================================
+   ENGAGEMENT — Validité liaison C2 lanceur
+   ========================================================================= */
+
+/* Retourne un Set des IDs lanceurs dont la liaison C2 est opérationnelle :
+   - parentC2Id défini et nœud C2 existant
+   - distance ≤ maxDistC2 (si maxDistC2 > 0)
+   - LOS dégagée (si linkType === 'radio')
+   Même logique que updateEntityLines() pour les liaisons lanceur. */
+async function computeValidLaunchers() {
+  const valid = new Set();
+  const hmin  = h => Math.max(1, parseFloat(h) || 1);
+  for (const l of launchers) {
+    if (!l.parentC2Id) continue;
+    const c2 = c2nodes.find(x => x.id === l.parentC2Id);
+    if (!c2) continue;
+    // Altitudes terrain
+    if (l.terrAlt === null || isNaN(l.terrAlt))   l.terrAlt  = await fetchSpotElevation(l.lat,  l.lon);
+    if (c2.terrAlt === null || isNaN(c2.terrAlt)) c2.terrAlt = await fetchSpotElevation(c2.lat, c2.lon);
+    // Distance
+    const dist = haversineKm(l.lat, l.lon, c2.lat, c2.lon); // km (même unité que maxDistC2)
+    if (l.maxDistC2 > 0 && dist > l.maxDistC2) continue;
+    // LOS (radio uniquement)
+    if ((l.linkType || 'fiber') === 'radio') {
+      const hL  = (l.terrAlt  ?? 0) + hmin(l.hant  || 0);
+      const hC2 = (c2.terrAlt ?? 0) + hmin(c2.hant || 0);
+      const los = await checkLOSAsync(l.lat, l.lon, hL, c2.lat, c2.lon, hC2);
+      if (!los.clear) continue;
+    }
+    valid.add(l.id);
+  }
+  return valid;
+}
+
+/* =========================================================================
+   ENGAGEMENT — Module 2-points (A→B, vitesse constante, altitude constante)
+   ========================================================================= */
+
+function _engDropMarker(which, lat, lon) {
+  const isA  = which === 'A';
+  const color = isA ? '#000091' : '#c9191e';
+  const icon  = L.divIcon({
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>`,
+    className: '', iconSize: [12, 12], iconAnchor: [6, 6]
+  });
+  const prev = isA ? _engAMarker : _engBMarker;
+  if (prev) map.removeLayer(prev);
+  const m = L.marker([lat, lon], { icon, interactive: false, zIndexOffset: 1000 }).addTo(map);
+  if (isA) _engAMarker = m; else _engBMarker = m;
+}
+
+function _engSetCoordField(which, lat, lon) {
+  document.getElementById(`eng-${which}-lat`).value = formatCoord(lat, true);
+  document.getElementById(`eng-${which}-lon`).value = formatCoord(lon, false);
+}
+
+function _engClearRubber() {
+  if (_engRubberLine) { map.removeLayer(_engRubberLine); _engRubberLine = null; }
+}
+
+function _engExitDraw() {
+  _engDrawState = null;
+  _engClearRubber();
+  map.getContainer().style.cursor = '';
+  document.getElementById('eng-pick-banner').style.display = 'none';
+  const drawBtn = document.getElementById('btn-eng-draw');
+  if (drawBtn) { drawBtn.classList.remove('on'); drawBtn.textContent = t('engDrawBtn'); }
+}
+
+function engHandleMapClick(e) {
+  const lat = e.latlng.lat, lon = e.latlng.lng;
+
+  if (_engDrawState === 'A') {
+    // 1er clic → place A, passe en mode rubber-band B
+    _engALatLon = { lat, lon };
+    _engDropMarker('A', lat, lon);
+    _engSetCoordField('a', lat, lon);
+    _engDrawState = 'A->B';
+    document.getElementById('eng-pick-banner').textContent = t('engPickHintB');
+    // Créer la ligne caoutchouc
+    _engRubberLine = L.polyline([[lat, lon], [lat, lon]], {
+      color: '#555', weight: 2.5, dashArray: '8 4', opacity: 0.6, interactive: false
+    }).addTo(map);
+
+  } else if (_engDrawState === 'A->B') {
+    // 2ème clic → place B, termine le dessin
+    _engDropMarker('B', lat, lon);
+    _engSetCoordField('b', lat, lon);
+    _engClearRubber();
+    // Maintenir une ligne grise A→B jusqu'au calcul
+    if (_engPreviewLine) { map.removeLayer(_engPreviewLine); }
+    _engPreviewLine = L.polyline([[_engALatLon.lat, _engALatLon.lon], [lat, lon]], {
+      color: '#555', weight: 2.5, dashArray: '8 4', opacity: 0.8, interactive: false
+    }).addTo(map);
+    _engExitDraw();
+  }
+}
+
+// Mise à jour du rubber-band sur mousemove
+map.on('mousemove', e => {
+  if (_engDrawState === 'A->B' && _engRubberLine && _engALatLon) {
+    _engRubberLine.setLatLngs([[_engALatLon.lat, _engALatLon.lon], [e.latlng.lat, e.latlng.lng]]);
+  }
+});
+
+function _engUpdateCoordA() {
+  const lat = parseCoord(document.getElementById('eng-a-lat').value);
+  const lon = parseCoord(document.getElementById('eng-a-lon').value);
+  if (!isNaN(lat) && !isNaN(lon)) { _engALatLon = { lat, lon }; _engDropMarker('A', lat, lon); }
+}
+function _engUpdateCoordB() {
+  const lat = parseCoord(document.getElementById('eng-b-lat').value);
+  const lon = parseCoord(document.getElementById('eng-b-lon').value);
+  if (!isNaN(lat) && !isNaN(lon)) _engDropMarker('B', lat, lon);
+}
+
+document.getElementById('btn-eng-draw').addEventListener('click', () => {
+  if (_engDrawState) { _engExitDraw(); return; }
+  _engDrawState = 'A';
+  map.getContainer().style.cursor = 'crosshair';
+  const banner = document.getElementById('eng-pick-banner');
+  banner.textContent = t('engPickHintA');
+  banner.style.display = '';
+  const drawBtn = document.getElementById('btn-eng-draw');
+  drawBtn.classList.add('on'); drawBtn.textContent = t('engDrawCancel');
+});
+
+document.getElementById('btn-eng-clear').addEventListener('click', () => {
+  _engExitDraw();
+  if (_engAMarker)    { map.removeLayer(_engAMarker);    _engAMarker    = null; }
+  if (_engBMarker)    { map.removeLayer(_engBMarker);    _engBMarker    = null; }
+  if (_engPreviewLine){ map.removeLayer(_engPreviewLine); _engPreviewLine = null; }
+  _engALatLon = null;
+  ['eng-a-lat','eng-a-lon','eng-b-lat','eng-b-lon'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  _validLauncherIds = null;
+  invalidateDetection();
+  threatWaypoints.forEach(wp => { if (wp.marker) map.removeLayer(wp.marker); });
+  threatWaypoints = [];
+  if (threatPolyline) { map.removeLayer(threatPolyline); threatPolyline = null; }
+  const resEl = document.getElementById('sim-det-status');
+  if (resEl) resEl.style.display = 'none';
+});
+
+document.getElementById('btn-eng-calc').addEventListener('click', runEngCalc);
+
+async function runEngCalc() {
+  if (_detAnalyzing) return;
+  const aLat = parseCoord(document.getElementById('eng-a-lat').value);
+  const aLon = parseCoord(document.getElementById('eng-a-lon').value);
+  const bLat = parseCoord(document.getElementById('eng-b-lat').value);
+  const bLon = parseCoord(document.getElementById('eng-b-lon').value);
+
+  if (isNaN(aLat) || isNaN(aLon) || isNaN(bLat) || isNaN(bLon)) {
+    alert(t('engPointsRequired'));
+    return;
+  }
+
+  const speedA = Math.max(50, Math.min(5000, parseFloat(document.getElementById('eng-a-speed').value) || 900));
+  const altA   = Math.max(0, parseFloat(document.getElementById('eng-a-alt').value) || 5000);
+  const speedB = Math.max(50, Math.min(5000, parseFloat(document.getElementById('eng-b-speed').value) || 900));
+  const altB   = Math.max(0, parseFloat(document.getElementById('eng-b-alt').value) || 500);
+
+  /* Redrop markers in case coords were typed manually */
+  _engDropMarker('A', aLat, aLon);
+  _engDropMarker('B', bLat, bLon);
+
+  /* Build 2-point waypoints array (reuses existing sampleThreatPath / computeThreatTOF) */
+  threatWaypoints.forEach(wp => { if (wp.marker) map.removeLayer(wp.marker); });
+  threatWaypoints = [
+    { id: 1, lat: aLat, lon: aLon, alt: altA, speed: speedA, marker: null, pinned: false },
+    { id: 2, lat: bLat, lon: bLon, alt: altB, speed: speedB, marker: null, pinned: false }
+  ];
+  nextThreatWpId = 3;
+
+  _simTofCache = computeThreatTOF();
+  simTotalT    = _simTofCache[_simTofCache.length - 1] || 0;
+
+  /* Effacer la preview avant que threatRefreshPolyline ne prenne le relais */
+  if (_engPreviewLine) { map.removeLayer(_engPreviewLine); _engPreviewLine = null; }
+  /* Draw dashed trajectory line */
+  threatRefreshPolyline();
+
+  /* Liaisons C2 lanceurs — calculer avant l'analyse de détection */
+  _validLauncherIds = await computeValidLaunchers();
+
+  /* Invalidate previous analysis */
+  invalidateDetection();
+
+  /* Show progress */
+  const resEl = document.getElementById('sim-det-status');
+  if (resEl) {
+    resEl.style.cssText = 'display:block;font-size:11px;line-height:1.4;padding:3px 0 1px 8px;border-left:3px solid var(--line);color:var(--txt-dim)';
+    resEl.textContent = t('detAnalyzing', 0);
+  }
+
+  const btn = document.getElementById('btn-eng-calc');
+  if (btn) btn.disabled = true;
+  _detAnalyzing = true;
+
+  await runDetectionAnalysis(pct => {
+    if (resEl) resEl.textContent = t('detAnalyzing', pct);
+  }, false);
+
+  _detAnalyzing = false;
+  if (btn) btn.disabled = false;
+
+  if (!_detStale) {
+    renderFireOrderMarkers();
+    renderPIPOverlay();   // re-render with populated _pipResults (computed by computeFireOrders)
+    showDetSummary();     // re-render summary with PIP info appended
+  }
+}
+
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
 updateDemResEstimate();
 document.getElementById('go').addEventListener('click',compute);
 loadMissileConfigs();
+fsaRenderSlots();
+_fsaInitAutosaveBanner();
 </script>
 </body>
 </html>
