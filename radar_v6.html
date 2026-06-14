@@ -364,6 +364,46 @@
   #basemap-overlay .seg { width: auto; border-color: var(--line); }
   #basemap-overlay .seg button { font-size: 12px; padding: 6px 11px; }
 
+  /* Barre de recherche géographique */
+  #geocode-box {
+    margin-top: 6px;
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 240px;
+  }
+  #geocode-wrap {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 8px;
+  }
+  #geocode-wrap svg { flex-shrink: 0; opacity: .45; }
+  #geocode-input {
+    flex: 1; min-width: 0;
+    border: none; background: transparent;
+    font-family: var(--sans); font-size: 12px; color: var(--txt);
+    padding: 7px 0; outline: none;
+  }
+  #geocode-input::placeholder { color: #aaa; }
+  #geocode-clear {
+    border: none; background: none; cursor: pointer;
+    color: #aaa; font-size: 13px; line-height: 1; padding: 0; flex-shrink: 0;
+  }
+  #geocode-clear:hover { color: var(--txt); }
+  #geocode-list {
+    list-style: none; margin: 0; padding: 0;
+    border-top: 1px solid var(--line);
+    max-height: 220px; overflow-y: auto;
+  }
+  #geocode-list li {
+    padding: 6px 10px; font-size: 11px; cursor: pointer; line-height: 1.4;
+    border-bottom: 1px solid var(--line);
+  }
+  #geocode-list li:last-child { border-bottom: none; }
+  #geocode-list li:hover, #geocode-list li.gc-on { background: var(--badge-bg); }
+  #geocode-list .gc-name { font-weight: 700; }
+  #geocode-list .gc-det  { color: #888; font-size: 10px; }
+
   /* =========================================================================
      FORMULAIRES — champs DSFR
      ========================================================================= */
@@ -1197,6 +1237,17 @@
         <button data-v="sat" data-i18n="satBtn">Satellite</button>
         <button data-v="elev" data-i18n="elevBtn">Élévation</button>
       </div>
+      <!-- Recherche d'adresse / lieu -->
+      <div id="geocode-box">
+        <div id="geocode-wrap">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <circle cx="6.5" cy="6.5" r="5"/><line x1="10.5" y1="10.5" x2="15" y2="15"/>
+          </svg>
+          <input type="text" id="geocode-input" data-i18n-ph="geocodePh" autocomplete="off" spellcheck="false">
+          <button id="geocode-clear" style="display:none" aria-label="Effacer">✕</button>
+        </div>
+        <ul id="geocode-list" hidden></ul>
+      </div>
     </div>
     <div id="cursor-tooltip"></div>
     <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div></div>
@@ -1784,7 +1835,7 @@ function renderRadarsUI() {
         </button>
         <div class="radar-item-header-actions">
           <button class="btn-pin" onclick="togglePin('radar', ${r.id}, event)" title="${t('pinTitle')}">📌</button>
-          ${radars.length > 1 ? `<button class="btn-del" onclick="event.stopPropagation(); removeRadar(${r.id})" title="${t('pDelete')}">✖</button>` : ''}
+          <button class="btn-del" onclick="event.stopPropagation(); removeRadar(${r.id})" title="${t('pDelete')}">✖</button>
         </div>
       </div>
       <div class="radar-item-body">
@@ -3135,6 +3186,7 @@ const I18N = {
     pngExport:'📷 Exporter PNG',
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
+    geocodePh:'Rechercher un lieu…',
     offlineSection:'Carte hors ligne',
     offlineHint:'Stocke les tuiles d\'élévation (AWS Terrarium, zoom 8–12) dans le navigateur. Permet le calcul LOS et couverture radar sans connexion internet. La carte de fond reste en ligne.',
     offlineDrawZone:'⬛ Définir une zone',
@@ -3159,7 +3211,7 @@ const I18N = {
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
     calcSection:'Précision calcul', calcFast:'Rapide', calcHD:'Haute Précision',
     demResEstimate:(r,u,z)=>`Résolution estimée : ~${r} ${u} (zoom ${z})`,
-    unitSection:'Unités d\'affichage', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
+    unitSection:'Unités de mesure', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
     tabUnits:'Déploiement', tabCoverage:'Couverture', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
     engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
@@ -3226,6 +3278,7 @@ const I18N = {
     pngExport:'📷 Export PNG',
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
+    geocodePh:'Search a place…',
     offlineSection:'Offline map',
     offlineHint:'Stores elevation tiles (AWS Terrarium, zoom 8–12) in the browser. Enables LOS and radar coverage computation without internet. The base map remains online.',
     offlineDrawZone:'⬛ Define zone',
@@ -3250,7 +3303,7 @@ const I18N = {
     kmlErrEmpty:'No SPM entities found in this KML file.',
     calcSection:'Calc. precision', calcFast:'Fast', calcHD:'High Precision',
     demResEstimate:(r,u,z)=>`Estimated resolution: ~${r} ${u} (zoom ${z})`,
-    unitSection:'Display units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
+    unitSection:'Measurement units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
     tabUnits:'Deployment', tabCoverage:'Coverage', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
     engThreatBtn:'✈ Threat trajectory', engThreatActive:'Done editing trajectory',
@@ -3270,6 +3323,7 @@ const t = (key, ...a) => { const v = I18N[lang][key]; return typeof v === 'funct
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-opt]').forEach(el => { el.textContent = t(el.dataset.i18nOpt); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   renderAltList(); renderAll(true); updateEntityCounts();
 }
 document.querySelectorAll('#lang-toggle button').forEach(b => b.addEventListener('click', () => {
@@ -3610,6 +3664,87 @@ async function exportPNG() {
   }
 }
 document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+
+/* =========================================================================
+   Géocodage — Nominatim / OpenStreetMap
+   ========================================================================= */
+(function () {
+  const input  = document.getElementById('geocode-input');
+  const list   = document.getElementById('geocode-list');
+  const clrBtn = document.getElementById('geocode-clear');
+  let timer = null, hits = [], activeIdx = -1;
+
+  function renderList(results) {
+    list.innerHTML = '';
+    hits = results;
+    activeIdx = -1;
+    if (!results.length) { list.hidden = true; return; }
+    results.forEach((r, i) => {
+      const li   = document.createElement('li');
+      const parts = r.display_name.split(',');
+      li.innerHTML = `<div class="gc-name">${escapeHtml(parts[0])}</div>`
+        + (parts[1] ? `<div class="gc-det">${escapeHtml(parts.slice(1, 3).join(',').trim())}</div>` : '');
+      li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+      list.appendChild(li);
+    });
+    list.hidden = false;
+  }
+
+  function setActive(idx) {
+    const items = list.querySelectorAll('li');
+    items.forEach(li => li.classList.remove('gc-on'));
+    activeIdx = Math.max(-1, Math.min(idx, items.length - 1));
+    if (activeIdx >= 0) items[activeIdx].classList.add('gc-on');
+  }
+
+  function clearList() { list.innerHTML = ''; list.hidden = true; activeIdx = -1; }
+
+  function pick(idx) {
+    const r = hits[idx]; if (!r) return;
+    input.value = r.display_name.split(',')[0];
+    clrBtn.style.display = '';
+    clearList();
+    const bb = r.boundingbox; // [S, N, W, E]
+    if (bb) {
+      map.fitBounds([[+bb[0], +bb[2]], [+bb[1], +bb[3]]], { maxZoom: 14, padding: [30, 30] });
+    } else {
+      map.setView([+r.lat, +r.lon], 13);
+    }
+  }
+
+  async function search(q) {
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?'
+        + new URLSearchParams({ q, format: 'json', limit: 6, addressdetails: 0 });
+      const resp = await fetch(url, { headers: { 'Accept-Language': lang } });
+      if (resp.ok) renderList(await resp.json());
+    } catch {}
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clrBtn.style.display = q ? '' : 'none';
+    clearTimeout(timer);
+    if (q.length < 2) { clearList(); return; }
+    timer = setTimeout(() => search(q), 400);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (list.hidden) return;
+    if      (e.key === 'ArrowDown')  { e.preventDefault(); setActive(activeIdx + 1); }
+    else if (e.key === 'ArrowUp')    { e.preventDefault(); setActive(activeIdx - 1); }
+    else if (e.key === 'Enter')      { e.preventDefault(); pick(activeIdx >= 0 ? activeIdx : 0); }
+    else if (e.key === 'Escape')     { clearList(); input.blur(); }
+  });
+
+  clrBtn.addEventListener('click', () => {
+    input.value = ''; clrBtn.style.display = 'none'; clearList(); input.focus();
+  });
+
+  document.addEventListener('pointerdown', e => {
+    if (!e.target.closest('#geocode-box')) clearList();
+  });
+})();
 
 /* =========================================================================
    Carte vectorielle hors ligne — Natural Earth (domaine public)
