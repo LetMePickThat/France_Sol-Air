@@ -252,23 +252,30 @@
         <a href="#demarrage">Démarrage rapide</a>
       </div>
       <div class="nav-group">
-        <h2>Onglets</h2>
+        <h2>Onglet OUTILS</h2>
+        <a href="#carte">Affichage &amp; Carte</a>
+        <a href="#sommets">Recherche de sommets</a>
+        <a href="#outils">Sauvegardes &amp; exports</a>
+        <a href="#kml" class="sub">Format KML / SPM</a>
+      </div>
+      <div class="nav-group">
+        <h2>Onglet DÉPLOIEMENT</h2>
         <a href="#unites">Unités</a>
         <a href="#radars" class="sub">Radars</a>
         <a href="#lanceurs" class="sub">Lanceurs</a>
         <a href="#c2" class="sub">Nœuds C2</a>
-        <a href="#cible-atmo">Cible &amp; Atmo</a>
-        <a href="#carte">Carte</a>
-        <a href="#outils">Outils</a>
       </div>
       <div class="nav-group">
-        <h2>Calcul</h2>
-        <a href="#couverture">Couverture radar</a>
-        <a href="#sommets">Recherche de sommets</a>
+        <h2>Onglet COUVERTURE</h2>
+        <a href="#cible-atmo">Cible &amp; Atmo</a>
+        <a href="#couverture">Calcul de couverture</a>
+      </div>
+      <div class="nav-group">
+        <h2>Onglet ENGAGEMENT</h2>
+        <a href="#engagement">Trajectoire &amp; analyse</a>
       </div>
       <div class="nav-group">
         <h2>Référence</h2>
-        <a href="#kml">Format KML / SPM</a>
         <a href="#glossaire">Glossaire</a>
       </div>
     </nav>
@@ -281,23 +288,30 @@
         <a href="#demarrage">Quick Start</a>
       </div>
       <div class="nav-group">
-        <h2>Tabs</h2>
+        <h2>TOOLS tab</h2>
+        <a href="#carte">Display &amp; Map</a>
+        <a href="#sommets">Summit search</a>
+        <a href="#outils">Saves &amp; exports</a>
+        <a href="#kml" class="sub">KML / SPM format</a>
+      </div>
+      <div class="nav-group">
+        <h2>DEPLOYMENT tab</h2>
         <a href="#unites">Units</a>
         <a href="#radars" class="sub">Radars</a>
         <a href="#lanceurs" class="sub">Launchers</a>
         <a href="#c2" class="sub">C2 Nodes</a>
-        <a href="#cible-atmo">Target &amp; Atmo</a>
-        <a href="#carte">Map</a>
-        <a href="#outils">Tools</a>
       </div>
       <div class="nav-group">
-        <h2>Computation</h2>
+        <h2>COVERAGE tab</h2>
+        <a href="#cible-atmo">Target &amp; Atmo</a>
         <a href="#couverture">Radar coverage</a>
-        <a href="#sommets">Summit search</a>
+      </div>
+      <div class="nav-group">
+        <h2>ENGAGEMENT tab</h2>
+        <a href="#engagement">Trajectory &amp; analysis</a>
       </div>
       <div class="nav-group">
         <h2>Reference</h2>
-        <a href="#kml">KML / SPM format</a>
         <a href="#glossaire">Glossary</a>
       </div>
     </nav>
@@ -364,12 +378,12 @@
         </ul>
 
         <h3>Les onglets de navigation</h3>
-        <p>Sous les boutons de fond de carte, quatre onglets donnent accès aux différentes fonctions de l'outil :</p>
+        <p>Sous l'en-tête, quatre onglets donnent accès aux différentes fonctions de l'outil :</p>
         <ul>
-          <li><span class="ui-badge">CARTE</span> — réglages d'affichage (opacité, format de coordonnées, anneaux de distance), mode de calcul Rapide / Haute Précision, et outil de recherche de sommets locaux.</li>
-          <li><span class="ui-badge">UNITÉS</span> — création et configuration des radars, lanceurs et nœuds C2 déployés sur la carte.</li>
-          <li><span class="ui-badge">CIBLE &amp; ATMO</span> — définition des altitudes cibles pour le calcul de couverture et choix du modèle atmosphérique (facteur de réfraction).</li>
-          <li><span class="ui-badge">OUTILS</span> — import et export du déploiement au format KML.</li>
+          <li><span class="ui-badge">OUTILS</span> — réglages d'affichage, choix du fond de carte, barre de géocodage, <strong>sauvegardes locales</strong> (3 emplacements + auto-save), import/export KML, export PNG, téléchargement hors-ligne, recherche de sommets locaux et convertisseur de coordonnées DMS.</li>
+          <li><span class="ui-badge">DÉPLOIEMENT</span> — création et configuration des radars, lanceurs et nœuds C2 déployés sur la carte.</li>
+          <li><span class="ui-badge">COUVERTURE</span> — définition des altitudes cibles, choix du modèle atmosphérique (facteur de réfraction k) et mode de calcul Rapide / Haute Précision.</li>
+          <li><span class="ui-badge">ENGAGEMENT</span> — définition d'une trajectoire de menace (deux points A/B avec vitesse et altitude) et calcul de la fenêtre d'engagement cinétique.</li>
         </ul>
 
         <h3>Commandes de calcul et préférences</h3>
@@ -413,12 +427,12 @@
         </ul>
 
         <h3>Navigation tabs</h3>
-        <p>Below the base map buttons, four tabs provide access to the tool's functions:</p>
+        <p>Below the header, four tabs provide access to the tool's functions:</p>
         <ul>
-          <li><span class="ui-badge">MAP</span> — display settings (opacity, coordinate format, range rings), Fast / High Precision computation mode, and local summit search.</li>
-          <li><span class="ui-badge">UNITS</span> — create and configure radars, launchers and C2 nodes deployed on the map.</li>
-          <li><span class="ui-badge">TARGET &amp; ATMO</span> — define target altitudes for coverage computation and choose the atmospheric model (refraction factor).</li>
-          <li><span class="ui-badge">TOOLS</span> — import and export the deployment in KML format.</li>
+          <li><span class="ui-badge">TOOLS</span> — display settings, base map selection, geocode search bar, <strong>local saves</strong> (3 named slots + auto-save), KML import/export, PNG export, offline tile download, local summit search and DMS coordinate converter.</li>
+          <li><span class="ui-badge">DEPLOYMENT</span> — create and configure radars, launchers and C2 nodes deployed on the map.</li>
+          <li><span class="ui-badge">COVERAGE</span> — define target altitudes, choose the atmospheric model (refraction factor k) and set the computation mode (Fast / High Precision).</li>
+          <li><span class="ui-badge">ENGAGEMENT</span> — define a two-point threat trajectory (A/B with speed and altitude) and compute the kinematic engagement window.</li>
         </ul>
 
         <h3>Computation controls and preferences</h3>
@@ -456,12 +470,12 @@
       <div class="help-fr">
         <h2>Démarrage rapide</h2>
         <ol>
-          <li>Choisissez un fond de carte (<strong>Plan clair</strong>, <strong>Plan sombre</strong> ou <strong>Élévation</strong>).</li>
-          <li>Allez dans l'onglet <span class="ui-badge">UNITÉS</span> puis <span class="ui-badge">Radars</span>.</li>
+          <li>Choisissez un fond de carte (<strong>Plan clair</strong>, <strong>Plan sombre</strong> ou <strong>Élévation</strong>) via le sélecteur en haut à droite de la carte.</li>
+          <li>Allez dans l'onglet <span class="ui-badge">DÉPLOIEMENT</span> puis <span class="ui-badge">Radars</span>.</li>
           <li>Cliquez <span class="ui-badge green">+ Ajouter un radar</span> — un marqueur apparaît au centre de la vue.</li>
           <li>Configurez la portée, la hauteur d'antenne et le secteur angulaire du radar dans le formulaire.</li>
           <li>Glissez le marqueur vers la position souhaitée sur la carte.</li>
-          <li>Dans l'onglet <span class="ui-badge">CIBLE &amp; ATMO</span>, vérifiez les altitudes cibles (0, 5, 40, 500 m par défaut).</li>
+          <li>Dans l'onglet <span class="ui-badge">COUVERTURE</span>, vérifiez les altitudes cibles (0, 5, 40, 500 m par défaut).</li>
           <li>Cliquez <span class="ui-badge">Calculer la couverture</span>.</li>
         </ol>
         <div class="callout tip">
@@ -473,12 +487,12 @@
       <div class="help-en">
         <h2>Quick Start</h2>
         <ol>
-          <li>Choose a base map (<strong>Map (light)</strong>, <strong>Map (dark)</strong> or <strong>Elevation</strong>).</li>
-          <li>Go to the <span class="ui-badge">UNITS</span> tab, then select <span class="ui-badge">Radars</span>.</li>
+          <li>Choose a base map (<strong>Map (light)</strong>, <strong>Map (dark)</strong> or <strong>Elevation</strong>) using the selector at the top-right of the map.</li>
+          <li>Go to the <span class="ui-badge">DEPLOYMENT</span> tab, then select <span class="ui-badge">Radars</span>.</li>
           <li>Click <span class="ui-badge green">+ Add radar</span> — a marker appears at the centre of the current view.</li>
           <li>Configure the range, antenna height and angular sector of the radar in the form.</li>
           <li>Drag the marker to the desired position on the map.</li>
-          <li>In the <span class="ui-badge">TARGET &amp; ATMO</span> tab, verify the target altitudes (0, 5, 40, 500 m by default).</li>
+          <li>In the <span class="ui-badge">COVERAGE</span> tab, verify the target altitudes (0, 5, 40, 500 m by default).</li>
           <li>Click <span class="ui-badge">Compute coverage</span>.</li>
         </ol>
         <div class="callout tip">
@@ -495,7 +509,7 @@
     <section class="help-section" id="unites">
 
       <div class="help-fr">
-        <h2>Onglet — Unités</h2>
+        <h2>Onglet — Déploiement</h2>
         <p>Cet onglet regroupe les trois types d'entités GBAD. Chacun dispose de son propre panneau accessible via le sélecteur <span class="ui-badge">Radars</span> <span class="ui-badge grey">Lanceurs</span> <span class="ui-badge grey">C2</span>.</p>
         <p>Chaque unité est représentée par une <strong>fiche dépliable</strong>. La fiche de l'unité active est mise en évidence. Un clic sur son titre la développe ou la réduit. L'icône épingle <strong>📌</strong> maintient une fiche ouverte en permanence.</p>
         <div class="callout">
@@ -505,7 +519,7 @@
       </div>
 
       <div class="help-en">
-        <h2>Tab — Units</h2>
+        <h2>Tab — Deployment</h2>
         <p>This tab groups the three GBAD entity types. Each has its own panel accessible via the selector <span class="ui-badge">Radars</span> <span class="ui-badge grey">Launchers</span> <span class="ui-badge grey">C2</span>.</p>
         <p>Each unit is shown as a <strong>collapsible card</strong>. The active unit's card is highlighted. Clicking its title expands or collapses it. The pin icon <strong>📌</strong> keeps a card permanently open.</p>
         <div class="callout">
@@ -679,7 +693,7 @@
     <section class="help-section" id="cible-atmo">
 
       <div class="help-fr">
-        <h2>Onglet — Cible &amp; Atmo</h2>
+        <h2>Onglet — Couverture (Cible &amp; Atmo)</h2>
         <h3>Référence d'altitude</h3>
         <p>Définit la convention d'altitude utilisée pour les altitudes cibles :</p>
         <ul>
@@ -706,7 +720,7 @@
       </div>
 
       <div class="help-en">
-        <h2>Tab — Target &amp; Atmo</h2>
+        <h2>Tab — Coverage (Target &amp; Atmo)</h2>
         <h3>Altitude reference</h3>
         <p>Defines the altitude convention used for target altitudes:</p>
         <ul>
@@ -740,7 +754,7 @@
     <section class="help-section" id="carte">
 
       <div class="help-fr">
-        <h2>Onglet — Carte</h2>
+        <h2>Onglet — Outils (Affichage &amp; Carte)</h2>
         <h3>Affichage &amp; Coordonnées</h3>
         <table class="param-table">
           <thead><tr><th>Contrôle</th><th>Description</th></tr></thead>
@@ -763,7 +777,7 @@
       </div>
 
       <div class="help-en">
-        <h2>Tab — Map</h2>
+        <h2>Tab — Tools (Display &amp; Map)</h2>
         <h3>Display &amp; Coordinates</h3>
         <table class="param-table">
           <thead><tr><th>Control</th><th>Description</th></tr></thead>
@@ -832,10 +846,75 @@
 
     <hr class="light">
 
-    <!-- ============================================================ OUTILS / KML -->
+    <!-- ============================================================ OUTILS / SAUVEGARDES / EXPORTS -->
     <section class="help-section" id="outils">
-      <div class="help-fr"><h2>Onglet — Outils</h2></div>
-      <div class="help-en"><h2>Tab — Tools</h2></div>
+
+      <div class="help-fr">
+        <h2>Onglet — Outils (Sauvegardes &amp; Exports)</h2>
+
+        <h3>Sauvegardes locales</h3>
+        <p>L'accordéon <strong>Sauvegardes</strong> propose trois emplacements nommés pour enregistrer et restaurer des déploiements directement dans le navigateur (localStorage), sans générer de fichier.</p>
+        <ul>
+          <li><span class="ui-badge green">Sauvegarder</span> — enregistre la situation complète (unités, altitudes cibles, facteur k, vue de la carte) dans l'emplacement sélectionné.</li>
+          <li><span class="ui-badge">Charger</span> — restaure le déploiement depuis l'emplacement.</li>
+          <li><span class="ui-badge red">Supprimer</span> — efface le contenu de l'emplacement.</li>
+        </ul>
+        <p>Un <strong>auto-save</strong> est déclenché automatiquement 600 ms après chaque modification. Si l'onglet est fermé ou la page rechargée sans sauvegarde explicite, une bannière propose de restaurer la session au prochain chargement.</p>
+        <div class="callout warn">
+          <strong>Attention — rafraîchissement</strong>
+          Un rechargement de la page (F5) efface les données non sauvegardées. Une fenêtre de confirmation s'affiche pour prévenir de cette perte.
+        </div>
+
+        <h3>Export PNG</h3>
+        <p>Capture la vue cartographique actuelle (radars, couverture, entités) en image PNG. La résolution peut être ajustée via le champ PPI avant l'export. Sur Chrome/Edge, une boîte de dialogue native permet de choisir le nom et l'emplacement du fichier ; sur Firefox, un nom de fichier est demandé par une fenêtre de saisie.</p>
+
+        <h3>Export / Import KML</h3>
+        <p>Voir la section <a href="#kml">Format KML / SPM</a> ci-dessous.</p>
+
+        <h3>Téléchargement hors-ligne</h3>
+        <p>Permet de mettre en cache les tuiles d'élévation AWS et les tuiles de fond de carte pour une utilisation sans connexion Internet. Définissez la zone géographique et les niveaux de zoom souhaités ; le téléchargement s'effectue en arrière-plan avec une barre de progression.</p>
+        <div class="callout">
+          <strong>Limite</strong>
+          La taille du cache dépend du stockage disponible dans le navigateur. Un avertissement s'affiche si le nombre de tuiles dépasse 5 000.
+        </div>
+
+        <h3>Convertisseur de coordonnées</h3>
+        <p>Convertit des coordonnées entre le format décimal (DD) et le format degrés-minutes-secondes (DMS), et inversement.</p>
+      </div>
+
+      <div class="help-en">
+        <h2>Tab — Tools (Saves &amp; Exports)</h2>
+
+        <h3>Local saves</h3>
+        <p>The <strong>Saves</strong> accordion provides three named slots for saving and restoring deployments directly in the browser (localStorage), without generating a file.</p>
+        <ul>
+          <li><span class="ui-badge green">Save</span> — stores the complete situation (units, target altitudes, k factor, map view) in the selected slot.</li>
+          <li><span class="ui-badge">Load</span> — restores the deployment from the slot.</li>
+          <li><span class="ui-badge red">Delete</span> — clears the slot contents.</li>
+        </ul>
+        <p>An <strong>auto-save</strong> is triggered automatically 600 ms after each change. If the tab is closed or the page is reloaded without an explicit save, a banner offers to restore the session on next load.</p>
+        <div class="callout warn">
+          <strong>Warning — page refresh</strong>
+          Reloading the page (F5) clears unsaved data. A confirmation prompt warns of this loss.
+        </div>
+
+        <h3>PNG export</h3>
+        <p>Captures the current map view (radars, coverage, entities) as a PNG image. Resolution can be adjusted via the PPI field before export. On Chrome/Edge, a native save dialog lets you choose the file name and location; on Firefox, a filename prompt is shown instead.</p>
+
+        <h3>KML export / import</h3>
+        <p>See the <a href="#kml">KML / SPM format</a> section below.</p>
+
+        <h3>Offline tile download</h3>
+        <p>Allows AWS elevation tiles and base map tiles to be cached for use without an internet connection. Set the geographic area and desired zoom levels; the download proceeds in the background with a progress bar.</p>
+        <div class="callout">
+          <strong>Limit</strong>
+          Cache size depends on the browser's available storage. A warning is shown if the tile count exceeds 5,000.
+        </div>
+
+        <h3>Coordinate converter</h3>
+        <p>Converts coordinates between decimal (DD) and degrees-minutes-seconds (DMS) formats, and vice versa.</p>
+      </div>
+
     </section>
 
     <section class="help-section" id="kml">
@@ -938,6 +1017,75 @@
         <div class="callout">
           <strong>Stale results</strong>
           As soon as a parameter is changed after a computation, the coverage layer is greyed out and the orange "Stale results" banner appears. Click <strong>Compute coverage</strong> to update.
+        </div>
+      </div>
+
+    </section>
+
+    <hr class="light">
+
+    <!-- ============================================================ ENGAGEMENT -->
+    <section class="help-section" id="engagement">
+
+      <div class="help-fr">
+        <h2>Onglet — Engagement</h2>
+        <p>L'onglet Engagement permet de simuler la trajectoire d'une menace aérienne et de calculer la <strong>fenêtre d'engagement cinétique</strong> pour chaque paire (radar, lanceur) du déploiement.</p>
+
+        <h3>Définir la trajectoire</h3>
+        <ol>
+          <li>Cliquez <span class="ui-badge">Tracer la trajectoire</span> pour entrer en mode dessin.</li>
+          <li><strong>1er clic</strong> sur la carte : pose le point de départ A (cercle bleu).</li>
+          <li><strong>2e clic</strong> : pose le point d'arrivée B (cercle rouge). La trajectoire est affichée en gris.</li>
+          <li>Renseignez la <strong>vitesse</strong> (km/h) et l'<strong>altitude</strong> (m) pour chacun des deux points. La vitesse et l'altitude sont interpolées linéairement entre A et B.</li>
+        </ol>
+        <p>Les coordonnées des points peuvent aussi être saisies manuellement dans les champs Lat/Lon.</p>
+
+        <h3>Calculer</h3>
+        <p>Cliquez <span class="ui-badge">Calculer</span> pour lancer l'analyse séquentielle :</p>
+        <ul>
+          <li>Détection de la cible par chaque radar actif (calcul d'intervisibilité le long de la trajectoire).</li>
+          <li>Génération des <strong>ordres de tir</strong> (T+det + délai de chaîne C2).</li>
+          <li>Calcul des <strong>fenêtres d'engagement</strong> (t_tir_first → t_tir_last) et du <strong>Point d'Impact Prévu (PIP)</strong> pour chaque lanceur configuré.</li>
+        </ul>
+        <p>Les résultats s'affichent dans le panneau inférieur et sur la carte (marqueurs de tir, PIP, barre de progression colorée rouge/vert).</p>
+
+        <h3>Simulation</h3>
+        <p>Le player de simulation permet de rejouer la trajectoire en temps réel et d'observer l'évolution dynamique du PIP à mesure que le track radar est actualisé.</p>
+
+        <div class="callout">
+          <strong>Pré-requis</strong>
+          Les lanceurs doivent avoir un <strong>type de missile</strong> configuré (onglet Déploiement) et être rattachés à un nœud C2 possédant le droit d'engagement (<em>Décision engagement : Oui</em>) pour générer une fenêtre.
+        </div>
+      </div>
+
+      <div class="help-en">
+        <h2>Tab — Engagement</h2>
+        <p>The Engagement tab allows you to simulate an airborne threat trajectory and compute the <strong>kinematic engagement window</strong> for each (radar, launcher) pair in the deployment.</p>
+
+        <h3>Define the trajectory</h3>
+        <ol>
+          <li>Click <span class="ui-badge">Draw trajectory</span> to enter drawing mode.</li>
+          <li><strong>1st click</strong> on the map: places departure point A (blue circle).</li>
+          <li><strong>2nd click</strong>: places arrival point B (red circle). The trajectory is shown in grey.</li>
+          <li>Enter the <strong>speed</strong> (km/h) and <strong>altitude</strong> (m) for each of the two points. Speed and altitude are linearly interpolated between A and B.</li>
+        </ol>
+        <p>Point coordinates can also be entered manually in the Lat/Lon fields.</p>
+
+        <h3>Calculate</h3>
+        <p>Click <span class="ui-badge">Calculate</span> to run the sequential analysis:</p>
+        <ul>
+          <li>Target detection by each active radar (intervisibility along the trajectory).</li>
+          <li>Generation of <strong>fire orders</strong> (T+det + C2 chain delay).</li>
+          <li>Computation of <strong>engagement windows</strong> (t_fire_first → t_fire_last) and the <strong>Predicted Impact Point (PIP)</strong> for each configured launcher.</li>
+        </ul>
+        <p>Results are shown in the lower panel and on the map (fire markers, PIP, red/green colour-coded progress bar).</p>
+
+        <h3>Simulation</h3>
+        <p>The simulation player replays the trajectory in real time, showing the dynamic PIP update as the radar track is refreshed.</p>
+
+        <div class="callout">
+          <strong>Requirements</strong>
+          Launchers must have a <strong>missile type</strong> configured (Deployment tab) and be attached to a C2 node with engagement authority (<em>Engagement decision: Yes</em>) to generate a window.
         </div>
       </div>
 

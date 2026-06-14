@@ -8,8 +8,7 @@ The application is bilingual (French default, English toggle) and complies with 
 
 ## Architecture
 
-- **Single-file SPA**: `radar_v6.html` (~4,500 lines) — all HTML, CSS, and JavaScript in one file
-- **Engagement proto**: `radarV6_eng_proto.html` — full copy of `radar_v6.html` with the ENGAGEMENT tab enabled; used for development and testing of the kinematic reachability engine
+- **Single-file SPA**: `radar_v6.html` (~6,150 lines) — all HTML, CSS, and JavaScript in one file; ENGAGEMENT tab is fully visible
 - **Standalone help page**: `aide.html` — separate DSFR-styled page, bilingual (FR/EN toggle)
 - **No build system**: open the file directly in a browser or serve it statically
 - **No backend**: all computation is client-side
@@ -19,8 +18,7 @@ The application is bilingual (French default, English toggle) and complies with 
 
 ```
 France_Sol-Air/
-├── radar_v6.html           # Main application (single-file SPA) — engagement tab hidden
-├── radarV6_eng_proto.html  # Dev proto — engagement tab enabled
+├── radar_v6.html           # Main application (single-file SPA) — all 4 tabs enabled
 ├── aide.html               # Standalone help page (FR/EN)
 ├── index.html              # GitHub Pages redirect → radar_v6.html
 ├── missiles/
@@ -51,7 +49,8 @@ France_Sol-Air/
 - **KML import/export**: full scenario round-trip with all parameters in `spm:` ExtendedData
 - **Multi-altitude coverage**: user-defined target altitudes (default: 0, 5, 40, 500 m)
 - **Coordinate tools**: DMS ↔ decimal degrees conversion
-- **i18n**: 70+ string pairs, function-based interpolation, FR/EN toggle
+- **i18n**: 80+ string pairs, function-based interpolation, FR/EN toggle
+- **LocalStorage save system**: 3 named slots + auto-save with F5 protection (`beforeunload`); slot buttons in OUTILS accordion; `showSaveFilePicker()` / `prompt()` fallback for KML and PNG exports
 - **Theme toggle**: light/dark per DSFR spec
 - **Compact UI mode**: `@media (max-height: 820px)` reduces chrome to preserve form space on low-res screens
 - **Help page**: `aide.html` with 14 sections, sidebar scroll-spy, FR/EN toggle, DSFR styling
@@ -139,7 +138,7 @@ let _detVersion      = 0;    // incremented on scenario invalidation; async loop
 
 ### Engagement tab visibility
 
-The ENGAGEMENT tab button has `style="display:none"` in `radar_v6.html` (public GitHub Pages build). It is fully visible in `radarV6_eng_proto.html` (dev proto). To re-enable it in the main file, remove the `style="display:none" aria-hidden="true"` attributes from the tab button at line ~749.
+The ENGAGEMENT tab is fully enabled in `radar_v6.html` (tab button visible, no `display:none`). The dev proto `radarV6_eng_proto.html` was deleted on 2026-06-14; `radar_v6.html` is the sole working file.
 
 ## Important Technical Details
 
