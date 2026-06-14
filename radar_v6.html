@@ -3672,7 +3672,7 @@ document.getElementById('btn-export-png').addEventListener('click', exportPNG);
   const input  = document.getElementById('geocode-input');
   const list   = document.getElementById('geocode-list');
   const clrBtn = document.getElementById('geocode-clear');
-  let timer = null, hits = [], activeIdx = -1;
+  let timer = null, hits = [], activeIdx = -1, pinMarker = null;
 
   function renderList(results) {
     list.innerHTML = '';
@@ -3699,11 +3699,47 @@ document.getElementById('btn-export-png').addEventListener('click', exportPNG);
 
   function clearList() { list.innerHTML = ''; list.hidden = true; activeIdx = -1; }
 
+  const geocodePin = L.divIcon({
+    className: '',
+    html: `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z"
+            fill="#e1000f" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="4.5" fill="#fff"/>
+    </svg>`,
+    iconSize: [24, 36], iconAnchor: [12, 36], tooltipAnchor: [0, -36]
+  });
+
+  function dropPin(lat, lon, label) {
+    if (pinMarker) map.removeLayer(pinMarker);
+    pinMarker = L.marker([lat, lon], { icon: geocodePin, interactive: true, zIndexOffset: 2000 })
+      .addTo(map)
+      .bindTooltip(label, { permanent: false, direction: 'top', className: 'radar-tooltip' });
+  }
+
+  function removePin() { if (pinMarker) { map.removeLayer(pinMarker); pinMarker = null; } }
+
+  function switchToOSM() {
+    if (baseMap === 'carto') return;
+    map.removeLayer(osmLayer); map.removeLayer(darkLayer);
+    map.removeLayer(satLayer); map.removeLayer(elevLayer);
+    if (_neLayerGroup && map.hasLayer(_neLayerGroup)) map.removeLayer(_neLayerGroup);
+    baseMap = 'carto';
+    osmLayer.addTo(map);
+    document.querySelectorAll('#basemap button').forEach(b => {
+      b.classList.toggle('on', b.dataset.v === 'carto');
+    });
+    if (coverageLayer) coverageLayer.bringToFront();
+    drawRings();
+  }
+
   function pick(idx) {
     const r = hits[idx]; if (!r) return;
-    input.value = r.display_name.split(',')[0];
+    const name = r.display_name.split(',')[0];
+    input.value = name;
     clrBtn.style.display = '';
     clearList();
+    switchToOSM();
+    dropPin(+r.lat, +r.lon, name);
     const bb = r.boundingbox; // [S, N, W, E]
     if (bb) {
       map.fitBounds([[+bb[0], +bb[2]], [+bb[1], +bb[3]]], { maxZoom: 14, padding: [30, 30] });
@@ -3738,7 +3774,7 @@ document.getElementById('btn-export-png').addEventListener('click', exportPNG);
   });
 
   clrBtn.addEventListener('click', () => {
-    input.value = ''; clrBtn.style.display = 'none'; clearList(); input.focus();
+    input.value = ''; clrBtn.style.display = 'none'; clearList(); removePin(); input.focus();
   });
 
   document.addEventListener('pointerdown', e => {
