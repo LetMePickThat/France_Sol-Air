@@ -1065,6 +1065,11 @@
             <span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body" id="acc-png">
+            <div class="form-row" style="align-items:center;gap:8px;margin-bottom:8px">
+              <label for="png-ppi" style="font-size:12px;white-space:nowrap" data-i18n="pngPPILabel">Résolution (PPI)</label>
+              <input type="number" id="png-ppi" value="150" min="72" max="600" step="1"
+                     style="width:72px;padding:3px 6px;font-size:12px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--txt)">
+            </div>
             <button class="btn-add" id="btn-export-png" data-i18n="pngExport">📷 Exporter PNG</button>
             <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
           </div>
@@ -3126,6 +3131,7 @@ const I18N = {
     kmlDocName:'Déploiement GBAD — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
     pngSection:'Export image',
+    pngPPILabel:'Résolution (PPI)',
     pngExport:'📷 Exporter PNG',
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
@@ -3216,6 +3222,7 @@ const I18N = {
     kmlDocName:'GBAD Deployment — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
     pngSection:'Image export',
+    pngPPILabel:'Resolution (PPI)',
     pngExport:'📷 Export PNG',
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
@@ -3474,14 +3481,17 @@ async function exportPNG() {
     const mapEl   = document.getElementById('map');
     const mapRect = mapEl.getBoundingClientRect();
     const W = Math.round(mapRect.width), H = Math.round(mapRect.height);
+    const ppi   = Math.max(72, Math.min(600, parseInt(document.getElementById('png-ppi')?.value) || 150));
+    const scale = ppi / 96;                       // 96 CSS px = 1 pouce (standard W3C)
     const out = document.createElement('canvas');
-    out.width = W; out.height = H;
+    out.width = Math.round(W * scale); out.height = Math.round(H * scale);
     const ctx = out.getContext('2d');
+    ctx.scale(scale, scale);                       // toutes les coords restent en CSS px
 
     const bxy = el => {
       const r = el.getBoundingClientRect();
-      return { x: Math.round(r.left - mapRect.left), y: Math.round(r.top - mapRect.top),
-               w: Math.round(r.width), h: Math.round(r.height) };
+      return { x: r.left - mapRect.left, y: r.top - mapRect.top,
+               w: r.width, h: r.height };
     };
 
     ctx.fillStyle = getComputedStyle(mapEl).backgroundColor || '#ececec';
