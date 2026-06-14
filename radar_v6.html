@@ -8,7 +8,6 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
   /* =========================================================================
@@ -1057,7 +1056,16 @@
             <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
             <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
             <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
-            <button class="btn-add" id="btn-export-png" data-i18n="pngExport" style="margin-top:18px">📷 Exporter PNG</button>
+          </div>
+        </div>
+        <!-- Export image — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-png">
+            <span data-i18n="pngSection">Export image</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-png">
+            <button class="btn-add" id="btn-export-png" data-i18n="pngExport">📷 Exporter PNG</button>
             <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
           </div>
         </div>
@@ -1458,9 +1466,9 @@ L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('nePane');
 map.getPane('nePane').style.zIndex = '195'; // sous tilePane (200), au-dessus de rien
 const osmLayer  = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+  { maxZoom:19, crossOrigin:'anonymous', attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
 const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  { subdomains:'abcd', maxZoom:20, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>' });
+  { subdomains:'abcd', maxZoom:20, crossOrigin:'anonymous', attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>' });
 const satLayer  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   { maxZoom:19, attribution:'Tiles © <a href="https://www.esri.com/">Esri</a> — Source: Esri, USGS, NOAA' });
 osmLayer.addTo(map);
@@ -3117,6 +3125,7 @@ const I18N = {
     kmlImportHint:'Remplace la situation actuelle par le déploiement du fichier KML.',
     kmlDocName:'Déploiement GBAD — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import réussi : ${r} radar(s), ${l} lanceur(s), ${c} nœud(s) C2.`,
+    pngSection:'Export image',
     pngExport:'📷 Exporter PNG',
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
@@ -3206,6 +3215,7 @@ const I18N = {
     kmlImportHint:'Replaces the current situation with the deployment in the KML file.',
     kmlDocName:'GBAD Deployment — SPM Helper',
     kmlImportOk:(r,l,c)=>`Import successful: ${r} radar(s), ${l} launcher(s), ${c} C2 node(s).`,
+    pngSection:'Image export',
     pngExport:'📷 Export PNG',
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
@@ -3457,24 +3467,137 @@ document.getElementById('kfac').addEventListener('change', e => {
 document.getElementById('btn-export-kml').addEventListener('click', exportKML);
 document.getElementById('kml-file-input').addEventListener('change', function() { importKMLFile(this); });
 
-function exportPNG() {
+async function exportPNG() {
   const btn = document.getElementById('btn-export-png');
   if (btn) { btn.disabled = true; btn.textContent = t('pngExporting'); }
-  html2canvas(document.getElementById('map'), {
-    useCORS: true,
-    allowTaint: false,
-    logging: false,
-    scale: window.devicePixelRatio || 1
-  }).then(canvas => {
+  try {
+    const mapEl   = document.getElementById('map');
+    const mapRect = mapEl.getBoundingClientRect();
+    const W = Math.round(mapRect.width), H = Math.round(mapRect.height);
+    const out = document.createElement('canvas');
+    out.width = W; out.height = H;
+    const ctx = out.getContext('2d');
+
+    const bxy = el => {
+      const r = el.getBoundingClientRect();
+      return { x: Math.round(r.left - mapRect.left), y: Math.round(r.top - mapRect.top),
+               w: Math.round(r.width), h: Math.round(r.height) };
+    };
+
+    ctx.fillStyle = getComputedStyle(mapEl).backgroundColor || '#ececec';
+    ctx.fillRect(0, 0, W, H);
+
+    /* tuiles (crossOrigin='anonymous' → canvas propre) */
+    for (const img of mapEl.querySelectorAll('.leaflet-tile-pane img.leaflet-tile')) {
+      if (!img.complete || !img.naturalWidth || img.crossOrigin !== 'anonymous') continue;
+      const p = bxy(img);
+      try { ctx.drawImage(img, p.x, p.y, p.w, p.h); } catch {}
+    }
+    for (const cv of mapEl.querySelectorAll('.leaflet-tile-pane canvas.leaflet-tile')) {
+      const p = bxy(cv); try { ctx.drawImage(cv, p.x, p.y, p.w, p.h); } catch {}
+    }
+
+    /* couverture radar (blob URL same-origin) */
+    for (const img of mapEl.querySelectorAll('.leaflet-overlay-pane img')) {
+      if (!img.complete || !img.naturalWidth) continue;
+      const p = bxy(img); try { ctx.drawImage(img, p.x, p.y, p.w, p.h); } catch {}
+    }
+
+    /* helper : sérialise un SVG sans son transform CSS (déjà pris en compte via getBoundingClientRect) */
+    const drawSVGEl = async (svg, x, y, w, h) => {
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('width', w); clone.setAttribute('height', h);
+      clone.style.transform = '';        // évite la double application du transform Leaflet
+      clone.style.webkitTransform = '';
+      const url = URL.createObjectURL(new Blob(
+        ['<?xml version="1.0"?>' + new XMLSerializer().serializeToString(clone)],
+        { type: 'image/svg+xml' }
+      ));
+      await new Promise(res => {
+        const i = new Image();
+        i.onload  = () => { try { ctx.drawImage(i, x, y, w, h); } catch {} URL.revokeObjectURL(url); res(); };
+        i.onerror = () => { URL.revokeObjectURL(url); res(); };
+        i.src = url;
+      });
+    };
+
+    /* overlays SVG (anneaux portée, lignes C2…) */
+    const seen = new Set();
+    for (const svg of mapEl.querySelectorAll('.leaflet-pane svg')) {
+      if (seen.has(svg)) continue; seen.add(svg);
+      const r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      await drawSVGEl(svg, r.left - mapRect.left, r.top - mapRect.top, r.width, r.height);
+    }
+
+    /* icônes marqueurs */
+    for (const icon of mapEl.querySelectorAll('.leaflet-marker-pane .leaflet-marker-icon')) {
+      const r  = icon.getBoundingClientRect();
+      const x0 = r.left - mapRect.left, y0 = r.top - mapRect.top;
+      const innerSVG = icon.querySelector('svg');
+      if (innerSVG) {
+        const iw = parseFloat(innerSVG.getAttribute('width'))  || r.width  || 14;
+        const ih = parseFloat(innerSVG.getAttribute('height')) || r.height || 14;
+        await drawSVGEl(innerSVG, x0, y0, iw, ih);
+      } else {
+        const div = icon.querySelector('div') || icon;
+        if (!div) continue;
+        const s  = getComputedStyle(div);
+        const bw = parseFloat(s.borderTopWidth) || 0;
+        const br = parseFloat(s.borderTopLeftRadius) || 0;
+        ctx.save();
+        ctx.fillStyle = s.backgroundColor || 'transparent';
+        ctx.strokeStyle = s.borderTopColor || '#ffffff';
+        ctx.lineWidth = bw;
+        if (br >= Math.min(r.width, r.height) * 0.4) {
+          ctx.beginPath();
+          ctx.arc(x0 + r.width/2, y0 + r.height/2, Math.min(r.width, r.height)/2 - bw/2, 0, Math.PI*2);
+          ctx.fill(); if (bw > 0) ctx.stroke();
+        } else {
+          ctx.fillRect(x0, y0, r.width, r.height);
+          if (bw > 0) ctx.strokeRect(x0 + bw/2, y0 + bw/2, r.width - bw, r.height - bw);
+        }
+        ctx.restore();
+      }
+    }
+
+    /* étiquettes texte */
+    ctx.save();
+    ctx.font = '600 11px Arial, sans-serif';
+    ctx.textBaseline = 'middle';
+    for (const tip of mapEl.querySelectorAll('.leaflet-tooltip.radar-tooltip')) {
+      const r = tip.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      const text = tip.textContent.trim();
+      if (!text) continue;
+      const x = r.left - mapRect.left, y = r.top - mapRect.top, rad = 3;
+      ctx.fillStyle = '#161616';
+      ctx.beginPath();
+      ctx.moveTo(x+rad, y); ctx.lineTo(x+r.width-rad, y);
+      ctx.arcTo(x+r.width, y, x+r.width, y+rad, rad);
+      ctx.lineTo(x+r.width, y+r.height-rad);
+      ctx.arcTo(x+r.width, y+r.height, x+r.width-rad, y+r.height, rad);
+      ctx.lineTo(x+rad, y+r.height);
+      ctx.arcTo(x, y+r.height, x, y+r.height-rad, rad);
+      ctx.lineTo(x, y+rad);
+      ctx.arcTo(x, y, x+rad, y, rad);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(text, x+8, y+r.height/2);
+    }
+    ctx.restore();
+
     const a = document.createElement('a');
-    a.download = 'france-sol-air.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-  }).catch(() => {
-    alert(t('pngExporting').replace('…', '') + ' — échec (CORS ou canvas teinté)');
-  }).finally(() => {
+    a.download = 'france-sol-air-' + new Date().toISOString().slice(0, 10) + '.png';
+    a.href = out.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } catch(e) {
+    console.error('exportPNG:', e);
+    alert('Export PNG échoué : ' + e.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = t('pngExport'); }
-  });
+  }
 }
 document.getElementById('btn-export-png').addEventListener('click', exportPNG);
 
