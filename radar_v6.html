@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
   /* =========================================================================
@@ -127,7 +126,7 @@
     margin: 0; font-size: 11px; font-weight: 400;
     color: var(--txt-dim); line-height: 1.4;
   }
-  #panel header .seg { margin-top: 10px; }
+  /* (supprimé: basemap seg n'est plus dans le header) */
 
   /* =========================================================================
      NAVIGATION PAR ONGLETS (inspiré fr-tabs DSFR v1.14)
@@ -250,24 +249,121 @@
   }
 
   /* =========================================================================
-     FOOTER PERMANENT — Calculer + Résultats + Langue/Thème
+     FOOTER PERMANENT — Langue / Thème / Aide
      ========================================================================= */
   #panel-footer {
     flex-shrink: 0;
     background: var(--panel2);
-    border-top: 2px solid var(--accent);
-    padding: 14px 18px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    border-top: 1px solid var(--line);
+    padding: 10px 18px;
   }
   #panel-footer .footer-toggles {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-top: 4px;
   }
+
+  /* =========================================================================
+     SECTION CTA FIXE — Calculer / Résultats / Avertissement
+     Toujours visible quel que soit l'onglet actif
+     ========================================================================= */
+  #panel-cta {
+    flex-shrink: 0;
+    background: var(--panel2);
+    border-top: 2px solid var(--accent);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #stale-banner {
+    display: none;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    border-left: 3px solid var(--warning);
+    font-size: 12px;
+    color: var(--warning);
+    font-weight: 600;
+    gap: 6px;
+    align-items: center;
+  }
+  #stale-banner.show { display: flex; }
+
+  /* =========================================================================
+     ACCORDÉONS — onglet OUTILS (sections à fréquence réduite)
+     ========================================================================= */
+  .acc-item {
+    border-bottom: 1px solid var(--line);
+  }
+  .acc-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 18px;
+    background: transparent;
+    border: 0;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--txt-label);
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.3;
+    transition: background .12s;
+  }
+  .acc-btn:hover { background: var(--badge-bg); }
+  .acc-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .acc-chevron {
+    font-size: 9px;
+    opacity: .55;
+    transition: transform .2s;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  .acc-btn[aria-expanded="true"] .acc-chevron { transform: rotate(-180deg); }
+  .acc-body {
+    display: none;
+    padding: 2px 18px 16px;
+  }
+  .acc-body.open { display: block; }
+
+  /* Badge compteur d'entités sur les boutons Radars/Lanceurs/C2 */
+  .entity-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  .seg button.on .entity-count-badge {
+    background: rgba(255,255,255,.25);
+    color: #fff;
+  }
+
+  /* Overlay fond de carte — flottant sur la carte (top-right) */
+  #basemap-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 999;
+    box-shadow: var(--shadow);
+  }
+  #basemap-overlay .seg { width: auto; border-color: var(--line); }
+  #basemap-overlay .seg button { font-size: 12px; padding: 6px 11px; }
 
   /* =========================================================================
      FORMULAIRES — champs DSFR
@@ -500,6 +596,15 @@
     padding: 4px 8px; box-shadow: var(--shadow);
   }
 
+  /* Labels villes Natural Earth */
+  .leaflet-tooltip.ne-label {
+    background: transparent; border: none; box-shadow: none;
+    font-size: 10px; font-family: var(--sans); font-weight: 600;
+    color: #333; white-space: nowrap; padding: 0 2px;
+    pointer-events: none; text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+  }
+  [data-theme="dark"] .leaflet-tooltip.ne-label { color: #ccc; text-shadow: 0 0 3px #111, 0 0 3px #111; }
+
   /* Écran d'attente (fr-modal-like) */
   #busy {
     position: absolute; inset: 0;
@@ -530,8 +635,7 @@
     white-space: nowrap; box-shadow: var(--shadow);
   }
 
-  #stale-banner { display: none; }
-  #stale-banner.show { display: flex; }
+  /* #stale-banner déplacé dans la section "BANNIÈRE PÉRIMÉE" ci-dessus */
   .leaflet-marker-draggable:active { cursor: grabbing !important; }
 
   /* Bouton toggle d'entité (remplace le div onclick — a11y DSFR) */
@@ -576,7 +680,7 @@
     #panel header .marianne-bloc { display: none; }
     #panel header p { display: none; }
     #panel header { padding: 8px 20px 6px; gap: 0; }
-    #panel header .seg { margin-top: 6px; }
+    /* (supprimé: basemap seg n'est plus dans le header) */
 
     /* Onglets de navigation plus compacts */
     .tab-btn { padding: 6px 4px 4px; }
@@ -593,9 +697,9 @@
     .row { margin-bottom: 8px; gap: 4px; }
     .row.row-inline { margin-bottom: 6px; }
 
-    /* Footer Calculer + bascules */
-    #panel-footer { padding: 8px 18px; gap: 6px; }
-    #panel-footer .footer-toggles { margin-top: 2px; }
+    /* Footer bascules + section CTA */
+    #panel-footer { padding: 6px 18px; }
+    #panel-cta { padding: 10px 18px; gap: 6px; }
 
     /* Pied de panneau entité */
     .entity-pane-footer { padding: 6px 14px 8px; gap: 4px; }
@@ -732,11 +836,6 @@
       <div class="marianne-bloc">République<br>Française</div>
       <h1>France Sol-Air</h1>
       <p data-i18n="appTitle">Intervisibilité Radar</p>
-      <div class="seg" id="basemap" style="margin-top:10px">
-        <button data-v="carto" class="on" data-i18n="cartoLight">Plan clair</button>
-        <button data-v="dark" data-i18n="cartoDark">Plan sombre</button>
-        <button data-v="elev" data-i18n="elevBtn">Élévation</button>
-      </div>
     </header>
 
     <!-- ========== Barre d'onglets (fr-tabs DSFR) ========== -->
@@ -744,7 +843,7 @@
       <button class="tab-btn active" role="tab" data-tab="tools"
               aria-selected="true"  aria-controls="tab-tools"     data-i18n="tabTools">OUTILS</button>
       <button class="tab-btn"        role="tab" data-tab="entities"
-              aria-selected="false" aria-controls="tab-entities"  data-i18n="tabUnits">UNITÉS</button>
+              aria-selected="false" aria-controls="tab-entities"  data-i18n="tabUnits">DÉPLOIEMENT</button>
       <button class="tab-btn"        role="tab" data-tab="coverage"
               aria-selected="false" aria-controls="tab-coverage"  data-i18n="tabCoverage">COUVERTURE</button>
       <button class="tab-btn"        role="tab" data-tab="engagement"
@@ -805,20 +904,36 @@
          ============================================================ -->
     <div id="tab-coverage" class="tab-panel" role="tabpanel">
       <div class="tab-scroll">
-        <div class="tab-section">
-          <h3 data-i18n="altRef">Référence d'altitude</h3>
-          <div class="seg" id="ref">
-            <button data-v="agl" class="on" data-i18n="altAGL">Sol (AGL)</button>
-            <button data-v="amsl" data-i18n="altAMSL">Mer (AMSL)</button>
+        <!-- Référence d'altitude — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-altref">
+            <span data-i18n="altRef">Référence d'altitude</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-altref">
+            <div class="seg" id="ref">
+              <button data-v="agl" class="on" data-i18n="altAGL">Sol (AGL)</button>
+              <button data-v="amsl" data-i18n="altAMSL">Mer (AMSL)</button>
+            </div>
           </div>
         </div>
-        <div class="tab-section">
-          <h3 data-i18n="altTargets">Altitudes cibles</h3>
-          <div id="alt-list"></div>
+        <!-- Altitudes cibles — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-alttargets">
+            <span data-i18n="altTargets">Altitudes cibles</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-alttargets">
+            <div id="alt-list"></div>
+          </div>
         </div>
-        <div class="tab-section">
-          <div class="row" style="margin-bottom:0">
-            <label for="kfac" data-i18n="refraction">Facteur de réfraction k</label>
+        <!-- Facteur de réfraction — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-kfac">
+            <span data-i18n="refraction">Facteur de réfraction k</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-kfac">
             <select id="kfac">
               <option value="1.3333" selected data-i18n-opt="kStd">4/3 — standard (1.33)</option>
               <option value="1.0"    data-i18n-opt="kGeo">1.0 — géométrique</option>
@@ -827,13 +942,19 @@
             </select>
           </div>
         </div>
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="calcSection">Précision DEM</h3>
-          <div class="seg" id="dem-quality-seg">
-            <button class="on" data-q="11" data-i18n="calcFast">Rapide</button>
-            <button data-q="12" data-i18n="calcHD">Haute Précision</button>
+        <!-- Précision calcul — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-dem">
+            <span data-i18n="calcSection">Précision calcul</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-dem">
+            <div class="seg" id="dem-quality-seg">
+              <button class="on" data-q="11" data-i18n="calcFast">Rapide</button>
+              <button data-q="12" data-i18n="calcHD">Haute Précision</button>
+            </div>
+            <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
           </div>
-          <p id="dem-res-estimate" class="hint" style="margin:8px 0 0; font-size:12px;"></p>
         </div>
       </div>
     </div>
@@ -843,96 +964,134 @@
          ============================================================ -->
     <div id="tab-tools" class="tab-panel active" role="tabpanel">
       <div class="tab-scroll">
-        <div class="tab-section">
-          <h3 data-i18n="unitSection">Unités</h3>
-          <div class="row row-inline" style="margin-bottom:8px">
-            <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
-            <div class="seg" id="unit-alt-seg">
-              <button class="on" data-u="m">m</button>
-              <button data-u="ft">ft</button>
+        <!-- Unités d'affichage — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-units">
+            <span data-i18n="unitSection">Unités</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-units">
+            <div class="row row-inline" style="margin-bottom:8px">
+              <label data-i18n="unitAltLabel" style="font-size:12px;font-weight:600;width:70px">Altitude</label>
+              <div class="seg" id="unit-alt-seg">
+                <button class="on" data-u="m">m</button>
+                <button data-u="ft">ft</button>
+              </div>
             </div>
-          </div>
-          <div class="row row-inline" style="margin-bottom:8px">
-            <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
-            <div class="seg" id="unit-dist-seg">
-              <button data-u="m">m</button>
-              <button class="on" data-u="km">km</button>
-              <button data-u="nm">nm</button>
+            <div class="row row-inline" style="margin-bottom:8px">
+              <label data-i18n="unitDistLabel" style="font-size:12px;font-weight:600;width:70px">Distance</label>
+              <div class="seg" id="unit-dist-seg">
+                <button data-u="m">m</button>
+                <button class="on" data-u="km">km</button>
+                <button data-u="nm">nm</button>
+              </div>
             </div>
-          </div>
-          <div class="row row-inline">
-            <label data-i18n="unitTimeLabel" style="font-size:12px;font-weight:600;width:70px">Temps</label>
-            <div class="seg" id="unit-time-seg">
-              <button class="on" data-u="sec">s</button>
-              <button data-u="min">min</button>
-              <button data-u="hms">h m s</button>
+            <div class="row row-inline">
+              <label data-i18n="unitTimeLabel" style="font-size:12px;font-weight:600;width:70px">Temps</label>
+              <div class="seg" id="unit-time-seg">
+                <button class="on" data-u="sec">s</button>
+                <button data-u="min">min</button>
+                <button data-u="hms">h m s</button>
+              </div>
             </div>
           </div>
         </div>
-        <div class="tab-section">
-          <h3 data-i18n="displayCoords">Affichage &amp; Coordonnées</h3>
-          <div class="row row-inline">
-            <label for="op-map" data-i18n="transpMap">Opacité carte</label>
-            <input type="range" id="op-map" min="0" max="100" value="100" style="max-width:140px;">
-          </div>
-          <div class="row row-inline">
-            <label for="op-cov" data-i18n="transpRadar">Opacité couverture</label>
-            <input type="range" id="op-cov" min="0" max="100" value="50" style="max-width:140px;">
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <label for="coord-format" data-i18n="coordFormat">Format des coordonnées</label>
-            <select id="coord-format">
-              <option value="DMS" selected data-i18n-opt="coordDMS">Degrés Minutes Secondes (DMS)</option>
-              <option value="DD"  data-i18n-opt="coordDD">Décimales (DD)</option>
-            </select>
-          </div>
-          <div class="row" style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:0">
-            <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
-            <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
-            <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
-            <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
-          </div>
-        </div>
-        <div class="tab-section">
-          <h3 data-i18n="peakSection">Recherche Sommets Locaux</h3>
-          <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
-          <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
-          <div class="row" style="margin-top:12px;">
-            <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
-            <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
-          </div>
-          <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
-          <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
-          <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
-        </div>
-        <div class="tab-section">
-          <h3 data-i18n="kmlSection">Import / Export KML</h3>
-          <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
-          <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
-          <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
-          <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
-          <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
-          <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
-          <button class="btn-add" id="btn-export-png" data-i18n="pngExport" style="margin-top:18px">📷 Exporter PNG</button>
-          <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
-        </div>
-        <div class="tab-section" style="border-bottom:0">
-          <h3 data-i18n="offlineSection">Carte hors ligne</h3>
-          <p class="hint" data-i18n="offlineHint" style="margin-bottom:8px">…</p>
-          <button class="btn-add" id="btn-offline-zone" data-i18n="offlineDrawZone">⬛ Définir une zone</button>
-          <div id="offline-info" style="display:none; margin-top:12px;">
-            <div class="row row-inline" style="margin-bottom:8px; align-items:center; gap:8px;">
-              <label style="font-size:12px;font-weight:600;" data-i18n="offlineZoom">Zoom</label>
-              <input type="number" id="offline-z-min" value="8" min="0" max="18" style="width:52px;height:28px;text-align:center;">
-              <span style="font-size:12px;color:var(--txt-dim)">–</span>
-              <input type="number" id="offline-z-max" value="13" min="0" max="18" style="width:52px;height:28px;text-align:center;">
+        <!-- Affichage & Coordonnées — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-display">
+            <span data-i18n="displayCoords">Affichage &amp; Coordonnées</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-display">
+            <div class="row row-inline">
+              <label for="op-map" data-i18n="transpMap">Opacité carte</label>
+              <input type="range" id="op-map" min="0" max="100" value="100" style="max-width:140px;">
             </div>
-            <div id="offline-tile-count" style="font-size:12px;font-weight:600;margin-bottom:10px;"></div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-              <button class="btn-add" id="btn-offline-download" data-i18n="offlineDownload">⬇ Télécharger</button>
-              <button id="btn-offline-cancel" style="display:none;padding:6px 14px;border-radius:4px;border:0;background:#ce0500;color:#fff;font-size:13px;cursor:pointer;" data-i18n="offlineCancel">✖ Annuler</button>
+            <div class="row row-inline">
+              <label for="op-cov" data-i18n="transpRadar">Opacité couverture</label>
+              <input type="range" id="op-cov" min="0" max="100" value="50" style="max-width:140px;">
             </div>
-            <div id="offline-progress" class="hint" style="margin-top:6px;"></div>
+            <div class="row" style="margin-top:10px;">
+              <label for="coord-format" data-i18n="coordFormat">Format des coordonnées</label>
+              <select id="coord-format">
+                <option value="DMS" selected data-i18n-opt="coordDMS">Degrés Minutes Secondes (DMS)</option>
+                <option value="DD"  data-i18n-opt="coordDD">Décimales (DD)</option>
+              </select>
+            </div>
+            <div class="row" style="margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line); flex-direction:row; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:0">
+              <label style="font-size:12px; font-weight:500;"><input type="checkbox" id="show-rings" checked> <span data-i18n="marksDist">Marques dist.</span></label>
+              <label style="font-size:12px; font-weight:400; color:var(--txt-dim);"><input type="checkbox" id="rings-all" checked> <span data-i18n="allRadars">Tous</span></label>
+              <input id="ring-step" type="number" step="1" value="10" min="1" style="width:55px; height:28px; padding:2px 4px;">
+              <span id="ring-step-unit" style="font-size:12px; color:var(--txt-dim)">km</span>
+            </div>
+          </div>
+        </div>
+        <!-- Recherche Sommets — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-peaks">
+            <span data-i18n="peakSection">Recherche Sommets Locaux</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-peaks">
+            <button id="btn-draw-zone" class="btn-add" data-i18n="peakDrawZone">Zone de recherche</button>
+            <div class="hint" id="peak-hint" data-i18n="peakHint" style="display:none; color:var(--warning); margin-top:6px">…</div>
+            <div class="row" style="margin-top:12px;">
+              <label for="peak-count" data-i18n="peakCountLabel">Nombre max de sommets</label>
+              <input type="number" id="peak-count" value="20" min="1" max="200" step="1">
+            </div>
+            <button id="btn-search-peaks" class="btn-add" style="margin-top:8px;" data-i18n="peakSearchBtn">Lancer la recherche</button>
+            <div id="peak-status" class="stat" style="margin-top:10px; display:none; border-left-color:var(--accent);"></div>
+            <button id="btn-clear-peaks" class="btn-add" style="margin-top:8px; border-color:var(--line); color:var(--txt-dim);" data-i18n="peakClear">Effacer</button>
+          </div>
+        </div>
+        <!-- Import / Export KML — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-kml">
+            <span data-i18n="kmlSection">Import / Export KML</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-kml">
+            <button class="btn-add" id="btn-export-kml" data-i18n="kmlExport">⬇ Exporter KML</button>
+            <p class="hint" data-i18n="kmlExportHint" style="margin-top:6px">…</p>
+            <label for="kml-file-input" class="btn-add" style="margin-top:10px; cursor:pointer;" data-i18n="kmlImport">⬆ Importer KML</label>
+            <input type="file" id="kml-file-input" accept=".kml,.xml" style="display:none">
+            <p class="hint" data-i18n="kmlImportHint" style="margin-top:6px">…</p>
+            <div id="kml-status" class="stat" style="display:none; margin-top:10px;" role="status" aria-live="polite"></div>
+            <button class="btn-add" id="btn-export-png" data-i18n="pngExport" style="margin-top:18px">📷 Exporter PNG</button>
+            <p class="hint" data-i18n="pngExportHint" style="margin-top:6px">…</p>
+          </div>
+        </div>
+        <!-- Carte hors ligne — accordéon -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-offline">
+            <span data-i18n="offlineSection">Carte hors ligne</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body" id="acc-offline">
+            <p class="hint" data-i18n="offlineHint" style="margin-bottom:10px">…</p>
+            <div id="offline-cache-status" class="hint" style="display:none; border-left-color:var(--success); color:var(--success); margin-bottom:6px;"></div>
+            <div id="offline-zones-toggle-row" style="display:none; flex-direction:row; align-items:center; gap:8px; margin-bottom:12px;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; cursor:pointer; color:var(--txt-label);">
+                <input type="checkbox" id="offline-zones-toggle" style="width:14px; height:14px; cursor:pointer; accent-color:var(--accent);">
+                <span data-i18n="offlineShowZones">Afficher les zones stockées sur la carte</span>
+              </label>
+            </div>
+            <button class="btn-add" id="btn-offline-zone" data-i18n="offlineDrawZone">⬛ Définir une zone</button>
+            <div id="offline-info" style="display:none; margin-top:12px;">
+              <div class="row row-inline" style="margin-bottom:8px; align-items:center; gap:8px;">
+                <label style="font-size:12px;font-weight:600;" data-i18n="offlineZoom">Zoom</label>
+                <input type="number" id="offline-z-min" value="8" min="0" max="18" style="width:52px;height:28px;text-align:center;">
+                <span style="font-size:12px;color:var(--txt-dim)">–</span>
+                <input type="number" id="offline-z-max" value="12" min="0" max="18" style="width:52px;height:28px;text-align:center;">
+              </div>
+              <div id="offline-tile-count" style="font-size:12px;font-weight:600;margin-bottom:10px;"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <button class="btn-add" id="btn-offline-download" data-i18n="offlineDownload">⬇ Stocker localement</button>
+                <button id="btn-offline-cancel" style="display:none;padding:6px 14px;border-radius:4px;border:0;background:#ce0500;color:#fff;font-size:13px;cursor:pointer;" data-i18n="offlineCancel">✖ Annuler</button>
+              </div>
+              <div id="offline-progress" class="hint" style="margin-top:6px;"></div>
+            </div>
+            <button class="btn-add" id="btn-offline-clear" style="margin-top:12px; border-color:var(--line); color:var(--txt-dim);" data-i18n="offlineClear">🗑 Vider le cache local</button>
           </div>
         </div>
       </div>
@@ -988,13 +1147,19 @@
     <!-- ============================================================
          FOOTER PERMANENT — Calculer + Résultats + Langue/Thème
          ============================================================ -->
-    <div id="panel-footer">
+    <!-- ============================================================
+         SECTION FIXE — Calculer / Résultats / Avertissement
+         ============================================================ -->
+    <div id="panel-cta">
       <button id="go" data-i18n="computeBtn">Calculer la couverture</button>
-      <div id="stale-banner" role="alert" aria-live="assertive" style="padding:8px 10px; background:color-mix(in srgb, var(--warning) 12%, transparent); border-left:3px solid var(--warning); font-size:12px; color:var(--warning); font-weight:600; gap:6px; align-items:center;">
-        <span>⚠</span><span data-i18n="staleBanner">Résultats périmés — Recalculer pour mettre à jour</span>
+      <div id="stale-banner" role="alert" aria-live="assertive">
+        <span>⚠</span><span data-i18n="staleBanner">Résultats périmés — recalculer pour mettre à jour</span>
       </div>
       <button id="btn-clear-coverage" class="btn-add" style="display:none; border-color:var(--danger); color:var(--danger);" data-i18n="clearCoverage">Supprimer la couverture</button>
-      <div id="results" class="stat" style="display:none" role="status" aria-live="polite"></div>
+      <div id="results" class="stat" style="display:none;" role="status" aria-live="polite"></div>
+    </div>
+
+    <div id="panel-footer">
       <div class="footer-toggles">
         <div class="seg" id="lang-toggle" style="max-width:100px;">
           <button data-l="fr" class="on">FR</button>
@@ -1011,6 +1176,15 @@
 
   <div id="map-container">
     <div id="map"></div>
+    <!-- Sélecteur de fond de carte — overlay flottant top-right -->
+    <div id="basemap-overlay">
+      <div class="seg" id="basemap">
+        <button data-v="carto" class="on" data-i18n="cartoLight">Plan clair</button>
+        <button data-v="dark" data-i18n="cartoDark">Plan sombre</button>
+        <button data-v="sat" data-i18n="satBtn">Satellite</button>
+        <button data-v="elev" data-i18n="elevBtn">Élévation</button>
+      </div>
+    </div>
     <div id="cursor-tooltip"></div>
     <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div></div>
   </div>
@@ -1057,13 +1231,15 @@ function switchEntityPane(type) {
 function updateEntityCounts() {
   const seg = document.getElementById('entity-type-seg');
   if (!seg) return;
-  const label = (key, n) => `${t(key)}${n ? ' ·' + n : ''}`;
+  const label = (key, n) => n
+    ? `${t(key)}<span class="entity-count-badge">${n}</span>`
+    : t(key);
   const rb = seg.querySelector('[data-e="radars"]');
   const lb = seg.querySelector('[data-e="launchers"]');
   const cb = seg.querySelector('[data-e="c2"]');
-  if (rb) rb.textContent = label('tabRadars',    radars.length);
-  if (lb) lb.textContent = label('tabLaunchers', launchers.length);
-  if (cb) cb.textContent = label('tabC2',        c2nodes.length);
+  if (rb) rb.innerHTML = label('tabRadars',    radars.length);
+  if (lb) lb.innerHTML = label('tabLaunchers', launchers.length);
+  if (cb) cb.innerHTML = label('tabC2',        c2nodes.length);
 }
 
 document.querySelectorAll('.tab-btn').forEach(b =>
@@ -1072,6 +1248,16 @@ document.querySelectorAll('.tab-btn').forEach(b =>
 document.querySelectorAll('#entity-type-seg button').forEach(b =>
   b.addEventListener('click', () => switchEntityPane(b.dataset.e))
 );
+
+/* Accordéons onglet OUTILS */
+document.querySelectorAll('.acc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', !expanded);
+    const body = document.getElementById(btn.getAttribute('aria-controls'));
+    if (body) body.classList.toggle('open', !expanded);
+  });
+});
 
 /* =========================================================================
    LOGIQUE APPLICATIVE ET MOTEUR
@@ -1202,13 +1388,85 @@ function pxToLonLat(x, y, worldPx) {
 }
 
 /* =========================================================================
+   CACHE TUILES HORS LIGNE — IndexedDB (persistant entre sessions)
+   Les tuiles OSM sont stockées localement et servies en priorité sur le réseau.
+   ========================================================================= */
+let _tileDB = null;
+async function _openTileDB() {
+  if (_tileDB) return _tileDB;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('fsa-offline-tiles', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('tiles');
+    req.onsuccess  = e => { _tileDB = e.target.result; resolve(_tileDB); };
+    req.onerror    = () => reject(req.error);
+  });
+}
+async function tileDBGet(key) {
+  const db = await _openTileDB();
+  return new Promise(resolve => {
+    const req = db.transaction('tiles','readonly').objectStore('tiles').get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror   = () => resolve(null);
+  });
+}
+async function tileDBPut(key, blob) {
+  const db = await _openTileDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('tiles','readwrite');
+    tx.objectStore('tiles').put(blob, key);
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+async function tileDBCount() {
+  const db = await _openTileDB();
+  return new Promise(resolve => {
+    const req = db.transaction('tiles','readonly').objectStore('tiles').count();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => resolve(0);
+  });
+}
+async function tileDBClear() {
+  const db = await _openTileDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('tiles','readwrite');
+    tx.objectStore('tiles').clear();
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+async function tileDBSize() {
+  const db = await _openTileDB();
+  return new Promise(resolve => {
+    let total = 0;
+    const req = db.transaction('tiles','readonly').objectStore('tiles').openCursor();
+    req.onsuccess = e => {
+      const cur = e.target.result;
+      if (cur) { if (cur.value?.size) total += cur.value.size; cur.continue(); }
+      else resolve(total);
+    };
+    req.onerror = () => resolve(0);
+  });
+}
+
+
+/* =========================================================================
    Initialisation Carte Leaflet
    ========================================================================= */
 const map = L.map('map',{zoomControl:true}).setView([48.8566,2.3522], 9);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
-const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OSM'});
-const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {subdomains:'abcd', maxZoom:20, attribution:'© OSM © CARTO'});
+map.createPane('nePane');
+map.getPane('nePane').style.zIndex = '195'; // sous tilePane (200), au-dessus de rien
+const osmLayer  = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  { subdomains:'abcd', maxZoom:20, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>' });
+const satLayer  = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:19, attribution:'Tiles © <a href="https://www.esri.com/">Esri</a> — Source: Esri, USGS, NOAA' });
 osmLayer.addTo(map);
+map.attributionControl.addAttribution(
+  'Élévation : © EU-DEM (<a href="https://www.copernicus.eu/">Copernicus</a>), SRTM (NASA/USGS) via <a href="https://github.com/tilezen/joerd">Tilezen/Joerd</a>'
+);
 
 const ElevationLayer = L.GridLayer.extend({
   createTile: function(coords,done) {
@@ -1237,7 +1495,7 @@ const ElevationLayer = L.GridLayer.extend({
     img.onerror=()=>done(null,tile); img.src=TERRA_URL(coords.z,coords.x,coords.y); return tile;
   }
 });
-const elevLayer = new ElevationLayer({maxZoom:14,minZoom:0});
+const elevLayer = new ElevationLayer({maxNativeZoom:14, maxZoom:19, minZoom:0});
 
 let coverageLayer = null, coverageBlobUrl = null;
 let coverageExists = false;  
@@ -1263,8 +1521,13 @@ let ringsLayer = null;
 document.querySelectorAll('#basemap button').forEach(b=>b.addEventListener('click', ()=>{
   if(b.dataset.v===baseMap) return;
   document.querySelectorAll('#basemap button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); baseMap=b.dataset.v;
-  map.removeLayer(osmLayer); map.removeLayer(darkLayer); map.removeLayer(elevLayer);
-  if(baseMap==='carto') osmLayer.addTo(map); else if(baseMap==='dark') darkLayer.addTo(map); else if(baseMap==='elev') elevLayer.addTo(map);
+  map.removeLayer(osmLayer); map.removeLayer(darkLayer); map.removeLayer(satLayer); map.removeLayer(elevLayer);
+  if (_neLayerGroup && map.hasLayer(_neLayerGroup)) map.removeLayer(_neLayerGroup);
+  if(baseMap==='carto') osmLayer.addTo(map);
+  else if(baseMap==='dark') darkLayer.addTo(map);
+  else if(baseMap==='sat') satLayer.addTo(map);
+  else if(baseMap==='elev') elevLayer.addTo(map);
+  else if(baseMap==='vector') showNEBasemap();
   if(coverageLayer) coverageLayer.bringToFront(); drawRings();
 }));
 
@@ -1347,29 +1610,38 @@ async function fetchElevTile(z, tx, ty) {
   const key = `${z}/${tx}/${ty}`;
   if (_elevTileCache.has(key)) return _elevTileCache.get(key);
   if (!_elevTilePending.has(key)) {
-    _elevTilePending.set(key, new Promise(res => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const cv = document.createElement('canvas');
-        cv.width = cv.height = 256;
-        const cx = cv.getContext('2d', { willReadFrequently: true });
-        cx.drawImage(img, 0, 0);
-        const d = cx.getImageData(0, 0, 256, 256).data;
-        const arr = new Float32Array(256 * 256);
-        for (let i = 0; i < 256 * 256; i++)
-          arr[i] = (d[i*4]*256 + d[i*4+1] + d[i*4+2]/256) - 32768;
-        _elevTileCache.set(key, arr);
-        _elevTilePending.delete(key);
-        res(arr);
-      };
-      img.onerror = () => {
-        _elevTileCache.set(key, null);
-        _elevTilePending.delete(key);
-        res(null);
-      };
-      img.src = TERRA_URL(z, tx, ty);
-    }));
+    _elevTilePending.set(key, (async () => {
+      const decodeImg = src => new Promise(res => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const cv = document.createElement('canvas');
+          cv.width = cv.height = 256;
+          const cx = cv.getContext('2d', { willReadFrequently: true });
+          cx.drawImage(img, 0, 0);
+          const d = cx.getImageData(0, 0, 256, 256).data;
+          const arr = new Float32Array(256 * 256);
+          for (let i = 0; i < 256 * 256; i++)
+            arr[i] = (d[i*4]*256 + d[i*4+1] + d[i*4+2]/256) - 32768;
+          res(arr);
+        };
+        img.onerror = () => res(null);
+        img.src = src;
+      });
+
+      let arr = null;
+      const blob = await tileDBGet(`elev/${key}`);
+      if (blob) {
+        const blobUrl = URL.createObjectURL(blob);
+        arr = await decodeImg(blobUrl);
+        URL.revokeObjectURL(blobUrl);
+      }
+      if (!arr) arr = await decodeImg(TERRA_URL(z, tx, ty));
+
+      _elevTileCache.set(key, arr);
+      _elevTilePending.delete(key);
+      return arr;
+    })());
   }
   return _elevTilePending.get(key);
 }
@@ -1937,7 +2209,7 @@ document.getElementById('btn-add-c2').addEventListener('click', () => {
   c2nodes.push({id, name: `${t('c2DefaultName')} ${id}`, lat: center.lat, lon: center.lng, marker: null, terrAlt: null, hant: 10, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', engDelay: 0, engDecision: false, pinned: false});
   selectEntity('c2', id);
 });
-document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
+document.getElementById('op-map').addEventListener('input', (e) => { const op = e.target.value / 100; osmLayer.setOpacity(op); darkLayer.setOpacity(op); satLayer.setOpacity(op); if(elevLayer.setOpacity) elevLayer.setOpacity(op); });
 document.getElementById('op-cov').addEventListener('input', (e) => { if(coverageLayer) coverageLayer.setOpacity(e.target.value / 100); });
 ['show-rings', 'rings-all', 'ring-step'].forEach(id => document.getElementById(id).addEventListener('change', drawRings));
 document.getElementById('ring-step').addEventListener('input', drawRings);
@@ -2849,20 +3121,31 @@ const I18N = {
     pngExportHint:'Capture la carte courante (radars, couverture, entités) en image PNG.',
     pngExporting:'Export en cours…',
     offlineSection:'Carte hors ligne',
-    offlineHint:'Télécharge les tuiles OSM de la zone définie en ZIP pour consultation sans connexion.',
+    offlineHint:'Stocke les tuiles d\'élévation (AWS Terrarium, zoom 8–12) dans le navigateur. Permet le calcul LOS et couverture radar sans connexion internet. La carte de fond reste en ligne.',
     offlineDrawZone:'⬛ Définir une zone',
     offlineZoom:'Zoom',
-    offlineDownload:'⬇ Télécharger',
+    offlineDownload:'⬇ Stocker localement',
     offlineCancel:'✖ Annuler',
-    offlineZipping:'Génération du ZIP…',
-    offlineDone:(d,e)=>`Terminé — ${d} tuile(s) téléchargée(s)${e?`, ${e} erreur(s)`:'.'} `,
-    offlineCancelled:'Téléchargement annulé.',
+    offlineDone:(d,e)=>`${d} tuile(s) stockée(s) localement${e?`, ${e} erreur(s)`:'.'} `,
+    offlineCancelled:'Stockage annulé.',
+    offlineClear:'🗑 Vider le cache local',
+    offlineCacheCleared:'Cache local vidé.',
+    offlineCacheStatus:(n,mb)=>`Cache local : ${n} tuile(s) — ${mb} Mo`,
+    offlineShowZones:'Afficher les zones stockées sur la carte',
+    offlineZoneTooltip:(z,n)=>`${z} · ${n} tuile(s)`,
+    offlineNEHint:'Carte vectorielle Natural Earth (domaine public) — fond de carte minimal fonctionnel sans connexion internet.',
+    offlineNEDownload:'⬇ Stocker la carte vectorielle',
+    offlineNEDownloading:(n,t)=>`Couche ${n}/${t}`,
+    offlineNEDone:'Carte vectorielle stockée.',
+    offlineNEStatus:mb=>`Carte vectorielle : ${mb} Mo`,
+    satBtn:'Satellite',
+    vectorBtn:'Vecteur',
     kmlErrParse:'Fichier KML invalide',
     kmlErrEmpty:'Aucune entité SPM reconnue dans ce fichier KML.',
-    calcSection:'Calcul', calcFast:'Rapide', calcHD:'Haute Précision',
+    calcSection:'Précision calcul', calcFast:'Rapide', calcHD:'Haute Précision',
     demResEstimate:(r,u,z)=>`Résolution estimée : ~${r} ${u} (zoom ${z})`,
     unitSection:'Unités d\'affichage', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Temps',
-    tabUnits:'Unités', tabCoverage:'Couverture', tabTools:'Outils', tabEngagement:'Engagement',
+    tabUnits:'Déploiement', tabCoverage:'Couverture', tabTools:'Outils', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
     engThreatBtn:'✈ Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
@@ -2927,20 +3210,31 @@ const I18N = {
     pngExportHint:'Captures the current map (radars, coverage, entities) as a PNG image.',
     pngExporting:'Exporting…',
     offlineSection:'Offline map',
-    offlineHint:'Downloads OSM tiles for the selected area as a ZIP for offline use.',
+    offlineHint:'Stores elevation tiles (AWS Terrarium, zoom 8–12) in the browser. Enables LOS and radar coverage computation without internet. The base map remains online.',
     offlineDrawZone:'⬛ Define zone',
     offlineZoom:'Zoom',
-    offlineDownload:'⬇ Download',
+    offlineDownload:'⬇ Store locally',
     offlineCancel:'✖ Cancel',
-    offlineZipping:'Generating ZIP…',
-    offlineDone:(d,e)=>`Done — ${d} tile(s) downloaded${e?`, ${e} error(s)`:'.'} `,
-    offlineCancelled:'Download cancelled.',
+    offlineDone:(d,e)=>`${d} tile(s) stored locally${e?`, ${e} error(s)`:'.'} `,
+    offlineCancelled:'Storage cancelled.',
+    offlineClear:'🗑 Clear local cache',
+    offlineCacheCleared:'Local cache cleared.',
+    offlineCacheStatus:(n,mb)=>`Local cache: ${n} tile(s) — ${mb} MB`,
+    offlineShowZones:'Show stored zones on the map',
+    offlineZoneTooltip:(z,n)=>`${z} · ${n} tile(s)`,
+    offlineNEHint:'Natural Earth vector map (public domain) — minimal base map available without internet connection.',
+    offlineNEDownload:'⬇ Store vector map',
+    offlineNEDownloading:(n,t)=>`Layer ${n}/${t}`,
+    offlineNEDone:'Vector map stored.',
+    offlineNEStatus:mb=>`Vector map: ${mb} MB`,
+    satBtn:'Satellite',
+    vectorBtn:'Vector',
     kmlErrParse:'Invalid KML file',
     kmlErrEmpty:'No SPM entities found in this KML file.',
-    calcSection:'Computation', calcFast:'Fast', calcHD:'High Precision',
+    calcSection:'Calc. precision', calcFast:'Fast', calcHD:'High Precision',
     demResEstimate:(r,u,z)=>`Estimated resolution: ~${r} ${u} (zoom ${z})`,
     unitSection:'Display units', unitAltLabel:'Altitude', unitDistLabel:'Distance', unitTimeLabel:'Time',
-    tabUnits:'Units', tabCoverage:'Coverage', tabTools:'Tools', tabEngagement:'Engagement',
+    tabUnits:'Deployment', tabCoverage:'Coverage', tabTools:'Tools', tabEngagement:'Engagement',
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
     engThreatBtn:'✈ Threat trajectory', engThreatActive:'Done editing trajectory',
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
@@ -3185,11 +3479,147 @@ function exportPNG() {
 document.getElementById('btn-export-png').addEventListener('click', exportPNG);
 
 /* =========================================================================
+   Carte vectorielle hors ligne — Natural Earth (domaine public)
+   ========================================================================= */
+const NE_BASE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/';
+const NE_FILES = [
+  { key:'ne/land',    url: NE_BASE+'ne_50m_land.geojson',                            filter: null },
+  { key:'ne/borders', url: NE_BASE+'ne_50m_admin_0_boundary_lines_land.geojson',     filter: null },
+  { key:'ne/states',  url: NE_BASE+'ne_50m_admin_1_states_provinces_lines.geojson',  filter: null },
+  { key:'ne/rivers',  url: NE_BASE+'ne_50m_rivers_lake_centerlines.geojson',         filter: null },
+  { key:'ne/lakes',   url: NE_BASE+'ne_50m_lakes.geojson',                           filter: null },
+  { key:'ne/cities',  url: NE_BASE+'ne_50m_populated_places_simple.geojson',         filter: f => (f.properties?.pop_max||0) >= 50000 },
+  { key:'ne/roads',   url: NE_BASE+'ne_10m_roads.geojson',                           filter: f => ['Major Highway','Secondary Highway'].includes(f.properties?.type) },
+];
+
+let _neLayerGroup  = null;
+let _neDownloading = false;
+
+async function downloadNaturalEarth(progEl) {
+  if (_neDownloading) return;
+  _neDownloading = true;
+  const el = progEl || { textContent: '' };
+  let done = 0;
+  for (const { key, url, filter } of NE_FILES) {
+    el.textContent = t('offlineNEDownloading', done + 1, NE_FILES.length) + ' ' + key.split('/')[1];
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(resp.status);
+      const geojson = await resp.json();
+      const out = filter ? { ...geojson, features: geojson.features.filter(filter) } : geojson;
+      await tileDBPut(key, new Blob([JSON.stringify(out)], { type:'application/json' }));
+    } catch(e) { console.warn('NE fetch failed:', key, e); }
+    done++;
+    el.textContent = t('offlineNEDownloading', done, NE_FILES.length) + ` (${Math.round(done/NE_FILES.length*100)} %)`;
+  }
+  el.textContent = t('offlineNEDone');
+  _neDownloading = false;
+  _neLayerGroup = null;
+}
+
+
+
+async function buildNaturalEarthLayer() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const pane   = 'nePane';
+  const lg     = L.layerGroup();
+
+  const load = async key => {
+    const blob = await tileDBGet(key);
+    if (!blob) return null;
+    try { return JSON.parse(await blob.text()); } catch { return null; }
+  };
+
+  const land = await load('ne/land');
+  if (land) L.geoJSON(land, { pane, style:{ fillColor: isDark?'#1e1e1e':'#e8e4db', fillOpacity:1, color:'none', weight:0 } }).addTo(lg);
+
+  const lakes = await load('ne/lakes');
+  if (lakes) L.geoJSON(lakes, { pane, style:{ fillColor: isDark?'#1d3d5a':'#b0cfe8', fillOpacity:0.9, color: isDark?'#2a5070':'#80afd0', weight:0.5 } }).addTo(lg);
+
+  const rivers = await load('ne/rivers');
+  if (rivers) L.geoJSON(rivers, { pane, style:{ color: isDark?'#2a5070':'#80afd0', weight:1.2, opacity:0.9 } }).addTo(lg);
+
+  const roads = await load('ne/roads');
+  if (roads) L.geoJSON(roads, { pane, style: f => ({
+    color: isDark ? '#4a4a4a' : '#c0b8a8',
+    weight: f.properties?.type === 'Major Highway' ? 1.5 : 0.8,
+    opacity: 0.9
+  }) }).addTo(lg);
+
+  const states = await load('ne/states');
+  if (states) L.geoJSON(states, { pane, style:{ color: isDark?'#383838':'#ccc', weight:0.6, dashArray:'3 5' } }).addTo(lg);
+
+  const borders = await load('ne/borders');
+  if (borders) L.geoJSON(borders, { pane, style:{ color: isDark?'#555':'#999', weight:1.2 } }).addTo(lg);
+
+  const cities = await load('ne/cities');
+  if (cities) {
+    L.geoJSON(cities, {
+      pane,
+      pointToLayer: (f, latlng) => {
+        const pop  = f.properties?.pop_max || 0;
+        const r    = pop >= 1000000 ? 4 : pop >= 200000 ? 3 : 2;
+        const m    = L.circleMarker(latlng, { pane, radius:r, fillColor: isDark?'#bbb':'#444', color: isDark?'#777':'#888', weight:1, fillOpacity:0.9 });
+        const name = f.properties?.name || '';
+        const opts = { className:'ne-label', direction:'right', offset:[4,0], sticky:false };
+        if (pop >= 200000) { opts.permanent = true; m.bindTooltip(name, opts); }
+        else m.bindTooltip(name, opts);
+        return m;
+      }
+    }).addTo(lg);
+  }
+
+  return lg;
+}
+
+async function activateVectorBasemap() {
+  const landBlob = await tileDBGet('ne/land');
+  if (!landBlob || baseMap === 'vector') return;
+  map.removeLayer(osmLayer); map.removeLayer(darkLayer); map.removeLayer(satLayer); map.removeLayer(elevLayer);
+  if (_neLayerGroup && map.hasLayer(_neLayerGroup)) map.removeLayer(_neLayerGroup);
+  baseMap = 'vector';
+  document.querySelectorAll('#basemap button').forEach(x => x.classList.remove('on'));
+  if (!_neLayerGroup) _neLayerGroup = await buildNaturalEarthLayer();
+  _neLayerGroup.addTo(map);
+  if (coverageLayer) coverageLayer.bringToFront();
+}
+
+window.addEventListener('offline', () => activateVectorBasemap());
+
+/* Bascule automatique si les tuiles OSM échouent (ex : réseau coupé ou accès bloqué) */
+let _tileErrCount = 0;
+osmLayer.on('tileload',  () => { _tileErrCount = 0; });
+osmLayer.on('tileerror', () => { if (++_tileErrCount >= 5) activateVectorBasemap(); });
+
+/* =========================================================================
    Carte hors ligne — Téléchargement de tuiles OSM
    ========================================================================= */
-let _offlineBounds = null;
-let _offlineRect   = null;
-let _offlineAbort  = false;
+let _offlineBounds     = null;
+let _offlineRect       = null;
+let _offlineAbort      = false;
+let _offlineZoneLayers = [];
+
+function saveOfflineZone(bounds, zMin, zMax, count) {
+  const zones = JSON.parse(localStorage.getItem('fsa-offline-zones') || '[]');
+  zones.push({ n: bounds.getNorth(), s: bounds.getSouth(), e: bounds.getEast(), w: bounds.getWest(), zMin, zMax, count });
+  localStorage.setItem('fsa-offline-zones', JSON.stringify(zones));
+}
+
+function renderOfflineZoneOverlay(show) {
+  _offlineZoneLayers.forEach(l => map.removeLayer(l));
+  _offlineZoneLayers = [];
+  if (!show) return;
+  const zones = JSON.parse(localStorage.getItem('fsa-offline-zones') || '[]');
+  zones.forEach(z => {
+    const r = L.rectangle([[z.s, z.w], [z.n, z.e]], {
+      color: '#0050cc', weight: 1.5, dashArray: '5 4',
+      fillColor: '#0050cc', fillOpacity: 0.07, interactive: true
+    });
+    r.bindTooltip(t('offlineZoneTooltip', `Z${z.zMin}–${z.zMax}`, z.count.toLocaleString()), { sticky: true });
+    r.addTo(map);
+    _offlineZoneLayers.push(r);
+  });
+}
 
 function _lon2tile(lon, z) { return Math.floor((lon + 180) / 360 * (1 << z)); }
 function _lat2tile(lat, z) {
@@ -3255,24 +3685,37 @@ function startOfflineZone() {
   document.addEventListener('keydown', onKey);
 }
 
+async function updateOfflineCacheStatus() {
+  const n = await tileDBCount();
+  const el = document.getElementById('offline-cache-status');
+  const toggleRow = document.getElementById('offline-zones-toggle-row');
+  if (!el) return;
+  if (n === 0) {
+    el.style.display = 'none';
+    if (toggleRow) toggleRow.style.display = 'none';
+  } else {
+    const bytes = await tileDBSize();
+    const mb = (bytes / 1024 / 1024).toFixed(1);
+    el.textContent = t('offlineCacheStatus', n.toLocaleString(), mb);
+    el.style.display = '';
+    if (toggleRow) toggleRow.style.display = 'flex';
+  }
+}
+
 async function downloadOfflineTiles() {
   if (!_offlineBounds) return;
-  if (typeof JSZip === 'undefined') { alert('JSZip non chargé.'); return; }
   const zMin = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-min').value) || 8));
-  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 13));
+  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 12));
   if (zMax < zMin) return;
 
-  const btnDl   = document.getElementById('btn-offline-download');
-  const btnCan  = document.getElementById('btn-offline-cancel');
-  const progEl  = document.getElementById('offline-progress');
+  const btnDl  = document.getElementById('btn-offline-download');
+  const btnCan = document.getElementById('btn-offline-cancel');
+  const progEl = document.getElementById('offline-progress');
   _offlineAbort = false;
   btnDl.style.display = 'none'; btnCan.style.display = '';
 
-  const zip    = new JSZip();
-  const folder = zip.folder('Tuiles_Hors_Ligne');
   const N = _offlineBounds.getNorth(), S = _offlineBounds.getSouth();
   const W = _offlineBounds.getWest(),  E = _offlineBounds.getEast();
-
   const tasks = [];
   for (let z = zMin; z <= zMax; z++) {
     const x0 = _lon2tile(W, z), x1 = _lon2tile(E, z);
@@ -3284,40 +3727,58 @@ async function downloadOfflineTiles() {
 
   let done = 0, errors = 0;
   const total = tasks.length;
-  const BATCH = 6;
+  const BATCH = 8;
 
   for (let i = 0; i < total && !_offlineAbort; i += BATCH) {
     await Promise.all(tasks.slice(i, i + BATCH).map(async ({ z, x, y }) => {
+      if (_offlineAbort) return;
       try {
-        const resp = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
-        if (resp.ok) folder.file(`${z}/${x}/${y}.png`, await resp.arrayBuffer());
+        const resp = await fetch(TERRA_URL(z, x, y));
+        if (resp.ok) await tileDBPut(`elev/${z}/${x}/${y}`, await resp.blob());
         else errors++;
       } catch { errors++; }
       done++;
       progEl.textContent = `${done} / ${total}  (${Math.round(done / total * 100)} %)`
                          + (errors ? `  — ${errors} erreur(s)` : '');
     }));
-    await new Promise(r => setTimeout(r, 40));
+    await new Promise(r => setTimeout(r, 20));
   }
 
-  if (!_offlineAbort) {
-    progEl.textContent = t('offlineZipping');
-    const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'Tuiles_Hors_Ligne.zip'; a.click();
-    URL.revokeObjectURL(a.href);
-    progEl.textContent = t('offlineDone', done - errors, errors);
-  } else {
-    progEl.textContent = t('offlineCancelled');
-  }
   btnDl.style.display = ''; btnCan.style.display = 'none';
+  progEl.textContent = _offlineAbort ? t('offlineCancelled') : t('offlineDone', done - errors, errors);
+  if (!_offlineAbort && done - errors > 0) {
+    saveOfflineZone(_offlineBounds, zMin, zMax, done - errors);
+    if (document.getElementById('offline-zones-toggle')?.checked) renderOfflineZoneOverlay(true);
+    await downloadNaturalEarth(progEl);
+  }
+  updateOfflineCacheStatus();
 }
 
 document.getElementById('btn-offline-zone').addEventListener('click', startOfflineZone);
 document.getElementById('btn-offline-download').addEventListener('click', downloadOfflineTiles);
 document.getElementById('btn-offline-cancel').addEventListener('click', () => { _offlineAbort = true; });
+document.getElementById('btn-offline-clear').addEventListener('click', async () => {
+  await tileDBClear();
+  localStorage.removeItem('fsa-offline-zones');
+  renderOfflineZoneOverlay(false);
+  const tog = document.getElementById('offline-zones-toggle');
+  if (tog) tog.checked = false;
+  if (_neLayerGroup && map.hasLayer(_neLayerGroup)) {
+    map.removeLayer(_neLayerGroup);
+    if (baseMap === 'vector') {
+      baseMap = 'carto'; osmLayer.addTo(map);
+      document.querySelectorAll('#basemap button').forEach(x => x.classList.remove('on'));
+      document.querySelector('#basemap [data-v="carto"]').classList.add('on');
+    }
+  }
+  _neLayerGroup = null;
+  document.getElementById('offline-progress').textContent = t('offlineCacheCleared');
+  updateOfflineCacheStatus();
+});
 document.getElementById('offline-z-min').addEventListener('input', updateOfflineInfo);
 document.getElementById('offline-z-max').addEventListener('input', updateOfflineInfo);
+document.getElementById('offline-zones-toggle').addEventListener('change', e => renderOfflineZoneOverlay(e.target.checked));
+updateOfflineCacheStatus();
 
 /* Toggle qualité DEM — Rapide (z≤11) / Haute Précision (z≤12) */
 function updateDemResEstimate() {
