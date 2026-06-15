@@ -964,6 +964,29 @@
   .btn-add:disabled { opacity:.4; cursor:not-allowed; }
   #fsa-autosave-banner { background:var(--badge-bg); border-left:3px solid var(--accent); border-radius:3px; padding:8px 10px; font-size:12px; margin-bottom:10px; }
   #fsa-autosave-banner button { margin-top:6px; padding:4px 10px; font-size:12px; border:1px solid var(--accent); border-radius:3px; background:transparent; color:var(--accent); cursor:pointer; }
+
+  /* ── Tutoriel interactif ── */
+  #btn-tutorial { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:transparent; border:1px solid var(--line); color:var(--txt-dim); font-size:15px; font-family:var(--sans); text-decoration:none; cursor:pointer; transition:color .12s,border-color .12s; flex-shrink:0; border-radius:0; }
+  #btn-tutorial:hover { color:var(--accent); border-color:var(--accent); }
+  #tutorial-overlay { display:none; position:fixed; inset:0; z-index:9500; pointer-events:none; }
+  #tutorial-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  #tutorial-card { position:fixed; pointer-events:all; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,.55); padding:20px 20px 16px; width:310px; max-width:calc(100vw - 20px); z-index:9502; box-sizing:border-box; }
+  #tutorial-badge { font-size:11px; font-weight:700; color:var(--accent); letter-spacing:.04em; margin-bottom:8px; }
+  #tutorial-title { margin:0 0 8px; font-size:14px; font-weight:700; color:var(--txt); }
+  #tutorial-text { margin:0 0 16px; font-size:12.5px; line-height:1.55; color:var(--txt-dim); }
+  .tuto-nav { display:flex; align-items:center; gap:8px; }
+  .tuto-nav-btn { padding:5px 14px; border-radius:5px; border:1px solid var(--line); background:transparent; color:var(--txt); font-size:13px; cursor:pointer; transition:background .1s,color .1s; white-space:nowrap; }
+  .tuto-nav-btn:hover:not(:disabled) { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tuto-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+  #tuto-btn-next { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; margin-left:auto; }
+  #tuto-btn-next:hover { opacity:.85; }
+  #tuto-btn-quit { border-color:transparent; color:var(--txt-dim); font-size:11px; padding:5px 8px; }
+  #tuto-progress { flex:1; height:3px; background:var(--line); border-radius:2px; overflow:hidden; }
+  #tuto-progress-fill { height:100%; background:var(--accent); transition:width .3s; border-radius:2px; }
+  #tutorial-highlight-ring { position:fixed; pointer-events:none; z-index:9501; border-radius:8px; box-shadow:0 0 0 3px var(--accent), 0 0 0 5px rgba(0,80,204,.25); transition:all .25s; }
+  #tuto-hint { display:none; margin:0 0 12px; padding:7px 10px; background:rgba(179,64,0,.1); border-left:3px solid var(--warning,#b34000); border-radius:4px; font-size:11.5px; line-height:1.45; color:var(--warning,#b34000); }
+  .tuto-nav-btn.locked { opacity:.38; cursor:not-allowed; }
+  @keyframes tuto-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 60%{transform:translateX(5px)} }
 </style>
 </head>
 <body>
@@ -1403,6 +1426,7 @@
           <button data-t="light" class="on">Clair</button>
           <button data-t="dark">Sombre</button>
         </div>
+        <button id="btn-tutorial" title="Tutoriel interactif" aria-label="Tutoriel">▷</button>
         <a href="aide.html" target="_blank" rel="noopener" id="btn-help" title="Aide" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid var(--line);color:var(--txt-dim);font-size:15px;font-weight:700;font-family:var(--sans);text-decoration:none;cursor:pointer;transition:color .12s,border-color .12s;flex-shrink:0;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt-dim)';this.style.borderColor='var(--line)'">?</a>
       </div>
     </div>
@@ -2378,7 +2402,7 @@ async function updateEntityLines(){
 
   // Aire translucide (sans trait) montrant la distance max autorisée vers le C2 parent
   // Affichée uniquement pour l'entité sélectionnée et ses subordonnés directs
-  const distFillStyle = { stroke: false, fill: true, fillColor: '#c9191e', fillOpacity: 0.06, interactive: false };
+  const distFillStyle = { stroke: false, fill: true, fillColor: '#c9191e', fillOpacity: 0.18, interactive: false };
   const addDistCircle = (centerLat, centerLon, radiusKm) => {
     if (radiusKm > 0) distCircles.push(L.circle([centerLat, centerLon], { ...distFillStyle, radius: radiusKm * 1000 }).addTo(map));
   };
@@ -4390,9 +4414,14 @@ let _offlineDrawing     = false;
 let _offlineAbort       = false;
 let _offlineZoneLayers = [];
 
-function saveOfflineZone(bounds, zMin, zMax, count) {
+function saveOfflineZone(verts, zMin, zMax, count) {
   const zones = JSON.parse(localStorage.getItem('fsa-offline-zones') || '[]');
-  zones.push({ n: bounds.getNorth(), s: bounds.getSouth(), e: bounds.getEast(), w: bounds.getWest(), zMin, zMax, count });
+  const bnds = L.latLngBounds(verts);
+  zones.push({
+    n: bnds.getNorth(), s: bnds.getSouth(), e: bnds.getEast(), w: bnds.getWest(),
+    verts: verts.map(v => [v.lat, v.lng]),
+    zMin, zMax, count
+  });
   localStorage.setItem('fsa-offline-zones', JSON.stringify(zones));
 }
 
@@ -4402,13 +4431,12 @@ function renderOfflineZoneOverlay(show) {
   if (!show) return;
   const zones = JSON.parse(localStorage.getItem('fsa-offline-zones') || '[]');
   zones.forEach(z => {
-    const r = L.rectangle([[z.s, z.w], [z.n, z.e]], {
-      color: '#0050cc', weight: 1.5, dashArray: '5 4',
-      fillColor: '#0050cc', fillOpacity: 0.07, interactive: true
-    });
-    r.bindTooltip(t('offlineZoneTooltip', `Z${z.zMin}–${z.zMax}`, z.count.toLocaleString()), { sticky: true });
-    r.addTo(map);
-    _offlineZoneLayers.push(r);
+    const shape = z.verts
+      ? L.polygon(z.verts, { color:'#0050cc', weight:1.5, dashArray:'5 4', fillColor:'#0050cc', fillOpacity:0.07, interactive:true })
+      : L.rectangle([[z.s, z.w], [z.n, z.e]], { color:'#0050cc', weight:1.5, dashArray:'5 4', fillColor:'#0050cc', fillOpacity:0.07, interactive:true });
+    shape.bindTooltip(t('offlineZoneTooltip', `Z${z.zMin}–${z.zMax}`, z.count.toLocaleString()), { sticky: true });
+    shape.addTo(map);
+    _offlineZoneLayers.push(shape);
   });
 }
 
@@ -4416,6 +4444,42 @@ function _lon2tile(lon, z) { return Math.floor((lon + 180) / 360 * (1 << z)); }
 function _lat2tile(lat, z) {
   const r = lat * Math.PI / 180;
   return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * (1 << z));
+}
+function _tile2lon(x, z) { return x / (1 << z) * 360 - 180; }
+function _tile2lat(y, z) {
+  const n = Math.PI - 2 * Math.PI * y / (1 << z);
+  return 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+}
+function _latLngInPoly(lat, lng, verts) {
+  let ins = false;
+  for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+    const xi = verts[i].lng, yi = verts[i].lat, xj = verts[j].lng, yj = verts[j].lat;
+    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) ins = !ins;
+  }
+  return ins;
+}
+function _segIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
+  const ux = bx-ax, uy = by-ay, vx = dx-cx, vy = dy-cy;
+  const cross = ux*vy - uy*vx;
+  if (Math.abs(cross) < 1e-12) return false;
+  const t = ((cx-ax)*vy - (cy-ay)*vx) / cross;
+  const s = ((cx-ax)*uy - (cy-ay)*ux) / cross;
+  return t >= 0 && t <= 1 && s >= 0 && s <= 1;
+}
+function _tileIntersectsPoly(z, tx, ty, verts) {
+  const w = _tile2lon(tx,   z), e = _tile2lon(tx+1, z);
+  const n = _tile2lat(ty,   z), s = _tile2lat(ty+1, z);
+  for (const v of verts)
+    if (v.lat >= s && v.lat <= n && v.lng >= w && v.lng <= e) return true;
+  for (const [lt, lg] of [[n,w],[n,e],[s,w],[s,e]])
+    if (_latLngInPoly(lt, lg, verts)) return true;
+  const tEdges = [[w,n,e,n],[e,n,e,s],[e,s,w,s],[w,s,w,n]];
+  for (let i = 0; i < verts.length; i++) {
+    const p1 = verts[i], p2 = verts[(i+1) % verts.length];
+    for (const [x1,y1,x2,y2] of tEdges)
+      if (_segIntersect(p1.lng,p1.lat,p2.lng,p2.lat, x1,y1,x2,y2)) return true;
+  }
+  return false;
 }
 
 function offlineVertIcon() {
@@ -4478,10 +4542,13 @@ function updateOfflineInfo() {
   const bnds = L.latLngBounds(_offlineVerts);
   let count = 0;
   const N = bnds.getNorth(), S = bnds.getSouth();
-  const W = bnds.getWest(),  E = bnds.getEast();
+  const W = bnds.getWest(), E = bnds.getEast();
   for (let z = zMin; z <= zMax; z++) {
-    count += Math.max(0, _lon2tile(E, z) - _lon2tile(W, z) + 1)
-           * Math.max(0, _lat2tile(S, z) - _lat2tile(N, z) + 1);
+    const x0 = _lon2tile(W, z), x1 = _lon2tile(E, z);
+    const y0 = _lat2tile(N, z), y1 = _lat2tile(S, z);
+    for (let x = x0; x <= x1; x++)
+      for (let y = y0; y <= y1; y++)
+        if (_tileIntersectsPoly(z, x, y, _offlineVerts)) count++;
   }
   const mo = (count * 170 / 1024).toFixed(1);
   el.style.color = count > 10000 ? 'var(--danger)' : count > 2000 ? '#b34f00' : 'inherit';
@@ -4537,14 +4604,14 @@ async function downloadOfflineTiles() {
 
   const bnds = L.latLngBounds(_offlineVerts);
   const N = bnds.getNorth(), S = bnds.getSouth();
-  const W = bnds.getWest(),  E = bnds.getEast();
+  const W = bnds.getWest(), E = bnds.getEast();
   const tasks = [];
   for (let z = zMin; z <= zMax; z++) {
     const x0 = _lon2tile(W, z), x1 = _lon2tile(E, z);
     const y0 = _lat2tile(N, z), y1 = _lat2tile(S, z);
     for (let x = x0; x <= x1; x++)
       for (let y = y0; y <= y1; y++)
-        tasks.push({ z, x, y });
+        if (_tileIntersectsPoly(z, x, y, _offlineVerts)) tasks.push({ z, x, y });
   }
 
   let done = 0, errors = 0;
@@ -4569,7 +4636,7 @@ async function downloadOfflineTiles() {
   btnDl.style.display = ''; btnCan.style.display = 'none';
   progEl.textContent = _offlineAbort ? t('offlineCancelled') : t('offlineDone', done - errors, errors);
   if (!_offlineAbort && done - errors > 0) {
-    saveOfflineZone(L.latLngBounds(_offlineVerts), zMin, zMax, done - errors);
+    saveOfflineZone(_offlineVerts, zMin, zMax, done - errors);
     if (document.getElementById('offline-zones-toggle')?.checked) renderOfflineZoneOverlay(true);
     await downloadNaturalEarth(progEl);
   }
@@ -6315,12 +6382,505 @@ async function runEngCalc() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   TUTORIEL INTERACTIF
+   ═══════════════════════════════════════════════════════════════════════ */
+(function() {
+  const FR = 0, EN = 1;
+  const STEPS = [
+    // [titleFR, titleEN, textFR, textEN, selector, tab, subPane, accordion]
+    /* ── 1 ─────────────────────────────────────────── Bienvenue */
+    ['Bienvenue dans France Sol-Air',
+     'Welcome to France Sol-Air',
+     'Ce tutoriel vous guide pas à pas pour créer un déploiement GBAD complet : nœud C2, radars, lanceurs, calcul de couverture terrain et analyse d\'engagement cinématique. À l\'issue, vous saurez positionner, configurer et analyser un dispositif Sol-Air complet. Utilisez ◀ ▶ ou les touches ← → pour naviguer, ou cliquez « Quitter » à tout moment.',
+     'This tutorial walks you step-by-step through a complete GBAD deployment: C2 node, radars, launchers, terrain coverage computation, and kinematic engagement analysis. By the end, you\'ll know how to position, configure, and analyse a full ground-based air-defence system. Use ◀ ▶ or ← → arrow keys to navigate, or click "Quit" at any time.',
+     null, null, null, null],
+
+    /* ── 2 ─────────────────────────────────────────── Les 4 onglets */
+    ['Les 4 onglets',
+     'The 4 tabs',
+     'Le panneau latéral est organisé en 4 onglets :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>OUTILS</strong> — sauvegardes, KML, unités, anneaux de portée, recherche de sommets</li><li><strong>DÉPLOIEMENT</strong> — créer et configurer radars, lanceurs et nœuds C2</li><li><strong>COUVERTURE</strong> — calculer la visibilité radar sur le relief</li><li><strong>ENGAGEMENT</strong> — simuler une menace et calculer les fenêtres de tir</li></ul>',
+     'The side panel has 4 tabs:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>TOOLS</strong> — saves, KML, units, range rings, summit search</li><li><strong>DEPLOYMENT</strong> — create and configure radars, launchers, C2 nodes</li><li><strong>COVERAGE</strong> — compute radar line-of-sight over terrain</li><li><strong>ENGAGEMENT</strong> — simulate a threat and compute firing windows</li></ul>',
+     '#panel-tabs-nav', null, null, null],
+
+    /* ── 3 ─────────────────────────────────────────── Unités de mesure [NEW] */
+    ['Unités de mesure',
+     'Measurement units',
+     'Choisissez vos unités avant de saisir des paramètres — elles s\'appliquent partout dans l\'interface :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude</strong> — m ou <strong>ft</strong> (ft = norme OTAN et aéronautique)</li><li><strong>Distance</strong> — m, km ou nm (nm = milles nautiques, norme aéronautique)</li><li><strong>Temps</strong> — s, min ou h m s</li></ul><br>Pour continuer : cliquez sur <strong>ft</strong> dans la ligne Altitude.',
+     'Choose your units before entering any parameters — they apply throughout the interface:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude</strong> — m or <strong>ft</strong> (ft = NATO and aeronautical standard)</li><li><strong>Distance</strong> — m, km, or nm (nm = nautical miles, aeronautical standard)</li><li><strong>Time</strong> — s, min, or h m s</li></ul><br>To continue: click <strong>ft</strong> in the Altitude row.',
+     '#unit-alt-seg', 'tools', null, 'acc-units'],
+
+    /* ── 4 ─────────────────────────────────────────── Anneaux portée senseur [NEW] */
+    ['Anneaux de portée senseur',
+     'Sensor range rings',
+     'Les anneaux de portée senseur tracent des cercles concentriques autour de chaque radar pour visualiser rapidement les distances clés. Cochez « Marque portée senseur » pour les afficher. Cochez « Tous senseurs » pour les afficher autour de tous les radars simultanément ; décochez pour n\'afficher que le radar sélectionné. Le champ numérique (défaut : 10 km) règle l\'espacement entre les anneaux.',
+     'Sensor range rings draw concentric circles around each radar to quickly visualise key distances. Check "Sensor range mark" to display them. Check "All sensors" to show rings around every radar at once; uncheck to show only the selected radar. The numeric field (default: 10 km) sets the spacing between rings.',
+     '#show-rings', 'tools', null, 'acc-display'],
+
+    /* ── 5 ─────────────────────────────────────────── Anneaux portée missile [NEW] */
+    ['Anneaux de portée missile',
+     'Missile range rings',
+     'Les anneaux de portée missile matérialisent l\'enveloppe de tir de chaque lanceur : portée minimale et maximale du missile sélectionné. « Tous lanceurs » affiche simultanément les enveloppes de toutes les batteries — pratique pour détecter les trous de couverture. Ces anneaux ne s\'affichent que si un missile est configuré sur le lanceur.<br><br>Pour continuer : cochez <strong>Marque portée missile</strong> ci-dessus.',
+     'Missile range rings show each launcher\'s firing envelope: minimum and maximum range of the selected missile. "All launchers" displays envelopes for all batteries at once — useful to spot coverage gaps. Rings only appear if a missile type is assigned to the launcher.<br><br>To continue: check <strong>Missile range mark</strong> above.',
+     '#show-missile-rings', 'tools', null, 'acc-display'],
+
+    /* ── 6 ─────────────────────────────────────────── Onglet Déploiement */
+    ['Étape 1 — Déploiement',
+     'Step 1 — Deployment',
+     'Passez à l\'onglet DÉPLOIEMENT. C\'est ici que vous allez créer les entités du dispositif. L\'ordre recommandé est toujours : C2 en premier, puis Radars, puis Lanceurs. Cela permet de rattacher chaque entité à son C2 dès sa création, et de garantir une hiérarchie cohérente dès le départ.',
+     'Switch to the DEPLOYMENT tab. This is where you create the system\'s entities. The recommended order is always: C2 first, then Radars, then Launchers. This allows you to link each entity to its C2 at creation time and ensures a consistent hierarchy from the start.',
+     '.tab-btn[data-tab="entities"]', 'entities', null, null],
+
+    /* ── 7 ─────────────────────────────────────────── Sous-onglet C2 */
+    ['Sous-onglet C2',
+     'C2 sub-tab',
+     'Le panneau dispose de trois sous-onglets : Radars, Lanceurs et C2. Sélectionnez le sous-onglet « C2 » pour accéder aux nœuds de commandement. Un déploiement peut comporter plusieurs nœuds C2 organisés en hiérarchie (ex. : PC de brigade → PC de bataillon). Pour l\'instant, un seul nœud C2 suffit.',
+     'The panel has three sub-tabs: Radars, Launchers, and C2. Select the "C2" sub-tab to manage command nodes. A deployment can include multiple C2 nodes organised in a hierarchy (e.g., brigade HQ → battalion HQ). For now, a single C2 node is sufficient.',
+     '#entity-type-seg button[data-e="c2"]', 'entities', 'c2', null],
+
+    /* ── 8 ─────────────────────────────────────────── Ajouter C2 */
+    ['Ajouter un nœud C2',
+     'Add a C2 node',
+     'Cliquez sur « + Ajouter un nœud C2 ». Un carré bleu apparaît au centre de la carte. Faites-le glisser vers la position réelle du poste de commandement. Le C2 est le point central de la hiérarchie : tous les radars et lanceurs y seront rattachés, et c\'est lui qui cumule les délais de décision avant autorisation de tir.',
+     'Click "+ Add a C2 node". A blue square appears at the map centre. Drag it to the real position of the command post. The C2 is the central point of the hierarchy: all radars and launchers will be linked to it, and it is where decision delays accumulate before a fire clearance is issued.',
+     '#btn-add-c2', 'entities', 'c2', null],
+
+    /* ── 9 ─────────────────────────────────────────── Configurer C2 */
+    ['Configurer le nœud C2',
+     'Configure the C2 node',
+     'Cliquez sur le carré bleu ou sur sa ligne dans la liste pour ouvrir le formulaire :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Nom</strong> — identifiant libre, ex. « PC BAT »</li><li><strong>Délai d\'engagement</strong> — durée entre détection et autorisation de tir (3 à 10 s typiquement)</li><li><strong>Distance max C2</strong> — alerte visuelle si la liaison dépasse ce seuil</li><li><strong>C2 parent</strong> — pour rattacher ce nœud à un échelon supérieur</li></ul><br>Exercice : nommez votre C2, saisissez un temps de réaction, et entrez <strong>15 km</strong> en distance max.',
+     'Click the blue square or its row in the list to open the form:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Name</strong> — free identifier, e.g. "BN HQ"</li><li><strong>Engagement delay</strong> — time from detection to fire authorisation (typically 3–10 s)</li><li><strong>Max C2 distance</strong> — visual alert if the link exceeds this threshold</li><li><strong>Parent C2</strong> — to link this node to a higher echelon</li></ul><br>Exercise: name your C2, enter a reaction time, and set <strong>15 km</strong> as max distance.',
+     '#pane-c2', 'entities', 'c2', null],
+
+    /* ── 10 ────────────────────────────────────────── Sous-onglet Radars */
+    ['Sous-onglet Radars',
+     'Radars sub-tab',
+     'Basculez sur le sous-onglet « Radars ». Un radar est le capteur qui détecte les menaces aériennes. Il est représenté par un cercle bleu sur la carte, avec un secteur de surveillance semi-transparent indiquant son azimut de couverture. Vous pouvez positionner plusieurs radars pour couvrir des axes d\'approche différents.',
+     'Switch to the "Radars" sub-tab. A radar is the sensor that detects airborne threats. It is shown as a blue circle on the map, with a semi-transparent sector indicating its azimuth coverage. You can place multiple radars to cover different approach axes.',
+     '#entity-type-seg button[data-e="radars"]', 'entities', 'radars', null],
+
+    /* ── 11 ────────────────────────────────────────── Ajouter radar */
+    ['Ajouter un radar',
+     'Add a radar',
+     'Cliquez sur « + Ajouter un radar ». Un cercle bleu apparaît sur la carte. Faites-le glisser vers sa position opérationnelle. Conseil : placez les radars sur des reliefs dominants pour maximiser la couverture ; le calcul MNT prendra en compte l\'élévation réelle du terrain et votre hauteur de mât.',
+     'Click "+ Add a radar". A blue circle appears on the map. Drag it to its operational position. Tip: place radars on dominant terrain features to maximise coverage; the DEM calculation will account for actual terrain elevation and your mast height.',
+     '#btn-add-radar', 'entities', 'radars', null],
+
+    /* ── 12 ────────────────────────────────────────── Portée radar Rmax */
+    ['Portée maximale (Rmax)',
+     'Maximum range (Rmax)',
+     'Rmax est la portée de détection maximale du radar en ligne de vue dégagée, exprimée dans l\'unité de distance choisie. La couverture calculée sera toujours inférieure à Rmax là où le relief masque le faisceau. Adaptez cette valeur au système réel que vous modélisez. Pour commencer, conservez 40 km.',
+     'Rmax is the maximum detection range in clear line-of-sight, expressed in your chosen distance unit. Computed coverage will always be less than Rmax where terrain masks the beam. Set this value to match the real system you are modelling. For now, keep 40 km.',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 13 ────────────────────────────────────────── Secteur azimut */
+    ['Secteur azimut du radar',
+     'Radar azimuth sector',
+     'Azimut min et azimut max définissent le secteur de surveillance du radar en degrés (0° = Nord, sens horaire). Un radar omnidirectionnel s\'écrit 0°–360°. Pour couvrir un axe d\'approche précis, par exemple le Nord-Est, réglez 0°–90°. Le secteur est affiché en surimpression sur la carte sous forme d\'un cône bleu semi-transparent. Astuce : faites glisser le radar sur la carte pour voir le cône se déplacer en temps réel.',
+     'Azimuth min and max define the radar\'s surveillance sector in degrees (0° = North, clockwise). An omnidirectional radar is written as 0°–360°. To cover a specific approach axis, e.g. the North-East, set 0°–90°. The sector is displayed as a semi-transparent blue cone on the map. Tip: drag the radar on the map to see the cone move in real time.',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 14 ────────────────────────────────────────── Angles élévation */
+    ['Angles d\'élévation',
+     'Elevation angles',
+     'Élévation min et max définissent la fenêtre angulaire verticale dans laquelle le radar peut détecter une cible. Élévation min > 0° : le radar ne « voit » pas les cibles rasantes (utile pour éviter les échos de sol). Élévation max < 90° : limite la détection des cibles en plongée très rapide. Pour la plupart des menaces aériennes classiques (avions, drones), une plage 0°–30° est réaliste. Ajustez si vous ciblez des missiles balistiques (plage haute).',
+     'Min and max elevation define the vertical angular window in which the radar can detect targets. Min elevation > 0°: the radar ignores low-level targets (useful to avoid ground clutter). Max elevation < 90°: limits detection of very fast diving targets. For most conventional air threats (aircraft, UAVs), a range of 0°–30° is realistic. Adjust if you are targeting ballistic missiles (high elevation range).',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 15 ────────────────────────────────────────── Hauteurs antenne/mât */
+    ['Hauteur d\'antenne et de mât',
+     'Antenna and mast height',
+     'La hauteur d\'antenne est la hauteur physique de l\'antenne radar au-dessus du sol (en m). La hauteur de mât est une surélevation additionnelle (ex. : mât télescopique, bâtiment, véhicule). Le système additionne les deux pour calculer le point de visée du raycasting. Même un gain de 10 m peut considérablement augmenter la couverture en zone vallonnée : essayez différentes valeurs et relancez le calcul.',
+     'Antenna height is the physical height of the radar antenna above ground level (in m). Mast height is an additional elevation (e.g., telescopic mast, building, vehicle). The system sums both to set the raycast origin. Even a 10 m gain can significantly increase coverage in hilly terrain — try different values and rerun the computation.',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 16 ────────────────────────────────────────── Rattachement C2 radar */
+    ['Rattachement C2 du radar',
+     'Radar C2 link',
+     'Sélectionnez le C2 parent auquel ce radar est rattaché. La liste déroulante affiche tous les nœuds C2 existants. Le délai d\'engagement du C2 parent s\'appliquera lors du calcul des fenêtres d\'engagement. Le champ « Distance max C2 » définit le seuil d\'alerte : si la distance physique entre le radar et son C2 dépasse cette valeur, un indicateur d\'avertissement apparaît dans la liste. Réglez-le selon la portée de votre liaison de données.',
+     'Select the parent C2 to which this radar is linked. The dropdown lists all existing C2 nodes. The parent C2 engagement delay applies when computing firing windows. The "Max C2 distance" field sets the alert threshold: if the physical distance between the radar and its C2 exceeds this value, a warning indicator appears in the list. Set it according to your data link range.',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 17 ────────────────────────────────────────── Sous-onglet Lanceurs */
+    ['Sous-onglet Lanceurs',
+     'Launchers sub-tab',
+     'Basculez sur le sous-onglet « Lanceurs ». Un lanceur est la batterie de missiles qui intercèpte les menaces détectées par les radars. Il est représenté par un triangle orange sur la carte. Chaque lanceur peut être équipé d\'un type de missile différent, ce qui vous permet de modéliser une défense à plusieurs couches (ex. : courte portée + longue portée).',
+     'Switch to the "Launchers" sub-tab. A launcher is the missile battery that intercepts threats detected by radars. It is shown as an orange triangle on the map. Each launcher can carry a different missile type, allowing you to model a layered defence (e.g., short-range + long-range).',
+     '#entity-type-seg button[data-e="launchers"]', 'entities', 'launchers', null],
+
+    /* ── 18 ────────────────────────────────────────── Ajouter lanceur */
+    ['Ajouter un lanceur',
+     'Add a launcher',
+     'Cliquez sur « + Ajouter un lanceur ». Un triangle orange apparaît au centre de la carte. Faites-le glisser vers sa position opérationnelle. Conseil tactique : le lanceur doit être suffisamment proche du C2 pour garantir la liaison de données, mais suffisamment dispersé pour éviter qu\'une frappe unique ne détruise à la fois le C2 et le lanceur.',
+     'Click "+ Add a launcher". An orange triangle appears at the map centre. Drag it to its operational position. Tactical tip: the launcher should be close enough to the C2 to maintain the data link, but dispersed enough to avoid a single strike destroying both the C2 and the launcher.',
+     '#btn-add-launcher', 'entities', 'launchers', null],
+
+    /* ── 19 ────────────────────────────────────────── Type de missile */
+    ['Type de missile',
+     'Missile type',
+     'Sélectionnez le type de missile dans la liste déroulante. Deux configs sont disponibles : « MSAM portée moyenne » (~10 km, vol max 20 s) et « MSAM longue portée notionnel » (~35 km, vol max 120 s). Le choix du missile détermine l\'enveloppe cinématique (portée min/max, altitude min/max, profil de vitesse) utilisée par le calculateur d\'engagement. Sans missile sélectionné, les anneaux de portée et les fenêtres de tir ne sont pas disponibles.',
+     'Select the missile type from the dropdown. Two configurations are available: "MSAM medium range" (~10 km, max 20 s flight) and "MSAM notional long range" (~35 km, max 120 s flight). The missile type determines the kinematic envelope (min/max range, min/max altitude, velocity profile) used by the engagement calculator. Without a missile selected, range rings and firing windows are unavailable.',
+     '#pane-launchers', 'entities', 'launchers', null],
+
+    /* ── 20 ────────────────────────────────────────── Liaison et distance C2 lanceur */
+    ['Liaison et rattachement C2',
+     'Data link and C2 link',
+     'Rattachez le lanceur à son nœud C2 parent. Type de liaison : « Fibre » (délai réseau négligeable, mais contrainte géographique forte) ou « Radio » (plus flexible, mais sensible aux brouillages et masques de relief). Distance max C2 : seuil d\'alerte visuelle — calé sur la portée effective de la liaison sélectionnée (ex. : 10 km pour une radio tactique HF). Un cercle rouge en pointillés apparaît sur la carte si la distance est dépassée.',
+     'Link the launcher to its parent C2 node. Link type: "Fibre" (negligible network delay, but strong geographic constraint) or "Radio" (more flexible, but susceptible to jamming and terrain masking). Max C2 distance: visual alert threshold — set to the effective range of the chosen link (e.g., 10 km for a tactical HF radio). A red dashed circle appears on the map if the distance is exceeded.',
+     '#pane-launchers', 'entities', 'launchers', null],
+
+    /* ── 21 ────────────────────────────────────────── Onglet Couverture */
+    ['Étape 2 — Couverture radar',
+     'Step 2 — Radar coverage',
+     'Basculez vers l\'onglet COUVERTURE. Il calcule la visibilité réelle de chaque radar en tenant compte du relief grâce au Modèle Numérique de Terrain (MNT) AWS Terrarium (~30 m de résolution en France). Le calcul est effectué par lancé de rayons (raycast) : pour chaque point de la carte, le système vérifie si la ligne de vue entre ce point et le radar est dégagée au-dessus du terrain.',
+     'Switch to the COVERAGE tab. It computes the actual visibility of each radar by accounting for terrain using the AWS Terrarium Digital Elevation Model (~30 m resolution in France). Computation uses raycasting: for each point on the map, the system checks whether the line of sight between that point and the radar clears the terrain.',
+     '.tab-btn[data-tab="coverage"]', 'coverage', null, null],
+
+    /* ── 22 ────────────────────────────────────────── Altitudes cibles */
+    ['Altitudes cibles',
+     'Target altitudes',
+     'Définissez les altitudes auxquelles vous souhaitez calculer la couverture (référence AGL = au-dessus du sol, ou AMSL = au-dessus du niveau de la mer). Valeurs par défaut : 0, 5, 40 et 500 m — elles couvrent les drones rasants, les hélicoptères, les avions bas et les cibles à moyenne altitude. Chaque altitude produit une couche de couleur différente sur la carte. Vous pouvez en ajouter ou en supprimer selon votre besoin opérationnel.',
+     'Define the altitudes at which you want to compute coverage (AGL = above ground level, or AMSL = above mean sea level). Defaults: 0, 5, 40, and 500 m — covering low-flying drones, helicopters, low-altitude aircraft, and medium-altitude targets. Each altitude produces a different colour layer on the map. Add or remove values according to your operational requirement.',
+     '#acc-alttargets', 'coverage', null, 'acc-alttargets'],
+
+    /* ── 23 ────────────────────────────────────────── Facteur de réfraction */
+    ['Facteur de réfraction atmosphérique',
+     'Atmospheric refraction factor',
+     'Le facteur k modélise la courbure du faisceau radar due à l\'atmosphère. k = 4/3 (défaut) : atmosphère standard, donne la portée classique « horizon radio ». k = 1.0 : propagation en ligne droite géométrique, sous-estime la portée. k = 1.15 : air sec chaud (désert). k = 1.6 : surréfraction (air humide chaud sur mer ou inversions thermiques) — augmente fortement la portée apparente. Conservez 4/3 pour une analyse générale en France.',
+     'The k factor models the bending of the radar beam due to the atmosphere. k = 4/3 (default): standard atmosphere, gives the classic "radio horizon" range. k = 1.0: geometric straight-line propagation, underestimates range. k = 1.15: hot dry air (desert). k = 1.6: superrefraction (warm humid air over sea or thermal inversions) — significantly increases apparent range. Keep 4/3 for a general analysis in France.',
+     '#acc-kfac', 'coverage', null, 'acc-kfac'],
+
+    /* ── 24 ────────────────────────────────────────── Qualité MNT */
+    ['Qualité du MNT',
+     'DEM quality',
+     'Trois niveaux de résolution pour le Modèle Numérique de Terrain. « Rapide » (zoom 11, ~52 m/px) : idéal pour une première analyse ou les grandes portées — calcul rapide. « Haute Précision » (zoom 12, ~26 m/px) : recommandé pour les analyses définitives — calcul 4× plus long. « Très haute précision » (zoom 14) : sans gain réel en France car la source SRTM est à 30 m — réservé à des usages très spécifiques. La résolution estimée pour votre zone est affichée sous les boutons.',
+     'Three resolution levels for the Digital Elevation Model. "Fast" (zoom 11, ~52 m/px): ideal for a first analysis or long ranges — fast computation. "High Precision" (zoom 12, ~26 m/px): recommended for final analyses — 4× longer computation. "Very High Precision" (zoom 14): no real gain in France as the SRTM source is 30 m — reserved for very specific uses. The estimated resolution for your area is shown below the buttons.',
+     '#dem-quality-seg', 'coverage', null, 'acc-dem'],
+
+    /* ── 25 ────────────────────────────────────────── Lancer le calcul */
+    ['Lancer le calcul de couverture',
+     'Run the coverage computation',
+     'Cliquez sur « Lancer le calcul ». Les zones couvertes apparaissent en surimpression colorée sur la carte : chaque couleur correspond à une altitude cible. Le calcul est asynchrone — la carte reste interactive pendant le traitement. Un bouton « Annuler » permet d\'interrompre à tout moment. Pour affiner, ajustez les paramètres radar (Rmax, hauteur de mât) et relancez.',
+     'Click "Run computation". Covered areas appear as a colour overlay on the map: each colour corresponds to a target altitude. The computation is asynchronous — the map remains interactive during processing. A "Cancel" button lets you abort at any time. To refine, adjust radar parameters (Rmax, mast height) and re-run.',
+     '#go', 'coverage', null, null],
+
+    /* ── 26 ────────────────────────────────────────── Onglet Engagement */
+    ['Étape 3 — Engagement cinématique',
+     'Step 3 — Kinematic engagement',
+     'L\'onglet ENGAGEMENT simule l\'arrivée d\'une menace aérienne et calcule les fenêtres de tir pour chaque paire (radar, lanceur). Il modélise la chaîne complète : détection → délai C2 → autorisation de tir → atteindre la cible avant qu\'elle ne sorte de l\'enveloppe missile. Ce module nécessite au moins un radar, un lanceur avec missile et une trajectoire de menace.',
+     'The ENGAGEMENT tab simulates an incoming airborne threat and computes firing windows for each (radar, launcher) pair. It models the full chain: detection → C2 delay → fire authorisation → intercept before the target leaves the missile envelope. This module requires at least one radar, one launcher with a missile, and a threat trajectory.',
+     '.tab-btn[data-tab="engagement"]', 'engagement', null, null],
+
+    /* ── 27 ────────────────────────────────────────── Tracer trajectoire */
+    ['Tracer la trajectoire de la menace',
+     'Draw the threat trajectory',
+     'Cliquez sur « Tracer la trajectoire » puis :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>1er clic sur la carte</strong> — place le point de départ (A)</li><li><strong>2ème clic sur la carte</strong> — place le point d\'arrivée (B) et termine la trajectoire</li></ul>Vous pouvez aussi saisir les coordonnées directement dans les champs du panneau. Réglez la vitesse et l\'altitude pour le point B avant de calculer.',
+     'Click "Draw trajectory", then:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>1st click on the map</strong> — places the start point (A)</li><li><strong>2nd click on the map</strong> — places the end point (B) and completes the trajectory</li></ul>You can also type coordinates directly into the panel fields. Set the speed and altitude for point B before computing.',
+     '#btn-eng-draw', 'engagement', null, null],
+
+    /* ── 28 ────────────────────────────────────────── Calculer fenêtres */
+    ['Calculer les fenêtres d\'engagement',
+     'Compute engagement windows',
+     'Cliquez sur « Calculer » pour lancer l\'analyse. Pour chaque paire (radar, lanceur), le système détermine quatre instants clés : t_det = premier instant de détection par le radar ; t_tir_min = t_det + délai C2 (autorisation de tir au plus tôt) ; t_tir_first = premier instant faisable cinématiquement (le missile peut atteindre la cible) ; t_tir_last = dernier instant de tir avant sortie d\'enveloppe. La fenêtre utile est [t_tir_first, t_tir_last].',
+     'Click "Compute" to launch the analysis. For each (radar, launcher) pair, the system determines four key instants: t_det = first radar detection instant; t_tir_min = t_det + C2 delay (earliest possible fire authorisation); t_tir_first = first kinematically feasible instant (the missile can reach the target); t_tir_last = last firing instant before the target exits the envelope. The useful window is [t_tir_first, t_tir_last].',
+     '#btn-eng-calc', 'engagement', null, null],
+
+    /* ── 29 ────────────────────────────────────────── Sauvegarder */
+    ['Étape 4 — Sauvegarder le déploiement',
+     'Step 4 — Save the deployment',
+     'Basculez vers l\'onglet OUTILS pour sauvegarder votre déploiement. L\'application dispose d\'une auto-sauvegarde active (slot « auto »), mais il est recommandé d\'utiliser l\'un des 3 emplacements nommés pour conserver plusieurs versions de votre scénario. La sauvegarde est locale dans le navigateur : elle persiste entre les sessions mais reste sur cette machine.',
+     'Switch to the TOOLS tab to save your deployment. The application has an active auto-save (slot "auto"), but it is recommended to use one of the 3 named slots to keep multiple versions of your scenario. Saves are stored locally in the browser: they persist across sessions but remain on this machine.',
+     '.tab-btn[data-tab="tools"]', 'tools', null, null],
+
+    /* ── 30 ────────────────────────────────────────── Emplacements de sauvegarde */
+    ['Emplacements de sauvegarde',
+     'Save slots',
+     'Trois emplacements nommés sont disponibles. Saisissez un nom descriptif (ex. « Scénario nord »), puis cliquez « Sauvegarder ». « Charger » restaure un déploiement antérieur. « Exporter KML » génère un fichier .kml portable contenant l\'ensemble du scénario (positions, paramètres, trajectoire) que vous pouvez importer sur un autre poste ou archiver. « Importer KML » recharge un scénario exporté précédemment.',
+     'Three named slots are available. Enter a descriptive name (e.g. "North scenario"), then click "Save". "Load" restores a previous deployment. "Export KML" generates a portable .kml file containing the full scenario (positions, parameters, trajectory) that you can import on another computer or archive. "Import KML" reloads a previously exported scenario.',
+     '#acc-save', 'tools', null, 'acc-save'],
+
+    /* ── 31 ────────────────────────────────────────── Félicitations */
+    ['Déploiement maîtrisé !',
+     'Deployment mastered!',
+     'Vous connaissez maintenant toutes les étapes pour créer un déploiement Sol-Air complet avec France Sol-Air : unités → C2 → Radars → Lanceurs → Couverture terrain → Fenêtres d\'engagement → Sauvegarde KML. Pour approfondir chaque fonctionnalité (recherche de sommets, cartes hors-ligne, import KML, simulation temps réel…), consultez la documentation complète via le bouton « ? ».',
+     'You now know all the steps to create a complete ground-based air-defence deployment with France Sol-Air: units → C2 → Radars → Launchers → Terrain coverage → Engagement windows → KML save. To explore advanced features (summit search, offline maps, KML import, real-time simulation…), open the full documentation via the "?" button.',
+     null, null, null, null],
+  ];
+
+  // Guards: step index → { ok(), hintFR, hintEN }
+  // A step with a guard blocks Next until ok() returns true.
+  const GUARDS = {
+    2:  { ok: () => document.querySelector('#unit-alt-seg button.on')?.dataset?.u === 'ft',
+          hintFR: 'Action requise : cliquez sur « ft » dans la ligne Altitude.',
+          hintEN: 'Action required: click "ft" in the Altitude row.' },
+    4:  { ok: () => !!document.getElementById('show-missile-rings')?.checked,
+          hintFR: 'Action requise : cochez « Marque portée missile ».',
+          hintEN: 'Action required: check "Missile range mark".' },
+    7:  { ok: () => c2nodes.length > 0,
+          hintFR: 'Action requise : ajoutez un nœud C2 en cliquant le bouton ci-dessus, puis faites-le glisser sur la carte.',
+          hintEN: 'Action required: add a C2 node by clicking the button above, then drag it on the map.' },
+    10: { ok: () => radars.length > 0,
+          hintFR: 'Action requise : ajoutez un radar en cliquant le bouton ci-dessus, puis faites-le glisser sur la carte.',
+          hintEN: 'Action required: add a radar by clicking the button above, then drag it on the map.' },
+    17: { ok: () => launchers.length > 0,
+          hintFR: 'Action requise : ajoutez un lanceur en cliquant le bouton ci-dessus, puis positionnez-le sur la carte.',
+          hintEN: 'Action required: add a launcher by clicking the button above, then position it on the map.' },
+    26: { ok: () => _engBMarker !== null,
+          hintFR: 'Action requise : cliquez « Tracer la trajectoire », puis cliquez une première fois sur la carte (point A), puis une deuxième fois (point B).',
+          hintEN: 'Action required: click "Draw trajectory", then click once on the map (point A), then once more (point B).' },
+  };
+
+  // ON_ENTER hooks: called after tab/pane switch when entering a step.
+  const ON_ENTER = {
+    11: () => { if (radars.length > 0) selectEntity('radar', radars[0].id); },
+  };
+
+  const N = STEPS.length;
+  let cur = 0;
+  let _keyHandler = null;
+  let _guardTimer  = null;
+
+  const isEn = () => document.documentElement.dataset.lang === 'en';
+  const L = i => isEn() ? EN : FR;
+
+  function guardOk() {
+    const g = GUARDS[cur];
+    return !g || g.ok();
+  }
+  function updateGuardUI() {
+    const nextBtn = document.getElementById('tuto-btn-next');
+    const hintEl  = document.getElementById('tuto-hint');
+    const ok = guardOk();
+    nextBtn.classList.toggle('locked', !ok);
+    if (ok && hintEl.dataset.auto === '1') {
+      hintEl.style.display = 'none';
+      hintEl.textContent = '';
+      delete hintEl.dataset.auto;
+    }
+  }
+  function showHint(msg) {
+    const hintEl = document.getElementById('tuto-hint');
+    hintEl.textContent = msg;
+    hintEl.style.display = '';
+    // shake the next button
+    const nextBtn = document.getElementById('tuto-btn-next');
+    nextBtn.style.animation = 'none';
+    nextBtn.offsetWidth;
+    nextBtn.style.animation = 'tuto-shake .35s ease';
+  }
+  function hideHint() {
+    const hintEl = document.getElementById('tuto-hint');
+    hintEl.style.display = 'none';
+    hintEl.textContent = '';
+    delete hintEl.dataset.auto;
+  }
+  function startGuardPoll() {
+    if (_guardTimer) { clearInterval(_guardTimer); _guardTimer = null; }
+    if (GUARDS[cur]) {
+      updateGuardUI();
+      _guardTimer = setInterval(updateGuardUI, 600);
+    }
+  }
+  function stopGuardPoll() {
+    if (_guardTimer) { clearInterval(_guardTimer); _guardTimer = null; }
+  }
+
+  function switchTab(tab) {
+    if (!tab) return;
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (btn && !btn.classList.contains('active')) btn.click();
+  }
+  function switchSubPane(pane) {
+    if (!pane) return;
+    const btn = document.querySelector(`#entity-type-seg button[data-e="${pane}"]`);
+    if (btn && !btn.classList.contains('on')) btn.click();
+  }
+  function openAccordion(id) {
+    if (!id) return;
+    const body = document.getElementById(id);
+    if (body && !body.classList.contains('open')) {
+      const btn = document.querySelector(`.acc-btn[aria-controls="${id}"]`);
+      if (btn) { btn.setAttribute('aria-expanded','true'); body.classList.add('open'); }
+    }
+  }
+
+  function show(idx) {
+    cur = Math.max(0, Math.min(N-1, idx));
+    hideHint();
+    stopGuardPoll();
+    const s = STEPS[cur];
+    const l = L();
+    const [titleFr, titleEn, textFr, textEn, sel, tab, subPane, acc] = s;
+
+    // 1. Switch context
+    switchTab(tab);
+    setTimeout(() => {
+      switchSubPane(subPane);
+      openAccordion(acc);
+      const hook = ON_ENTER[cur];
+      if (hook) hook();
+      setTimeout(() => { positionStep(sel, l, titleFr, titleEn, textFr, textEn); startGuardPoll(); }, 180);
+    }, tab ? 120 : 0);
+  }
+
+  function positionStep(sel, l, titleFr, titleEn, textFr, textEn) {
+    const card   = document.getElementById('tutorial-card');
+    const hole   = document.getElementById('tuto-hole');
+    const ring   = document.getElementById('tutorial-highlight-ring');
+    const fill   = document.getElementById('tuto-progress-fill');
+    const badge  = document.getElementById('tutorial-badge');
+    const titleEl= document.getElementById('tutorial-title');
+    const textEl = document.getElementById('tutorial-text');
+    const prevBtn= document.getElementById('tuto-btn-prev');
+    const nextBtn= document.getElementById('tuto-btn-next');
+
+    // Content
+    badge.textContent  = `${cur+1} / ${N}`;
+    titleEl.textContent= l === EN ? titleEn : titleFr;
+    textEl.innerHTML   = l === EN ? textEn  : textFr;
+    fill.style.width   = `${((cur+1)/N)*100}%`;
+    prevBtn.disabled   = cur === 0;
+    nextBtn.textContent= cur === N-1 ? (l===EN ? '✓ Done' : '✓ Terminé') : '▶';
+    nextBtn.style.animation = '';
+
+    // Spotlight
+    const PAD = 10;
+    let el = sel ? document.querySelector(sel) : null;
+    if (el) {
+      el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+      const r = el.getBoundingClientRect();
+      const x = r.left - PAD, y = r.top - PAD;
+      const w = r.width + PAD*2, h = r.height + PAD*2;
+      hole.setAttribute('x', Math.max(0,x));
+      hole.setAttribute('y', Math.max(0,y));
+      hole.setAttribute('width', Math.max(w,10));
+      hole.setAttribute('height', Math.max(h,10));
+      ring.style.display = '';
+      ring.style.left   = `${Math.max(0,x)}px`;
+      ring.style.top    = `${Math.max(0,y)}px`;
+      ring.style.width  = `${Math.max(w,10)}px`;
+      ring.style.height = `${Math.max(h,10)}px`;
+      placeCard(card, {x, y, w, h});
+    } else {
+      hole.setAttribute('width', 0); hole.setAttribute('height', 0);
+      ring.style.display = 'none';
+      const vw = window.innerWidth, vh = window.innerHeight;
+      card.style.left = `${Math.max(8,(vw - card.offsetWidth) / 2)}px`;
+      card.style.top  = `${Math.max(8,(vh - card.offsetHeight) / 2)}px`;
+    }
+  }
+
+  function placeCard(card, {x, y, w, h}) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const cw = card.offsetWidth || 320, ch = card.offsetHeight || 200;
+    const GAP = 16;
+    let cx, cy;
+    // Prefer: below → above → right → left
+    if (y + h + GAP + ch <= vh) {
+      cy = y + h + GAP;
+      cx = Math.min(Math.max(8, x + w/2 - cw/2), vw - cw - 8);
+    } else if (y - GAP - ch >= 0) {
+      cy = y - GAP - ch;
+      cx = Math.min(Math.max(8, x + w/2 - cw/2), vw - cw - 8);
+    } else if (x + w + GAP + cw <= vw) {
+      cx = x + w + GAP;
+      cy = Math.min(Math.max(8, y + h/2 - ch/2), vh - ch - 8);
+    } else {
+      cx = Math.max(8, x - GAP - cw);
+      cy = Math.min(Math.max(8, y + h/2 - ch/2), vh - ch - 8);
+    }
+    card.style.left = `${Math.max(8, cx)}px`;
+    card.style.top  = `${Math.max(8, cy)}px`;
+  }
+
+  function _tutoClearAll() {
+    clearCoverage();
+    clearThreat();
+    [...radars].forEach(r => { if (r.marker) map.removeLayer(r.marker); if (radarLines.has(r.id)) { map.removeLayer(radarLines.get(r.id)); radarLines.delete(r.id); } });
+    radars.length = 0; activeRadarId = null; nextRadarId = 1;
+    [...launchers].forEach(l => { if (l.marker) map.removeLayer(l.marker); if (launcherLines.has(l.id)) { map.removeLayer(launcherLines.get(l.id)); launcherLines.delete(l.id); } });
+    launchers.length = 0; activeLauncherId = null; nextLauncherId = 1;
+    [...c2nodes].forEach(c => { if (c.marker) map.removeLayer(c.marker); if (c2c2Lines.has(c.id)) { map.removeLayer(c2c2Lines.get(c.id)); c2c2Lines.delete(c.id); } });
+    c2nodes.length = 0; activeC2Id = null; nextC2Id = 1;
+    distCircles.forEach(c => map.removeLayer(c)); distCircles = [];
+    activeEntityType = null;
+    renderAll();
+  }
+
+  function start() {
+    cur = 0;
+    _tutoClearAll();
+    document.getElementById('tutorial-overlay').style.display = 'block';
+    show(0);
+    _keyHandler = e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    { e.preventDefault(); prev(); }
+      if (e.key === 'Escape')                                { e.preventDefault(); stop(); }
+    };
+    document.addEventListener('keydown', _keyHandler);
+  }
+
+  function stop() {
+    stopGuardPoll();
+    document.getElementById('tutorial-overlay').style.display = 'none';
+    document.getElementById('tuto-hole').setAttribute('width', 0);
+    document.getElementById('tuto-hole').setAttribute('height', 0);
+    document.getElementById('tutorial-highlight-ring').style.display = 'none';
+    if (_keyHandler) { document.removeEventListener('keydown', _keyHandler); _keyHandler = null; }
+  }
+
+  function next() {
+    const g = GUARDS[cur];
+    if (g && !g.ok()) {
+      const hintEl = document.getElementById('tuto-hint');
+      hintEl.dataset.auto = '1';
+      showHint(isEn() ? g.hintEN : g.hintFR);
+      return;
+    }
+    cur < N-1 ? show(cur+1) : stop();
+  }
+  function prev() { if (cur > 0) show(cur-1); }
+
+  // Inject overlay into DOM immediately, then wire listeners
+  document.body.insertAdjacentHTML('beforeend', `
+<div id="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutoriel">
+  <svg id="tutorial-svg" aria-hidden="true">
+    <defs>
+      <mask id="tuto-mask">
+        <rect width="100%" height="100%" fill="white"/>
+        <rect id="tuto-hole" rx="8" ry="8" fill="black" x="0" y="0" width="0" height="0"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="rgba(0,0,0,0.72)" mask="url(#tuto-mask)"/>
+  </svg>
+  <div id="tutorial-highlight-ring" style="display:none"></div>
+  <div id="tutorial-card">
+    <div id="tutorial-badge"></div>
+    <div id="tutorial-title"></div>
+    <div id="tutorial-text"></div>
+    <div id="tuto-hint"></div>
+    <div class="tuto-nav">
+      <button class="tuto-nav-btn" id="tuto-btn-prev">&#9664;</button>
+      <div id="tuto-progress"><div id="tuto-progress-fill"></div></div>
+      <button class="tuto-nav-btn" id="tuto-btn-quit">Quitter</button>
+      <button class="tuto-nav-btn" id="tuto-btn-next">&#9654;</button>
+    </div>
+  </div>
+</div>`);
+  document.getElementById('btn-tutorial').addEventListener('click', start);
+  document.getElementById('tuto-btn-prev').addEventListener('click', prev);
+  document.getElementById('tuto-btn-next').addEventListener('click', next);
+  document.getElementById('tuto-btn-quit').addEventListener('click', stop);
+})();
+
 applyLang();          /* initialise toutes les chaînes I18N dès le chargement */
+renderAll();          /* place les marqueurs des entités initiales sur la carte */
 updateDemResEstimate();
 document.getElementById('go').addEventListener('click',compute);
 loadMissileConfigs();
 fsaRenderSlots();
 _fsaInitAutosaveBanner();
 </script>
+
 </body>
 </html>
