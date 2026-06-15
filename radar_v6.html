@@ -4418,8 +4418,8 @@ function _lat2tile(lat, z) {
 
 function updateOfflineInfo() {
   if (!_offlineBounds) return;
-  const zMin = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-min').value) || 8));
-  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 13));
+  const zMin = Math.max(8, Math.min(12, parseInt(document.getElementById('offline-z-min').value) || 8));
+  const zMax = Math.max(8, Math.min(12, parseInt(document.getElementById('offline-z-max').value) || 12));
   const el = document.getElementById('offline-tile-count');
   const btnDl = document.getElementById('btn-offline-download');
   if (zMax < zMin) { el.textContent = '—'; btnDl.disabled = true; return; }
@@ -4493,8 +4493,8 @@ async function updateOfflineCacheStatus() {
 
 async function downloadOfflineTiles() {
   if (!_offlineBounds) return;
-  const zMin = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-min').value) || 8));
-  const zMax = Math.max(0, Math.min(18, parseInt(document.getElementById('offline-z-max').value) || 12));
+  const zMin = Math.max(8, Math.min(12, parseInt(document.getElementById('offline-z-min').value) || 8));
+  const zMax = Math.max(8, Math.min(12, parseInt(document.getElementById('offline-z-max').value) || 12));
   if (zMax < zMin) return;
 
   const btnDl  = document.getElementById('btn-offline-download');
