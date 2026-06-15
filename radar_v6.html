@@ -4568,8 +4568,7 @@ function updateDemResEstimate() {
     ? all.reduce((s, e) => s + e.lat, 0) / all.length
     : map.getCenter().lat;
   const cosLat = Math.cos(lat * Math.PI / 180);
-  const autoZoom = Math.round(Math.log2(R_MERC * 2 * Math.PI * cosLat / (256 * 30)));
-  const z = Math.max(8, Math.min(demZoomCap, autoZoom));
+  const z = demZoomCap;
   const res = Math.round((2 * Math.PI * R_MERC * cosLat) / (256 * Math.pow(2, z)));
   document.getElementById('dem-res-estimate').textContent = t('demResEstimate', res, 'm', z);
 }
