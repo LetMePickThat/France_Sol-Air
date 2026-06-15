@@ -2657,7 +2657,7 @@ async function compute(){
   const altData = getAltData(); const thr = altData.map(e => e.value); if(!thr.length){ alert(t('errNoAlt')); return; }
 
   _coverageAborted = false;
-  busyEl.classList.add('show'); btnGo.disabled=true; btnCancel.style.display=''; msgEl.textContent=t('msgZone');
+  busyEl.classList.add('show'); btnGo.disabled=true; btnCancel.style.display='block'; msgEl.textContent=t('msgZone');
   const _abortCompute = () => { busyEl.classList.remove('show'); btnGo.disabled=false; btnCancel.style.display='none'; };
   await new Promise(r=>setTimeout(r,30));
 
@@ -2727,6 +2727,7 @@ async function compute(){
 
   if(_coverageAborted){ _abortCompute(); return; }
   msgEl.textContent=t('msgRender'); await new Promise(r=>setTimeout(r,5));
+  if(_coverageAborted){ _abortCompute(); return; }
   let coveredCells=0; for(let i=0; i<W*H; i++) if(band[i]>=0) coveredCells++;
   const cols = altData.map(e => hexToRgb(e.color)); const out=document.createElement('canvas'); out.width=W; out.height=H;
   const octx=out.getContext('2d'); const img=octx.createImageData(W,H); const od=img.data;
@@ -2737,12 +2738,12 @@ async function compute(){
   const [eLon, sLat] = pxToLonLat(originPx + W, originPy + H, worldPx);
   
   out.toBlob(blob => {
-    /* Libérer l'UI dans tous les cas (y compris si toBlob échoue) */
+    /* Libérer l'UI dans tous les cas (y compris si toBlob échoue ou si abort) */
     btnCancel.style.display = 'none';
-    if (!blob) {
+    if (_coverageAborted || !blob) {
       busyEl.classList.remove('show');
       btnGo.disabled = false;
-      alert(t('errDEM'));
+      if (!_coverageAborted) alert(t('errDEM'));
       return;
     }
     if (coverageLayer) { map.removeLayer(coverageLayer); URL.revokeObjectURL(coverageBlobUrl); }
