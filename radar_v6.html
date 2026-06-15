@@ -2600,7 +2600,7 @@ function removeAlt(i) { markCoverageStale(); altEntries.splice(i, 1); if (altEnt
  * Construit un MNT (Modèle Numérique de Terrain) couvrant bbox au zoom donné.
  * Utilise fetchElevTile pour bénéficier du cache partagé avec fetchSpotElevation.
  */
-async function buildDEM(bbox, zoom, onProgress) {
+async function buildDEM(bbox, zoom, onProgress, isCancelled) {
   const worldPx  = 256 * Math.pow(2, zoom);
   const [px0, py0] = lonLatToPx(bbox.w, bbox.n, worldPx);
   const [px1, py1] = lonLatToPx(bbox.e, bbox.s, worldPx);
@@ -2617,8 +2617,10 @@ async function buildDEM(bbox, zoom, onProgress) {
   let done = 0;
   const CONC = 8;
   for (let i = 0; i < jobs.length; i += CONC) {
+    if (isCancelled && isCancelled()) return null;
     const batch = jobs.slice(i, i + CONC);
     const arrs  = await Promise.all(batch.map(([tx, ty]) => fetchElevTile(zoom, tx, ty)));
+    if (isCancelled && isCancelled()) return null;
     for (let j = 0; j < batch.length; j++) {
       done++;
       const arr = arrs[j];
@@ -2663,8 +2665,8 @@ async function compute(){
   let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*30))); zoom=Math.max(8,Math.min(demZoomCap,zoom));
 
   msgEl.textContent=t('msgDEM');
-  let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot)); } catch(err){ _abortCompute(); alert(t('errDEM')); return; }
-  if(_coverageAborted){ _abortCompute(); return; }
+  let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot), ()=>_coverageAborted); } catch(err){ _abortCompute(); alert(t('errDEM')); return; }
+  if(!dem || _coverageAborted){ _abortCompute(); return; }
 
   const sample = makeSampler(dem); globalDemSampler = sample;
 
