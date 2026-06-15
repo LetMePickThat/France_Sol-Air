@@ -662,12 +662,6 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: var(--txt); text-align: center; padding: 0 24px;
   }
-  #busy .busy-cancel {
-    padding: 6px 22px; border-radius: 4px; border: 0;
-    background: var(--danger, #ce0500); color: #fff;
-    font-family: var(--sans); font-size: 13px; font-weight: 600;
-    cursor: pointer;
-  }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Infobulle carte */
@@ -1395,6 +1389,7 @@
          ============================================================ -->
     <div id="panel-cta">
       <button id="go" data-i18n="computeBtn">Calculer la couverture</button>
+      <button id="btn-cancel-coverage" class="btn-add" style="display:none; border-color:var(--danger); color:#fff; background:var(--danger);" data-i18n="cancelCoverage">✖ Annuler le calcul</button>
       <div id="stale-banner" role="alert" aria-live="assertive">
         <span>⚠</span><span data-i18n="staleBanner">Résultats périmés — recalculer pour mettre à jour</span>
       </div>
@@ -1440,7 +1435,7 @@
       </div>
     </div>
     <div id="cursor-tooltip"></div>
-    <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div><button id="btn-cancel-coverage" class="busy-cancel" style="display:none;" data-i18n="cancelCoverage">Annuler le calcul</button></div>
+    <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div></div>
     <button id="fsa-mobile-fab" aria-label="Ouvrir le panneau" aria-expanded="false"
             onclick="toggleMobilePanel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
