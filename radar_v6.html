@@ -2117,8 +2117,9 @@ function updateRadar(id, field, val) {
 }
 document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false }); selectEntity('radar', id); });
 map.on('click', e => {
-  if (peakDrawing)   { peakHandleClick(e);   return; }
-  if (threatDrawing) { threatHandleClick(e); return; }
+  if (_offlineDrawing) { offlineAddVert(e.latlng); return; }
+  if (peakDrawing)     { peakHandleClick(e);        return; }
+  if (threatDrawing)   { threatHandleClick(e);      return; }
   if (typeof _engDrawState !== 'undefined' && _engDrawState) { engHandleMapClick(e); return; }
   deselectAll();
 });
@@ -3615,7 +3616,6 @@ const I18N = {
     engPickHintB:'Cliquer pour placer le point d\'arrivée (B)',
     storageFull:'Stockage local plein ou inaccessible.',
     pngExportFailed:msg=>`Export PNG échoué : ${msg}`,
-    offlineTileLimit:'  ⚠ limite dépassée (> 5 000)',
     offlineErrCount:n=>`  — ${n} erreur(s)`,
     saveSection:'Sauvegardes',
     saveBtnSave:'Sauvegarder',
@@ -3637,11 +3637,13 @@ const I18N = {
     offlineSection:'Carte hors ligne',
     offlineHint:'Stocke les tuiles d\'élévation (AWS Terrarium, zoom 8–12) dans le navigateur. Permet le calcul LOS et couverture radar sans connexion internet. La carte de fond reste en ligne.',
     offlineDrawZone:'Définir une zone',
+    offlineCancelZone:'Annuler la zone',
     offlineDownload:'Stocker localement',
     offlineCancel:'Annuler',
     offlineDone:(d,e)=>`${d} tuile(s) stockée(s) localement${e?`, ${e} erreur(s)`:'.'} `,
     offlineCancelled:'Stockage annulé.',
     offlineClear:'Vider le cache local',
+    offlineClearConfirm:'Vider le cache local ? Cette action supprimera toutes les tuiles stockées et ne peut pas être annulée.',
     offlineCacheCleared:'Cache local vidé.',
     offlineCacheStatus:(n,mb)=>`Cache local : ${n} tuile(s) — ${mb} Mo`,
     offlineShowZones:'Afficher les zones stockées sur la carte',
@@ -3721,7 +3723,6 @@ const I18N = {
     engPickHintB:'Click to place arrival point (B)',
     storageFull:'Local storage full or unavailable.',
     pngExportFailed:msg=>`PNG export failed: ${msg}`,
-    offlineTileLimit:'  ⚠ limit exceeded (> 5,000)',
     offlineErrCount:n=>`  — ${n} error(s)`,
     saveSection:'Saves',
     saveBtnSave:'Save',
@@ -3743,11 +3744,13 @@ const I18N = {
     offlineSection:'Offline map',
     offlineHint:'Stores elevation tiles (AWS Terrarium, zoom 8–12) in the browser. Enables LOS and radar coverage computation without internet. The base map remains online.',
     offlineDrawZone:'Define zone',
+    offlineCancelZone:'Cancel zone',
     offlineDownload:'Store locally',
     offlineCancel:'Cancel',
     offlineDone:(d,e)=>`${d} tile(s) stored locally${e?`, ${e} error(s)`:'.'} `,
     offlineCancelled:'Storage cancelled.',
     offlineClear:'Clear local cache',
+    offlineClearConfirm:'Clear local cache? This will delete all stored tiles and cannot be undone.',
     offlineCacheCleared:'Local cache cleared.',
     offlineCacheStatus:(n,mb)=>`Local cache: ${n} tile(s) — ${mb} MB`,
     offlineShowZones:'Show stored zones on the map',
@@ -3974,6 +3977,7 @@ document.getElementById('btn-draw-zone').addEventListener('click', () => {
     btn.classList.remove('on'); btn.textContent = t('peakDrawZone');
     document.getElementById('peak-hint').style.display = 'none';
   } else {
+    cancelOfflineZone();
     clearPeaks();
     peakDrawing = true;
     const btn = document.getElementById('btn-draw-zone');
@@ -4379,9 +4383,11 @@ osmLayer.on('tileerror', () => { if (++_tileErrCount >= 5) activateVectorBasemap
 /* =========================================================================
    Carte hors ligne — Téléchargement de tuiles OSM
    ========================================================================= */
-let _offlineBounds     = null;
-let _offlineRect       = null;
-let _offlineAbort      = false;
+let _offlineVerts       = [];
+let _offlineVertMarkers = [];
+let _offlinePoly        = null;
+let _offlineDrawing     = false;
+let _offlineAbort       = false;
 let _offlineZoneLayers = [];
 
 function saveOfflineZone(bounds, zMin, zMax, count) {
@@ -4412,61 +4418,94 @@ function _lat2tile(lat, z) {
   return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * (1 << z));
 }
 
+function offlineVertIcon() {
+  return L.divIcon({
+    html:`<div style="width:10px;height:10px;border-radius:50%;background:#0050cc;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)"></div>`,
+    className:'', iconSize:[10,10], iconAnchor:[5,5]
+  });
+}
+
+function offlineRefreshPoly() {
+  if (_offlinePoly) { map.removeLayer(_offlinePoly); _offlinePoly = null; }
+  if (_offlineVerts.length >= 3) {
+    _offlinePoly = L.polygon(_offlineVerts, {color:'#0050cc', weight:2, fillColor:'#0050cc', fillOpacity:.06, opacity:.9}).addTo(map);
+  } else if (_offlineVerts.length === 2) {
+    _offlinePoly = L.polyline(_offlineVerts, {color:'#0050cc', weight:2, dashArray:'6 4', opacity:.9}).addTo(map);
+  }
+  const infoEl = document.getElementById('offline-info');
+  if (_offlineVerts.length >= 3) { infoEl.style.display = ''; updateOfflineInfo(); }
+  else { infoEl.style.display = 'none'; }
+}
+
+function offlineRemoveVertByIdx(index) {
+  if (index < 0 || index >= _offlineVerts.length) return;
+  if (_offlineVertMarkers[index]) map.removeLayer(_offlineVertMarkers[index]);
+  _offlineVerts.splice(index, 1);
+  _offlineVertMarkers.splice(index, 1);
+  for (let i = index; i < _offlineVertMarkers.length; i++) {
+    const m = _offlineVertMarkers[i];
+    m.off('drag'); m.off('mousedown');
+    m.on('drag', e => { _offlineVerts[i] = e.target.getLatLng(); offlineRefreshPoly(); });
+    m.on('mousedown', e => {
+      if (e.originalEvent.button === 1) { L.DomEvent.stopPropagation(e); offlineRemoveVertByIdx(i); }
+    });
+  }
+  offlineRefreshPoly();
+}
+
+function offlineAddVert(latlng) {
+  const idx = _offlineVerts.length;
+  _offlineVerts.push(L.latLng(latlng));
+  const m = L.marker(_offlineVerts[idx], {icon: offlineVertIcon(), draggable: true, zIndexOffset: 1000}).addTo(map);
+  m.on('drag', e => { _offlineVerts[idx] = e.target.getLatLng(); offlineRefreshPoly(); });
+  m.on('click', e => { L.DomEvent.stopPropagation(e); });
+  m.on('mousedown', e => {
+    if (e.originalEvent.button === 1) {
+      L.DomEvent.stopPropagation(e);
+      const i = _offlineVertMarkers.indexOf(m);
+      if (i !== -1) offlineRemoveVertByIdx(i);
+    }
+  });
+  _offlineVertMarkers.push(m);
+  offlineRefreshPoly();
+}
+
 function updateOfflineInfo() {
-  if (!_offlineBounds) return;
+  if (_offlineVerts.length < 3) return;
   const zMin = 8, zMax = 12;
   const el = document.getElementById('offline-tile-count');
   const btnDl = document.getElementById('btn-offline-download');
-  if (zMax < zMin) { el.textContent = '—'; btnDl.disabled = true; return; }
+  const bnds = L.latLngBounds(_offlineVerts);
   let count = 0;
-  const N = _offlineBounds.getNorth(), S = _offlineBounds.getSouth();
-  const W = _offlineBounds.getWest(),  E = _offlineBounds.getEast();
+  const N = bnds.getNorth(), S = bnds.getSouth();
+  const W = bnds.getWest(),  E = bnds.getEast();
   for (let z = zMin; z <= zMax; z++) {
     count += Math.max(0, _lon2tile(E, z) - _lon2tile(W, z) + 1)
            * Math.max(0, _lat2tile(S, z) - _lat2tile(N, z) + 1);
   }
-  const mo = (count * 25 / 1024).toFixed(1);
-  const tooMany = count > 5000;
-  el.style.color = tooMany ? 'var(--danger)' : count > 1000 ? '#b34f00' : 'inherit';
-  el.textContent = `${count.toLocaleString()} tuile${count > 1 ? 's' : ''} — ~${mo} Mo`
-                 + (tooMany ? t('offlineTileLimit') : '');
-  btnDl.disabled = tooMany;
+  const mo = (count * 170 / 1024).toFixed(1);
+  el.style.color = count > 10000 ? 'var(--danger)' : count > 2000 ? '#b34f00' : 'inherit';
+  el.textContent = `${count.toLocaleString()} tuile${count > 1 ? 's' : ''} — ~${mo} Mo`;
+  btnDl.disabled = false;
+}
+
+function cancelOfflineZone() {
+  _offlineDrawing = false;
+  _offlineVertMarkers.forEach(m => map.removeLayer(m)); _offlineVertMarkers = [];
+  if (_offlinePoly) { map.removeLayer(_offlinePoly); _offlinePoly = null; }
+  _offlineVerts = [];
+  document.getElementById('offline-info').style.display = 'none';
+  const btn = document.getElementById('btn-offline-zone');
+  btn.classList.remove('on'); btn.textContent = t('offlineDrawZone');
 }
 
 function startOfflineZone() {
-  if (_offlineRect) { map.removeLayer(_offlineRect); _offlineRect = null; }
-  document.getElementById('offline-info').style.display = 'none';
+  clearPeaks();
+  cancelOfflineZone();
   document.getElementById('offline-progress').textContent = '';
+  _offlineDrawing = true;
   const btn = document.getElementById('btn-offline-zone');
-  let c1 = null, tmp = null;
-  btn.style.opacity = '0.5';
-  map.getContainer().style.cursor = 'crosshair';
-
-  function onMove(e) {
-    if (tmp) map.removeLayer(tmp);
-    tmp = L.rectangle(L.latLngBounds(c1, e.latlng),
-      { color:'#0050cc', weight:2, fillOpacity:0.06, dashArray:'6 4' }).addTo(map);
-  }
-  function cleanup() {
-    map.off('mousemove', onMove); map.off('click', onClick);
-    document.removeEventListener('keydown', onKey);
-    if (tmp) { map.removeLayer(tmp); tmp = null; }
-    map.getContainer().style.cursor = ''; btn.style.opacity = '';
-  }
-  function onKey(e) { if (e.key === 'Escape') cleanup(); }
-  function onClick(e) {
-    if (!c1) { c1 = e.latlng; map.on('mousemove', onMove); }
-    else {
-      cleanup();
-      _offlineBounds = L.latLngBounds(c1, e.latlng);
-      _offlineRect = L.rectangle(_offlineBounds,
-        { color:'#0050cc', weight:2, fillOpacity:0.06 }).addTo(map);
-      document.getElementById('offline-info').style.display = '';
-      updateOfflineInfo();
-    }
-  }
-  map.on('click', onClick);
-  document.addEventListener('keydown', onKey);
+  btn.classList.add('on'); btn.textContent = t('offlineCancelZone');
 }
 
 async function updateOfflineCacheStatus() {
@@ -4487,9 +4526,8 @@ async function updateOfflineCacheStatus() {
 }
 
 async function downloadOfflineTiles() {
-  if (!_offlineBounds) return;
+  if (_offlineVerts.length < 3) return;
   const zMin = 8, zMax = 12;
-  if (zMax < zMin) return;
 
   const btnDl  = document.getElementById('btn-offline-download');
   const btnCan = document.getElementById('btn-offline-cancel');
@@ -4497,8 +4535,9 @@ async function downloadOfflineTiles() {
   _offlineAbort = false;
   btnDl.style.display = 'none'; btnCan.style.display = '';
 
-  const N = _offlineBounds.getNorth(), S = _offlineBounds.getSouth();
-  const W = _offlineBounds.getWest(),  E = _offlineBounds.getEast();
+  const bnds = L.latLngBounds(_offlineVerts);
+  const N = bnds.getNorth(), S = bnds.getSouth();
+  const W = bnds.getWest(),  E = bnds.getEast();
   const tasks = [];
   for (let z = zMin; z <= zMax; z++) {
     const x0 = _lon2tile(W, z), x1 = _lon2tile(E, z);
@@ -4530,17 +4569,20 @@ async function downloadOfflineTiles() {
   btnDl.style.display = ''; btnCan.style.display = 'none';
   progEl.textContent = _offlineAbort ? t('offlineCancelled') : t('offlineDone', done - errors, errors);
   if (!_offlineAbort && done - errors > 0) {
-    saveOfflineZone(_offlineBounds, zMin, zMax, done - errors);
+    saveOfflineZone(L.latLngBounds(_offlineVerts), zMin, zMax, done - errors);
     if (document.getElementById('offline-zones-toggle')?.checked) renderOfflineZoneOverlay(true);
     await downloadNaturalEarth(progEl);
   }
   updateOfflineCacheStatus();
 }
 
-document.getElementById('btn-offline-zone').addEventListener('click', startOfflineZone);
+document.getElementById('btn-offline-zone').addEventListener('click', () => {
+  if (_offlineDrawing || _offlineVerts.length > 0) { cancelOfflineZone(); } else { startOfflineZone(); }
+});
 document.getElementById('btn-offline-download').addEventListener('click', downloadOfflineTiles);
 document.getElementById('btn-offline-cancel').addEventListener('click', () => { _offlineAbort = true; });
 document.getElementById('btn-offline-clear').addEventListener('click', async () => {
+  if (!confirm(t('offlineClearConfirm'))) return;
   await tileDBClear();
   localStorage.removeItem('fsa-offline-zones');
   renderOfflineZoneOverlay(false);
