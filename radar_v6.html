@@ -662,6 +662,12 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: var(--txt); text-align: center; padding: 0 24px;
   }
+  #busy .busy-cancel {
+    padding: 6px 22px; border-radius: 4px; border: 0;
+    background: var(--danger, #ce0500); color: #fff;
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Infobulle carte */
@@ -1434,7 +1440,7 @@
       </div>
     </div>
     <div id="cursor-tooltip"></div>
-    <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div></div>
+    <div id="busy"><div class="ring"></div><div class="msg" id="busymsg" role="status" aria-live="polite">Calcul de l'empreinte géospatiale…</div><button id="btn-cancel-coverage" class="busy-cancel" style="display:none;" data-i18n="cancelCoverage">Annuler le calcul</button></div>
     <button id="fsa-mobile-fab" aria-label="Ouvrir le panneau" aria-expanded="false"
             onclick="toggleMobilePanel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -1757,8 +1763,9 @@ const ElevationLayer = L.GridLayer.extend({
 const elevLayer = new ElevationLayer({maxNativeZoom:14, maxZoom:19, minZoom:0});
 
 let coverageLayer = null, coverageBlobUrl = null;
-let coverageExists = false;  
-let coverageStale  = false;  
+let coverageExists = false;
+let coverageStale  = false;
+let _coverageAborted = false;
 
 function markCoverageStale() {
   invalidateDetection();
@@ -2645,10 +2652,13 @@ function idxSector(adeg, azmin, azmax) { if (Math.abs(azmax - azmin) >= 360 || a
 
 async function compute(){
   const busyEl = document.getElementById('busy'); const msgEl = document.getElementById('busymsg'); const btnGo = document.getElementById('go');
+  const btnCancel = document.getElementById('btn-cancel-coverage');
   if(radars.length === 0) { alert(t('errNoRadar')); return; }
   const altData = getAltData(); const thr = altData.map(e => e.value); if(!thr.length){ alert(t('errNoAlt')); return; }
 
-  busyEl.classList.add('show'); btnGo.disabled=true; msgEl.textContent=t('msgZone');
+  _coverageAborted = false;
+  busyEl.classList.add('show'); btnGo.disabled=true; btnCancel.style.display=''; msgEl.textContent=t('msgZone');
+  const _abortCompute = () => { busyEl.classList.remove('show'); btnGo.disabled=false; btnCancel.style.display='none'; };
   await new Promise(r=>setTimeout(r,30));
 
   let gN=-90, gS=90, gW=180, gE=-180;
@@ -2658,8 +2668,9 @@ async function compute(){
   let zoom=Math.round(Math.log2(R_MERC*2*Math.PI*Math.cos(centerLatRad)/(256*30))); zoom=Math.max(8,Math.min(demZoomCap,zoom));
 
   msgEl.textContent=t('msgDEM');
-  let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot)); } catch(err){ busyEl.classList.remove('show'); btnGo.disabled=false; alert(t('errDEM')); return; }
-  
+  let dem; try{ dem=await buildDEM(bbox,zoom,(d,tot)=>msgEl.textContent=t('msgDEMTiles',d,tot)); } catch(err){ _abortCompute(); alert(t('errDEM')); return; }
+  if(_coverageAborted){ _abortCompute(); return; }
+
   const sample = makeSampler(dem); globalDemSampler = sample;
 
   const {W,H,worldPx,originPx,originPy}=dem; const band=new Int16Array(W*H).fill(-1);
@@ -2680,6 +2691,7 @@ async function compute(){
 
     msgEl.textContent = t('msgRadar', ri+1, radars.length);
     await new Promise(res => setTimeout(res, 0));
+    if(_coverageAborted) break;
 
     let lastYield = performance.now();
     for(let ai=0; ai<nAz; ai++){
@@ -2689,6 +2701,7 @@ async function compute(){
           msgEl.textContent = t('msgRadarPct', ri+1, radars.length, Math.round((ai/nAz)*100));
           await new Promise(res => setTimeout(res, 0));
           lastYield = performance.now();
+          if(_coverageAborted) break;
         }
       }
       const adeg = (ai / nAz) * 360; 
@@ -2709,8 +2722,10 @@ async function compute(){
         if(bnd>=0) stamp(gx,gy,bnd); if(terrSlope>maxSlope) maxSlope=terrSlope;
       }
     }
+    if(_coverageAborted) break;
   }
 
+  if(_coverageAborted){ _abortCompute(); return; }
   msgEl.textContent=t('msgRender'); await new Promise(r=>setTimeout(r,5));
   let coveredCells=0; for(let i=0; i<W*H; i++) if(band[i]>=0) coveredCells++;
   const cols = altData.map(e => hexToRgb(e.color)); const out=document.createElement('canvas'); out.width=W; out.height=H;
@@ -2723,6 +2738,7 @@ async function compute(){
   
   out.toBlob(blob => {
     /* Libérer l'UI dans tous les cas (y compris si toBlob échoue) */
+    btnCancel.style.display = 'none';
     if (!blob) {
       busyEl.classList.remove('show');
       btnGo.disabled = false;
@@ -3570,7 +3586,7 @@ const I18N = {
     targetAtmo:'Cible & atmosphère', altRef:'Référence d\'altitude', altAGL:'Sol (AGL)', altAMSL:'Mer (AMSL)',
     altTargets:'Altitudes cibles', refraction:'Facteur de réfraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — géométrique', kDry:'1.15 — air sec', kSuper:'1.6 — surréfraction',
-    computeBtn:'Calculer la couverture', staleBanner:'Résultats périmés — recalculer pour mettre à jour', clearCoverage:'Supprimer la couverture',
+    computeBtn:'Calculer la couverture', cancelCoverage:'Annuler le calcul', staleBanner:'Résultats périmés — recalculer pour mettre à jour', clearCoverage:'Supprimer la couverture',
     peakSection:'Recherche Sommets Locaux', peakDrawZone:'Zone de recherche', peakDrawActive:'Annuler le dessin',
     peakHint:'Cliquez pour ajouter des sommets (min. 3). Faites glisser les points pour les repositionner. Le clic molette sur un point le supprime.',
     peakCountLabel:'Nombre max de sommets',
@@ -3677,7 +3693,7 @@ const I18N = {
     targetAtmo:'Target & atmosphere', altRef:'Alt. reference', altAGL:'Ground (AGL)', altAMSL:'Sea level (AMSL)',
     altTargets:'Target altitudes', refraction:'Refraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — geometric', kDry:'1.15 — dry air', kSuper:'1.6 — super-refraction',
-    computeBtn:'Compute coverage', staleBanner:'Stale results — recalculate to update', clearCoverage:'Clear coverage',
+    computeBtn:'Compute coverage', cancelCoverage:'Cancel computation', staleBanner:'Stale results — recalculate to update', clearCoverage:'Clear coverage',
     peakSection:'Local Summit Search', peakDrawZone:'Draw search zone', peakDrawActive:'Cancel drawing',
     peakHint:'Click to add vertices (min. 3). Drag points to reposition. Middle-click on a point deletes it.',
     peakCountLabel:'Summit count',
@@ -3974,6 +3990,7 @@ document.getElementById('btn-draw-zone').addEventListener('click', () => {
 document.getElementById('btn-search-peaks').addEventListener('click', searchPeaks);
 document.getElementById('btn-clear-peaks').addEventListener('click', clearPeaks);
 document.getElementById('btn-clear-coverage').addEventListener('click', clearCoverage);
+document.getElementById('btn-cancel-coverage').addEventListener('click', () => { _coverageAborted = true; });
 document.getElementById('kfac').addEventListener('change', e => {
   _kfac = +e.target.value;
   markCoverageStale();
