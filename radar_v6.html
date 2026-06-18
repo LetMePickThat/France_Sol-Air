@@ -1417,6 +1417,8 @@
     </div>
 
     <div id="panel-footer">
+      <!-- Compteur de visites — ping silencieux pour dimensionnement hébergement -->
+      <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fletmepickthat.github.io%2FFrance_Sol-Air%2F&count_bg=%2379C83D&title_bg=%23555555&title=hits&edge_flat=false" alt="" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" referrerpolicy="no-referrer-when-downgrade">
       <div class="footer-toggles">
         <div class="seg" id="lang-toggle" style="max-width:100px;">
           <button data-l="fr" class="on">FR</button>
@@ -6389,250 +6391,260 @@ async function runEngCalc() {
   const FR = 0, EN = 1;
   const STEPS = [
     // [titleFR, titleEN, textFR, textEN, selector, tab, subPane, accordion]
-    /* ── 1 ─────────────────────────────────────────── Bienvenue */
-    ['Bienvenue dans France Sol-Air',
-     'Welcome to France Sol-Air',
-     'Ce tutoriel vous guide pas à pas pour créer un déploiement GBAD complet : nœud C2, radars, lanceurs, calcul de couverture terrain et analyse d\'engagement cinématique. À l\'issue, vous saurez positionner, configurer et analyser un dispositif Sol-Air complet. Utilisez ◀ ▶ ou les touches ← → pour naviguer, ou cliquez « Quitter » à tout moment.',
-     'This tutorial walks you step-by-step through a complete GBAD deployment: C2 node, radars, launchers, terrain coverage computation, and kinematic engagement analysis. By the end, you\'ll know how to position, configure, and analyse a full ground-based air-defence system. Use ◀ ▶ or ← → arrow keys to navigate, or click "Quit" at any time.',
-     null, null, null, null],
+    /* ── 1 ─────────────────────────────────────────── La carte interactive */
+    ['La carte interactive',
+     'The interactive map',
+     'La carte est le cœur de l\'application. Vous pouvez :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Zoomer</strong> — molette de la souris ou boutons +/−</li><li><strong>Déplacer</strong> — cliquer-glisser</li><li><strong>Centrer</strong> — double-clic sur un point pour zoomer dessus</li></ul>Toutes les entités (radars, lanceurs, C2) se placent sur cette carte et se repositionnent par glisser-déposer.',
+     'The map is the heart of the application. You can:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Zoom</strong> — mouse wheel or +/− buttons</li><li><strong>Pan</strong> — click-drag</li><li><strong>Centre</strong> — double-click a point to zoom in on it</li></ul>All entities (radars, launchers, C2) are placed on this map and repositioned by drag-and-drop.',
+     '#map', null, null, null],
 
-    /* ── 2 ─────────────────────────────────────────── Les 4 onglets */
-    ['Les 4 onglets',
-     'The 4 tabs',
-     'Le panneau latéral est organisé en 4 onglets :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>OUTILS</strong> — sauvegardes, KML, unités, anneaux de portée, recherche de sommets</li><li><strong>DÉPLOIEMENT</strong> — créer et configurer radars, lanceurs et nœuds C2</li><li><strong>COUVERTURE</strong> — calculer la visibilité radar sur le relief</li><li><strong>ENGAGEMENT</strong> — simuler une menace et calculer les fenêtres de tir</li></ul>',
-     'The side panel has 4 tabs:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>TOOLS</strong> — saves, KML, units, range rings, summit search</li><li><strong>DEPLOYMENT</strong> — create and configure radars, launchers, C2 nodes</li><li><strong>COVERAGE</strong> — compute radar line-of-sight over terrain</li><li><strong>ENGAGEMENT</strong> — simulate a threat and compute firing windows</li></ul>',
-     '#panel-tabs-nav', null, null, null],
+    /* ── 2 ─────────────────────────────────────────── Fonds de carte */
+    ['Fonds de carte',
+     'Base maps',
+     'Quatre fonds de carte sont disponibles :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Plan clair</strong> — fond neutre, idéal pour l\'analyse</li><li><strong>Plan sombre</strong> — mode veille opérationnelle</li><li><strong>Satellite</strong> — imagerie réelle du terrain</li><li><strong>Élévation</strong> — relief coloré par altitude, utile pour identifier les zones dominantes</li></ul>Cliquez sur l\'un des boutons pour changer de fond à tout moment.',
+     'Four base maps are available:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Light plan</strong> — neutral background, ideal for analysis</li><li><strong>Dark plan</strong> — operational watch mode</li><li><strong>Satellite</strong> — real terrain imagery</li><li><strong>Elevation</strong> — terrain coloured by altitude, useful for identifying dominant areas</li></ul>Click any button to change the base map at any time.',
+     '#basemap', null, null, null],
 
-    /* ── 3 ─────────────────────────────────────────── Unités de mesure [NEW] */
-    ['Unités de mesure',
-     'Measurement units',
-     'Choisissez vos unités avant de saisir des paramètres — elles s\'appliquent partout dans l\'interface :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude</strong> — m ou <strong>ft</strong> (ft = norme OTAN et aéronautique)</li><li><strong>Distance</strong> — m, km ou nm (nm = milles nautiques, norme aéronautique)</li><li><strong>Temps</strong> — s, min ou h m s</li></ul><br>Pour continuer : cliquez sur <strong>ft</strong> dans la ligne Altitude.',
-     'Choose your units before entering any parameters — they apply throughout the interface:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude</strong> — m or <strong>ft</strong> (ft = NATO and aeronautical standard)</li><li><strong>Distance</strong> — m, km, or nm (nm = nautical miles, aeronautical standard)</li><li><strong>Time</strong> — s, min, or h m s</li></ul><br>To continue: click <strong>ft</strong> in the Altitude row.',
-     '#unit-alt-seg', 'tools', null, 'acc-units'],
+    /* ── 3 ─────────────────────────────────────────── Barre de recherche */
+    ['Barre de recherche',
+     'Search bar',
+     'La barre de recherche permet de localiser rapidement n\'importe quel lieu : ville, village, adresse ou point géographique. Saisissez un nom et sélectionnez le résultat dans la liste — la carte se centre automatiquement sur le lieu. Vous pouvez l\'utiliser à tout moment pour naviguer vers une zone d\'intérêt sans perdre vos entités déployées.',
+     'The search bar lets you quickly locate any place: town, village, address, or geographic point. Type a name and select the result from the list — the map centres automatically on the location. You can use it at any time to navigate to an area of interest without losing your deployed entities.',
+     '#geocode-box', null, null, null],
 
-    /* ── 4 ─────────────────────────────────────────── Anneaux portée senseur [NEW] */
-    ['Anneaux de portée senseur',
-     'Sensor range rings',
-     'Les anneaux de portée senseur tracent des cercles concentriques autour de chaque radar pour visualiser rapidement les distances clés. Cochez « Marque portée senseur » pour les afficher. Cochez « Tous senseurs » pour les afficher autour de tous les radars simultanément ; décochez pour n\'afficher que le radar sélectionné. Le champ numérique (défaut : 10 km) règle l\'espacement entre les anneaux.',
-     'Sensor range rings draw concentric circles around each radar to quickly visualise key distances. Check "Sensor range mark" to display them. Check "All sensors" to show rings around every radar at once; uncheck to show only the selected radar. The numeric field (default: 10 km) sets the spacing between rings.',
-     '#show-rings', 'tools', null, 'acc-display'],
-
-    /* ── 5 ─────────────────────────────────────────── Anneaux portée missile [NEW] */
-    ['Anneaux de portée missile',
-     'Missile range rings',
-     'Les anneaux de portée missile matérialisent l\'enveloppe de tir de chaque lanceur : portée minimale et maximale du missile sélectionné. « Tous lanceurs » affiche simultanément les enveloppes de toutes les batteries — pratique pour détecter les trous de couverture. Ces anneaux ne s\'affichent que si un missile est configuré sur le lanceur.<br><br>Pour continuer : cochez <strong>Marque portée missile</strong> ci-dessus.',
-     'Missile range rings show each launcher\'s firing envelope: minimum and maximum range of the selected missile. "All launchers" displays envelopes for all batteries at once — useful to spot coverage gaps. Rings only appear if a missile type is assigned to the launcher.<br><br>To continue: check <strong>Missile range mark</strong> above.',
-     '#show-missile-rings', 'tools', null, 'acc-display'],
-
-    /* ── 6 ─────────────────────────────────────────── Onglet Déploiement */
-    ['Étape 1 — Déploiement',
-     'Step 1 — Deployment',
-     'Passez à l\'onglet DÉPLOIEMENT. C\'est ici que vous allez créer les entités du dispositif. L\'ordre recommandé est toujours : C2 en premier, puis Radars, puis Lanceurs. Cela permet de rattacher chaque entité à son C2 dès sa création, et de garantir une hiérarchie cohérente dès le départ.',
-     'Switch to the DEPLOYMENT tab. This is where you create the system\'s entities. The recommended order is always: C2 first, then Radars, then Launchers. This allows you to link each entity to its C2 at creation time and ensures a consistent hierarchy from the start.',
-     '.tab-btn[data-tab="entities"]', 'entities', null, null],
-
-    /* ── 7 ─────────────────────────────────────────── Sous-onglet C2 */
-    ['Sous-onglet C2',
-     'C2 sub-tab',
-     'Le panneau dispose de trois sous-onglets : Radars, Lanceurs et C2. Sélectionnez le sous-onglet « C2 » pour accéder aux nœuds de commandement. Un déploiement peut comporter plusieurs nœuds C2 organisés en hiérarchie (ex. : PC de brigade → PC de bataillon). Pour l\'instant, un seul nœud C2 suffit.',
-     'The panel has three sub-tabs: Radars, Launchers, and C2. Select the "C2" sub-tab to manage command nodes. A deployment can include multiple C2 nodes organised in a hierarchy (e.g., brigade HQ → battalion HQ). For now, a single C2 node is sufficient.',
-     '#entity-type-seg button[data-e="c2"]', 'entities', 'c2', null],
-
-    /* ── 8 ─────────────────────────────────────────── Ajouter C2 */
-    ['Ajouter un nœud C2',
-     'Add a C2 node',
-     'Cliquez sur « + Ajouter un nœud C2 ». Un carré bleu apparaît au centre de la carte. Faites-le glisser vers la position réelle du poste de commandement. Le C2 est le point central de la hiérarchie : tous les radars et lanceurs y seront rattachés, et c\'est lui qui cumule les délais de décision avant autorisation de tir.',
-     'Click "+ Add a C2 node". A blue square appears at the map centre. Drag it to the real position of the command post. The C2 is the central point of the hierarchy: all radars and launchers will be linked to it, and it is where decision delays accumulate before a fire clearance is issued.',
-     '#btn-add-c2', 'entities', 'c2', null],
-
-    /* ── 9 ─────────────────────────────────────────── Configurer C2 */
-    ['Configurer le nœud C2',
-     'Configure the C2 node',
-     'Cliquez sur le carré bleu ou sur sa ligne dans la liste pour ouvrir le formulaire :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Nom</strong> — identifiant libre, ex. « PC BAT »</li><li><strong>Délai d\'engagement</strong> — durée entre détection et autorisation de tir (3 à 10 s typiquement)</li><li><strong>Distance max C2</strong> — alerte visuelle si la liaison dépasse ce seuil</li><li><strong>C2 parent</strong> — pour rattacher ce nœud à un échelon supérieur</li></ul><br>Exercice : nommez votre C2, saisissez un temps de réaction, et entrez <strong>15 km</strong> en distance max.',
-     'Click the blue square or its row in the list to open the form:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Name</strong> — free identifier, e.g. "BN HQ"</li><li><strong>Engagement delay</strong> — time from detection to fire authorisation (typically 3–10 s)</li><li><strong>Max C2 distance</strong> — visual alert if the link exceeds this threshold</li><li><strong>Parent C2</strong> — to link this node to a higher echelon</li></ul><br>Exercise: name your C2, enter a reaction time, and set <strong>15 km</strong> as max distance.',
-     '#pane-c2', 'entities', 'c2', null],
-
-    /* ── 10 ────────────────────────────────────────── Sous-onglet Radars */
-    ['Sous-onglet Radars',
-     'Radars sub-tab',
-     'Basculez sur le sous-onglet « Radars ». Un radar est le capteur qui détecte les menaces aériennes. Il est représenté par un cercle bleu sur la carte, avec un secteur de surveillance semi-transparent indiquant son azimut de couverture. Vous pouvez positionner plusieurs radars pour couvrir des axes d\'approche différents.',
-     'Switch to the "Radars" sub-tab. A radar is the sensor that detects airborne threats. It is shown as a blue circle on the map, with a semi-transparent sector indicating its azimuth coverage. You can place multiple radars to cover different approach axes.',
-     '#entity-type-seg button[data-e="radars"]', 'entities', 'radars', null],
-
-    /* ── 11 ────────────────────────────────────────── Ajouter radar */
-    ['Ajouter un radar',
-     'Add a radar',
-     'Cliquez sur « + Ajouter un radar ». Un cercle bleu apparaît sur la carte. Faites-le glisser vers sa position opérationnelle. Conseil : placez les radars sur des reliefs dominants pour maximiser la couverture ; le calcul MNT prendra en compte l\'élévation réelle du terrain et votre hauteur de mât.',
-     'Click "+ Add a radar". A blue circle appears on the map. Drag it to its operational position. Tip: place radars on dominant terrain features to maximise coverage; the DEM calculation will account for actual terrain elevation and your mast height.',
-     '#btn-add-radar', 'entities', 'radars', null],
-
-    /* ── 12 ────────────────────────────────────────── Portée radar Rmax */
-    ['Portée maximale (Rmax)',
-     'Maximum range (Rmax)',
-     'Rmax est la portée de détection maximale du radar en ligne de vue dégagée, exprimée dans l\'unité de distance choisie. La couverture calculée sera toujours inférieure à Rmax là où le relief masque le faisceau. Adaptez cette valeur au système réel que vous modélisez. Pour commencer, conservez 40 km.',
-     'Rmax is the maximum detection range in clear line-of-sight, expressed in your chosen distance unit. Computed coverage will always be less than Rmax where terrain masks the beam. Set this value to match the real system you are modelling. For now, keep 40 km.',
-     '#pane-radars', 'entities', 'radars', null],
-
-    /* ── 13 ────────────────────────────────────────── Secteur azimut */
-    ['Secteur azimut du radar',
-     'Radar azimuth sector',
-     'Azimut min et azimut max définissent le secteur de surveillance du radar en degrés (0° = Nord, sens horaire). Un radar omnidirectionnel s\'écrit 0°–360°. Pour couvrir un axe d\'approche précis, par exemple le Nord-Est, réglez 0°–90°. Le secteur est affiché en surimpression sur la carte sous forme d\'un cône bleu semi-transparent. Astuce : faites glisser le radar sur la carte pour voir le cône se déplacer en temps réel.',
-     'Azimuth min and max define the radar\'s surveillance sector in degrees (0° = North, clockwise). An omnidirectional radar is written as 0°–360°. To cover a specific approach axis, e.g. the North-East, set 0°–90°. The sector is displayed as a semi-transparent blue cone on the map. Tip: drag the radar on the map to see the cone move in real time.',
-     '#pane-radars', 'entities', 'radars', null],
-
-    /* ── 14 ────────────────────────────────────────── Angles élévation */
-    ['Angles d\'élévation',
-     'Elevation angles',
-     'Élévation min et max définissent la fenêtre angulaire verticale dans laquelle le radar peut détecter une cible. Élévation min > 0° : le radar ne « voit » pas les cibles rasantes (utile pour éviter les échos de sol). Élévation max < 90° : limite la détection des cibles en plongée très rapide. Pour la plupart des menaces aériennes classiques (avions, drones), une plage 0°–30° est réaliste. Ajustez si vous ciblez des missiles balistiques (plage haute).',
-     'Min and max elevation define the vertical angular window in which the radar can detect targets. Min elevation > 0°: the radar ignores low-level targets (useful to avoid ground clutter). Max elevation < 90°: limits detection of very fast diving targets. For most conventional air threats (aircraft, UAVs), a range of 0°–30° is realistic. Adjust if you are targeting ballistic missiles (high elevation range).',
-     '#pane-radars', 'entities', 'radars', null],
-
-    /* ── 15 ────────────────────────────────────────── Hauteurs antenne/mât */
-    ['Hauteur d\'antenne et de mât',
-     'Antenna and mast height',
-     'La hauteur d\'antenne est la hauteur physique de l\'antenne radar au-dessus du sol (en m). La hauteur de mât est une surélevation additionnelle (ex. : mât télescopique, bâtiment, véhicule). Le système additionne les deux pour calculer le point de visée du raycasting. Même un gain de 10 m peut considérablement augmenter la couverture en zone vallonnée : essayez différentes valeurs et relancez le calcul.',
-     'Antenna height is the physical height of the radar antenna above ground level (in m). Mast height is an additional elevation (e.g., telescopic mast, building, vehicle). The system sums both to set the raycast origin. Even a 10 m gain can significantly increase coverage in hilly terrain — try different values and rerun the computation.',
-     '#pane-radars', 'entities', 'radars', null],
-
-    /* ── 16 ────────────────────────────────────────── Rattachement C2 radar */
-    ['Rattachement C2 du radar',
-     'Radar C2 link',
-     'Sélectionnez le C2 parent auquel ce radar est rattaché. La liste déroulante affiche tous les nœuds C2 existants. Le délai d\'engagement du C2 parent s\'appliquera lors du calcul des fenêtres d\'engagement. Le champ « Distance max C2 » définit le seuil d\'alerte : si la distance physique entre le radar et son C2 dépasse cette valeur, un indicateur d\'avertissement apparaît dans la liste. Réglez-le selon la portée de votre liaison de données.',
-     'Select the parent C2 to which this radar is linked. The dropdown lists all existing C2 nodes. The parent C2 engagement delay applies when computing firing windows. The "Max C2 distance" field sets the alert threshold: if the physical distance between the radar and its C2 exceeds this value, a warning indicator appears in the list. Set it according to your data link range.',
-     '#pane-radars', 'entities', 'radars', null],
-
-    /* ── 17 ────────────────────────────────────────── Sous-onglet Lanceurs */
-    ['Sous-onglet Lanceurs',
-     'Launchers sub-tab',
-     'Basculez sur le sous-onglet « Lanceurs ». Un lanceur est la batterie de missiles qui intercèpte les menaces détectées par les radars. Il est représenté par un triangle orange sur la carte. Chaque lanceur peut être équipé d\'un type de missile différent, ce qui vous permet de modéliser une défense à plusieurs couches (ex. : courte portée + longue portée).',
-     'Switch to the "Launchers" sub-tab. A launcher is the missile battery that intercepts threats detected by radars. It is shown as an orange triangle on the map. Each launcher can carry a different missile type, allowing you to model a layered defence (e.g., short-range + long-range).',
-     '#entity-type-seg button[data-e="launchers"]', 'entities', 'launchers', null],
-
-    /* ── 18 ────────────────────────────────────────── Ajouter lanceur */
-    ['Ajouter un lanceur',
-     'Add a launcher',
-     'Cliquez sur « + Ajouter un lanceur ». Un triangle orange apparaît au centre de la carte. Faites-le glisser vers sa position opérationnelle. Conseil tactique : le lanceur doit être suffisamment proche du C2 pour garantir la liaison de données, mais suffisamment dispersé pour éviter qu\'une frappe unique ne détruise à la fois le C2 et le lanceur.',
-     'Click "+ Add a launcher". An orange triangle appears at the map centre. Drag it to its operational position. Tactical tip: the launcher should be close enough to the C2 to maintain the data link, but dispersed enough to avoid a single strike destroying both the C2 and the launcher.',
-     '#btn-add-launcher', 'entities', 'launchers', null],
-
-    /* ── 19 ────────────────────────────────────────── Type de missile */
-    ['Type de missile',
-     'Missile type',
-     'Sélectionnez le type de missile dans la liste déroulante. Deux configs sont disponibles : « MSAM portée moyenne » (~10 km, vol max 20 s) et « MSAM longue portée notionnel » (~35 km, vol max 120 s). Le choix du missile détermine l\'enveloppe cinématique (portée min/max, altitude min/max, profil de vitesse) utilisée par le calculateur d\'engagement. Sans missile sélectionné, les anneaux de portée et les fenêtres de tir ne sont pas disponibles.',
-     'Select the missile type from the dropdown. Two configurations are available: "MSAM medium range" (~10 km, max 20 s flight) and "MSAM notional long range" (~35 km, max 120 s flight). The missile type determines the kinematic envelope (min/max range, min/max altitude, velocity profile) used by the engagement calculator. Without a missile selected, range rings and firing windows are unavailable.',
-     '#pane-launchers', 'entities', 'launchers', null],
-
-    /* ── 20 ────────────────────────────────────────── Liaison et distance C2 lanceur */
-    ['Liaison et rattachement C2',
-     'Data link and C2 link',
-     'Rattachez le lanceur à son nœud C2 parent. Type de liaison : « Fibre » (délai réseau négligeable, mais contrainte géographique forte) ou « Radio » (plus flexible, mais sensible aux brouillages et masques de relief). Distance max C2 : seuil d\'alerte visuelle — calé sur la portée effective de la liaison sélectionnée (ex. : 10 km pour une radio tactique HF). Un cercle rouge en pointillés apparaît sur la carte si la distance est dépassée.',
-     'Link the launcher to its parent C2 node. Link type: "Fibre" (negligible network delay, but strong geographic constraint) or "Radio" (more flexible, but susceptible to jamming and terrain masking). Max C2 distance: visual alert threshold — set to the effective range of the chosen link (e.g., 10 km for a tactical HF radio). A red dashed circle appears on the map if the distance is exceeded.',
-     '#pane-launchers', 'entities', 'launchers', null],
-
-    /* ── 21 ────────────────────────────────────────── Onglet Couverture */
-    ['Étape 2 — Couverture radar',
-     'Step 2 — Radar coverage',
-     'Basculez vers l\'onglet COUVERTURE. Il calcule la visibilité réelle de chaque radar en tenant compte du relief grâce au Modèle Numérique de Terrain (MNT) AWS Terrarium (~30 m de résolution en France). Le calcul est effectué par lancé de rayons (raycast) : pour chaque point de la carte, le système vérifie si la ligne de vue entre ce point et le radar est dégagée au-dessus du terrain.',
-     'Switch to the COVERAGE tab. It computes the actual visibility of each radar by accounting for terrain using the AWS Terrarium Digital Elevation Model (~30 m resolution in France). Computation uses raycasting: for each point on the map, the system checks whether the line of sight between that point and the radar clears the terrain.',
-     '.tab-btn[data-tab="coverage"]', 'coverage', null, null],
-
-    /* ── 22 ────────────────────────────────────────── Altitudes cibles */
-    ['Altitudes cibles',
-     'Target altitudes',
-     'Définissez les altitudes auxquelles vous souhaitez calculer la couverture (référence AGL = au-dessus du sol, ou AMSL = au-dessus du niveau de la mer). Valeurs par défaut : 0, 5, 40 et 500 m — elles couvrent les drones rasants, les hélicoptères, les avions bas et les cibles à moyenne altitude. Chaque altitude produit une couche de couleur différente sur la carte. Vous pouvez en ajouter ou en supprimer selon votre besoin opérationnel.',
-     'Define the altitudes at which you want to compute coverage (AGL = above ground level, or AMSL = above mean sea level). Defaults: 0, 5, 40, and 500 m — covering low-flying drones, helicopters, low-altitude aircraft, and medium-altitude targets. Each altitude produces a different colour layer on the map. Add or remove values according to your operational requirement.',
-     '#acc-alttargets', 'coverage', null, 'acc-alttargets'],
-
-    /* ── 23 ────────────────────────────────────────── Facteur de réfraction */
-    ['Facteur de réfraction atmosphérique',
-     'Atmospheric refraction factor',
-     'Le facteur k modélise la courbure du faisceau radar due à l\'atmosphère. k = 4/3 (défaut) : atmosphère standard, donne la portée classique « horizon radio ». k = 1.0 : propagation en ligne droite géométrique, sous-estime la portée. k = 1.15 : air sec chaud (désert). k = 1.6 : surréfraction (air humide chaud sur mer ou inversions thermiques) — augmente fortement la portée apparente. Conservez 4/3 pour une analyse générale en France.',
-     'The k factor models the bending of the radar beam due to the atmosphere. k = 4/3 (default): standard atmosphere, gives the classic "radio horizon" range. k = 1.0: geometric straight-line propagation, underestimates range. k = 1.15: hot dry air (desert). k = 1.6: superrefraction (warm humid air over sea or thermal inversions) — significantly increases apparent range. Keep 4/3 for a general analysis in France.',
-     '#acc-kfac', 'coverage', null, 'acc-kfac'],
-
-    /* ── 24 ────────────────────────────────────────── Qualité MNT */
-    ['Qualité du MNT',
-     'DEM quality',
-     'Trois niveaux de résolution pour le Modèle Numérique de Terrain. « Rapide » (zoom 11, ~52 m/px) : idéal pour une première analyse ou les grandes portées — calcul rapide. « Haute Précision » (zoom 12, ~26 m/px) : recommandé pour les analyses définitives — calcul 4× plus long. « Très haute précision » (zoom 14) : sans gain réel en France car la source SRTM est à 30 m — réservé à des usages très spécifiques. La résolution estimée pour votre zone est affichée sous les boutons.',
-     'Three resolution levels for the Digital Elevation Model. "Fast" (zoom 11, ~52 m/px): ideal for a first analysis or long ranges — fast computation. "High Precision" (zoom 12, ~26 m/px): recommended for final analyses — 4× longer computation. "Very High Precision" (zoom 14): no real gain in France as the SRTM source is 30 m — reserved for very specific uses. The estimated resolution for your area is shown below the buttons.',
-     '#dem-quality-seg', 'coverage', null, 'acc-dem'],
-
-    /* ── 25 ────────────────────────────────────────── Lancer le calcul */
-    ['Lancer le calcul de couverture',
-     'Run the coverage computation',
-     'Cliquez sur « Lancer le calcul ». Les zones couvertes apparaissent en surimpression colorée sur la carte : chaque couleur correspond à une altitude cible. Le calcul est asynchrone — la carte reste interactive pendant le traitement. Un bouton « Annuler » permet d\'interrompre à tout moment. Pour affiner, ajustez les paramètres radar (Rmax, hauteur de mât) et relancez.',
-     'Click "Run computation". Covered areas appear as a colour overlay on the map: each colour corresponds to a target altitude. The computation is asynchronous — the map remains interactive during processing. A "Cancel" button lets you abort at any time. To refine, adjust radar parameters (Rmax, mast height) and re-run.',
-     '#go', 'coverage', null, null],
-
-    /* ── 26 ────────────────────────────────────────── Onglet Engagement */
-    ['Étape 3 — Engagement cinématique',
-     'Step 3 — Kinematic engagement',
-     'L\'onglet ENGAGEMENT simule l\'arrivée d\'une menace aérienne et calcule les fenêtres de tir pour chaque paire (radar, lanceur). Il modélise la chaîne complète : détection → délai C2 → autorisation de tir → atteindre la cible avant qu\'elle ne sorte de l\'enveloppe missile. Ce module nécessite au moins un radar, un lanceur avec missile et une trajectoire de menace.',
-     'The ENGAGEMENT tab simulates an incoming airborne threat and computes firing windows for each (radar, launcher) pair. It models the full chain: detection → C2 delay → fire authorisation → intercept before the target leaves the missile envelope. This module requires at least one radar, one launcher with a missile, and a threat trajectory.',
-     '.tab-btn[data-tab="engagement"]', 'engagement', null, null],
-
-    /* ── 27 ────────────────────────────────────────── Tracer trajectoire */
-    ['Tracer la trajectoire de la menace',
-     'Draw the threat trajectory',
-     'Cliquez sur « Tracer la trajectoire » puis :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>1er clic sur la carte</strong> — place le point de départ (A)</li><li><strong>2ème clic sur la carte</strong> — place le point d\'arrivée (B) et termine la trajectoire</li></ul>Vous pouvez aussi saisir les coordonnées directement dans les champs du panneau. Réglez la vitesse et l\'altitude pour le point B avant de calculer.',
-     'Click "Draw trajectory", then:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>1st click on the map</strong> — places the start point (A)</li><li><strong>2nd click on the map</strong> — places the end point (B) and completes the trajectory</li></ul>You can also type coordinates directly into the panel fields. Set the speed and altitude for point B before computing.',
-     '#btn-eng-draw', 'engagement', null, null],
-
-    /* ── 28 ────────────────────────────────────────── Calculer fenêtres */
-    ['Calculer les fenêtres d\'engagement',
-     'Compute engagement windows',
-     'Cliquez sur « Calculer » pour lancer l\'analyse. Pour chaque paire (radar, lanceur), le système détermine quatre instants clés : t_det = premier instant de détection par le radar ; t_tir_min = t_det + délai C2 (autorisation de tir au plus tôt) ; t_tir_first = premier instant faisable cinématiquement (le missile peut atteindre la cible) ; t_tir_last = dernier instant de tir avant sortie d\'enveloppe. La fenêtre utile est [t_tir_first, t_tir_last].',
-     'Click "Compute" to launch the analysis. For each (radar, launcher) pair, the system determines four key instants: t_det = first radar detection instant; t_tir_min = t_det + C2 delay (earliest possible fire authorisation); t_tir_first = first kinematically feasible instant (the missile can reach the target); t_tir_last = last firing instant before the target exits the envelope. The useful window is [t_tir_first, t_tir_last].',
-     '#btn-eng-calc', 'engagement', null, null],
-
-    /* ── 29 ────────────────────────────────────────── Sauvegarder */
-    ['Étape 4 — Sauvegarder le déploiement',
-     'Step 4 — Save the deployment',
-     'Basculez vers l\'onglet OUTILS pour sauvegarder votre déploiement. L\'application dispose d\'une auto-sauvegarde active (slot « auto »), mais il est recommandé d\'utiliser l\'un des 3 emplacements nommés pour conserver plusieurs versions de votre scénario. La sauvegarde est locale dans le navigateur : elle persiste entre les sessions mais reste sur cette machine.',
-     'Switch to the TOOLS tab to save your deployment. The application has an active auto-save (slot "auto"), but it is recommended to use one of the 3 named slots to keep multiple versions of your scenario. Saves are stored locally in the browser: they persist across sessions but remain on this machine.',
+    /* ── 4 ─────────────────────────────────────────── Onglet OUTILS */
+    ['Onglet OUTILS',
+     'TOOLS tab',
+     'L\'onglet OUTILS regroupe la configuration générale de l\'application et la gestion des fichiers de scénarios :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Paramètres</strong> — unités de mesure, format des coordonnées, options d\'affichage</li><li><strong>Sauvegarde</strong> — 3 emplacements nommés + auto-sauvegarde, export/import KML</li><li><strong>Outils avancés</strong> — recherche de sommets, anneaux de portée</li></ul>',
+     'The TOOLS tab contains the general application configuration and scenario file management:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Settings</strong> — measurement units, coordinate format, display options</li><li><strong>Save</strong> — 3 named slots + auto-save, KML export/import</li><li><strong>Advanced tools</strong> — summit search, range rings</li></ul>',
      '.tab-btn[data-tab="tools"]', 'tools', null, null],
 
-    /* ── 30 ────────────────────────────────────────── Emplacements de sauvegarde */
-    ['Emplacements de sauvegarde',
-     'Save slots',
-     'Trois emplacements nommés sont disponibles. Saisissez un nom descriptif (ex. « Scénario nord »), puis cliquez « Sauvegarder ». « Charger » restaure un déploiement antérieur. « Exporter KML » génère un fichier .kml portable contenant l\'ensemble du scénario (positions, paramètres, trajectoire) que vous pouvez importer sur un autre poste ou archiver. « Importer KML » recharge un scénario exporté précédemment.',
-     'Three named slots are available. Enter a descriptive name (e.g. "North scenario"), then click "Save". "Load" restores a previous deployment. "Export KML" generates a portable .kml file containing the full scenario (positions, parameters, trajectory) that you can import on another computer or archive. "Import KML" reloads a previously exported scenario.',
-     '#acc-save', 'tools', null, 'acc-save'],
+    /* ── 5 ─────────────────────────────────────────── Accordéon unités de mesure */
+    ['Unités de mesure',
+     'Measurement units',
+     'La section <strong>Unités de mesure</strong> permet de régler les unités employées par l\'outil pour tous les champs de valeur : altitude, distance et temps. Ces réglages s\'appliquent à l\'ensemble de l\'interface.<br><br>Cliquez sur l\'en-tête pour ouvrir le menu associé.',
+     'The <strong>Measurement units</strong> section lets you set the units used by the tool for all value fields: altitude, distance, and time. These settings apply across the entire interface.<br><br>Click the header to open the associated menu.',
+     '.acc-btn[aria-controls="acc-units"]', 'tools', null, null],
 
-    /* ── 31 ────────────────────────────────────────── Félicitations */
-    ['Déploiement maîtrisé !',
-     'Deployment mastered!',
-     'Vous connaissez maintenant toutes les étapes pour créer un déploiement Sol-Air complet avec France Sol-Air : unités → C2 → Radars → Lanceurs → Couverture terrain → Fenêtres d\'engagement → Sauvegarde KML. Pour approfondir chaque fonctionnalité (recherche de sommets, cartes hors-ligne, import KML, simulation temps réel…), consultez la documentation complète via le bouton « ? ».',
-     'You now know all the steps to create a complete ground-based air-defence deployment with France Sol-Air: units → C2 → Radars → Launchers → Terrain coverage → Engagement windows → KML save. To explore advanced features (summit search, offline maps, KML import, real-time simulation…), open the full documentation via the "?" button.',
+    /* ── 6 ─────────────────────────────────────────── Unités altitude / distance / temps */
+    ['Unités de mesure',
+     'Measurement units',
+     'Paramétrez l\'application avec les unités de la norme OTAN :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude → ft</strong> (pied)</li><li><strong>Distance → nm</strong> (mille nautique)</li><li><strong>Temps → s</strong> (seconde)</li></ul>',
+     'Configure the application with NATO standard units:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Altitude → ft</strong> (feet)</li><li><strong>Distance → nm</strong> (nautical mile)</li><li><strong>Time → s</strong> (second)</li></ul>',
+     '#acc-units', 'tools', null, 'acc-units'],
+
+    /* ── 7 ─────────────────────────────────────────── Accordéon affichage et coordonnées */
+    ['Affichage et coordonnées',
+     'Display and coordinates',
+     'Le menu <strong>Affichage et coordonnées</strong> permet de personnaliser ce qui est affiché sur la carte : opacité des couches, format des coordonnées, anneaux de portée et marqueurs des entités.<br><br>Cliquez sur l\'en-tête pour ouvrir le menu.',
+     'The <strong>Display and coordinates</strong> menu lets you customise what is shown on the map: layer opacity, coordinate format, range rings, and entity markers.<br><br>Click the header to open the menu.',
+     '.acc-btn[aria-controls="acc-display"]', 'tools', null, null],
+
+    /* ── 8 ─────────────────────────────────────────── Options d'affichage */
+    ['Options d\'affichage',
+     'Display options',
+     'Ce menu regroupe les options de visualisation sur la carte :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Format des coordonnées</strong> — DMS ou décimales</li><li><strong>Marque portée senseur</strong> — cercles de portée autour des radars</li><li><strong>Marque portée missile</strong> — enveloppe de tir des lanceurs</li><li><strong>Tous lanceurs</strong> — afficher toutes les enveloppes simultanément</li></ul>Activez maintenant <strong>Marque portée missile</strong> et <strong>Tous lanceurs</strong>.',
+     'This menu groups the map visualisation options:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Coordinate format</strong> — DMS or decimal</li><li><strong>Sensor range mark</strong> — range circles around radars</li><li><strong>Missile range mark</strong> — launcher firing envelopes</li><li><strong>All launchers</strong> — show all envelopes simultaneously</li></ul>Now enable <strong>Missile range mark</strong> and <strong>All launchers</strong>.',
+     '#acc-display', 'tools', null, 'acc-display'],
+
+    /* ── 9 ─────────────────────────────────────────── Centrer sur Pau */
+    ['Déploiement sur Pau',
+     'Deployment on Pau',
+     'Vous allez déployer un système sol-air sur la région de <strong>Pau</strong> (Pyrénées-Atlantiques). Cette ville est un centre important pour la défense sol-air en France.<br><br>Centrez la vue sur Pau, soit en naviguant sur la carte, soit en utilisant la barre de recherche. Lorsque vous avez trouvé la ville, cliquez <strong>▶</strong> pour continuer.',
+     'You are going to deploy a ground-to-air system in the region of <strong>Pau</strong> (Pyrénées-Atlantiques). This city is an important centre for ground-based air defence in France.<br><br>Centre the view on Pau, either by navigating on the map or using the search bar. When you have found the city, click <strong>▶</strong> to continue.',
+     '#map', null, null, null],
+
+    /* ── 10 ─────────────────────────────────────────── Zone de déploiement */
+    ['Zone de déploiement',
+     'Deployment zone',
+     'Le rectangle orange délimite la <strong>zone de déploiement</strong> : un carré de 20 × 20 km centré sur Pau. L\'ensemble de votre dispositif sol-air (C2, radars, lanceurs) devra être positionné à l\'intérieur de cette zone.<br><br>Prenez connaissance de la zone, puis cliquez <strong>▶</strong> pour commencer le déploiement.',
+     'The orange rectangle marks the <strong>deployment zone</strong>: a 20 × 20 km square centred on Pau. Your entire ground-to-air system (C2, radars, launchers) must be positioned within this zone.<br><br>Take note of the zone, then click <strong>▶</strong> to begin deployment.',
      null, null, null, null],
+
+    /* ── 11 ────────────────────────────────────────── Organiser les accordéons */
+    ['Organiser le panneau OUTILS',
+     'Organise the TOOLS panel',
+     'Avant de continuer, organisez le panneau :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.9"><li>Repliez <strong>Unités de mesure</strong></li><li>Repliez <strong>Affichage &amp; Coordonnées</strong></li><li>Dépliez <strong>Recherche Sommets Locaux</strong></li></ul>',
+     'Before continuing, organise the panel:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.9"><li>Collapse <strong>Measurement units</strong></li><li>Collapse <strong>Display &amp; Coordinates</strong></li><li>Expand <strong>Local Summit Search</strong></li></ul>',
+     '#tab-tools', 'tools', null, null],
+
+    /* ── 12 ────────────────────────────────────────── Recherche sommets locaux */
+    ['Recherche de sommets locaux',
+     'Local summit search',
+     'L\'outil <strong>Recherche Sommets Locaux</strong> identifie les points hauts du terrain dans une zone définie sur la carte — utile pour positionner les radars sur des reliefs dominants qui maximisent la couverture.<br><br>Cliquez sur <strong>Zone de recherche</strong> pour tracer un rectangle sur la carte (~10 × 10 km au nord de Pau), réglez le compteur sur <strong>10</strong>, puis cliquez <strong>Lancer la recherche</strong>.',
+     'The <strong>Local Summit Search</strong> tool identifies terrain high points within a user-drawn zone — useful for positioning radars on dominant terrain to maximise coverage.<br><br>Click <strong>Search zone</strong> to draw a rectangle on the map (~10 × 10 km north of Pau), set the count to <strong>10</strong>, then click <strong>Run search</strong>.',
+     '@full', 'tools', null, 'acc-peaks'],
+
+    /* ── 13 ────────────────────────────────────────── Nuances de couleur des sommets */
+    ['Lecture des résultats',
+     'Reading the results',
+     'Les sommets identifiés apparaissent sur la carte sous forme de marqueurs numérotés par ordre d\'élévation décroissante : le <strong>n° 1</strong> est le plus haut. Un clic sur un marqueur affiche l\'altitude exacte et les coordonnées du point.<br><br>Ces positions sont des candidats privilégiés pour l\'implantation de radars : une hauteur dominante réduit les masques de relief et augmente significativement la portée de détection effective.',
+     'Identified summits appear on the map as numbered markers in descending elevation order: <strong>No. 1</strong> is the highest. Click a marker to display the exact altitude and coordinates.<br><br>These positions are prime candidates for radar placement: a dominant height reduces terrain masking and significantly increases effective detection range.',
+     '#map', null, null, null],
+
+    /* ── 14 ────────────────────────────────────────── Onglet Déploiement */
+    ['Onglet DÉPLOIEMENT',
+     'DEPLOYMENT tab',
+     'C\'est depuis l\'onglet <strong>DÉPLOIEMENT</strong> que sont placées et configurées toutes les unités du dispositif Sol-Air : nœuds C2, radars et lanceurs. L\'ordre de création recommandé est toujours <strong>C2 → Radars → Lanceurs</strong> pour permettre le rattachement hiérarchique dès la création.<br><br>Cliquez sur l\'onglet DÉPLOIEMENT pour continuer.',
+     'The <strong>DEPLOYMENT</strong> tab is where all ground-based air defence units are placed and configured: C2 nodes, radars, and launchers. The recommended creation order is always <strong>C2 → Radars → Launchers</strong> to allow hierarchical linking at creation time.<br><br>Click the DEPLOYMENT tab to continue.',
+     '.tab-btn[data-tab="entities"]', null, null, null],
+
+    /* ── 15 ────────────────────────────────────────── Toggle Radar / Lanceurs / C2 */
+    ['Sous-menus du déploiement',
+     'Deployment sub-menus',
+     'Trois sous-menus organisent le panneau :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Radars</strong> — capteurs de détection</li><li><strong>Lanceurs</strong> — batteries de missiles</li><li><strong>C2</strong> — nœuds de commandement et de contrôle</li></ul>Chaque sous-menu affiche la liste des unités du type sélectionné et permet de les créer, configurer ou supprimer.<br><br>Cliquez sur <strong>C2</strong> pour continuer.',
+     'Three sub-menus organise the panel:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Radars</strong> — detection sensors</li><li><strong>Launchers</strong> — missile batteries</li><li><strong>C2</strong> — command and control nodes</li></ul>Each sub-menu shows the list of units of the selected type and allows creation, configuration, or deletion.<br><br>Click <strong>C2</strong> to continue.',
+     '#entity-type-seg', 'entities', null, null],
+
+    /* ── 16 ────────────────────────────────────────── Ajouter un C2 */
+    ['Nœud de commandement (C2)',
+     'Command and control node (C2)',
+     'Le <strong>nœud C2</strong> est le centre nerveux du déploiement. Il représente le poste de commandement qui reçoit les détections des radars, décide de l\'engagement et transmet l\'ordre de tir aux lanceurs. Son <strong>délai d\'engagement</strong> modélise le temps de réaction de la chaîne de décision — un paramètre clé pour le calcul des fenêtres de tir.<br><br>Cliquez sur <strong>+ Ajouter un nœud C2</strong> pour placer votre PC sur la carte.',
+     'The <strong>C2 node</strong> is the nerve centre of the deployment. It receives detections from radars, decides on engagement, and transmits fire orders to launchers. Its <strong>engagement delay</strong> models the decision chain reaction time — a key parameter for computing firing windows.<br><br>Click <strong>+ Add a C2 node</strong> to place your command post on the map.',
+     '#tab-entities', 'entities', 'c2', null],
+
+    /* ── 17 ────────────────────────────────────────── Configurer le C2 */
+    ['Configurer le nœud C2',
+     'Configure the C2 node',
+     'Configurez votre nœud C2 :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Nom</strong> — identifiez votre PC (ex. « PC PAU »)</li><li><strong>Délai d\'engagement</strong> — temps entre la détection et l\'autorisation de tir (10 s est une valeur réaliste)</li><li><strong>Distance max C2</strong> — seuil d\'alerte si une unité dépasse cette distance (ex. 15 km)</li></ul>Faites glisser le carré bleu sur la carte vers la position de votre PC. Lorsque vous avez terminé, cliquez <strong>▶</strong>.',
+     'Configure your C2 node:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Name</strong> — identify your command post (e.g. "PAU HQ")</li><li><strong>Engagement delay</strong> — time from detection to fire authorisation (10 s is realistic)</li><li><strong>Max C2 distance</strong> — alert threshold if a unit exceeds this distance (e.g. 15 km)</li></ul>Drag the blue square on the map to your command post position. When done, click <strong>▶</strong>.',
+     '#pane-c2', 'entities', 'c2', null],
+
+    /* ── 18 ────────────────────────────────────────── Aller sur Radars */
+    ['Déployer un radar',
+     'Deploy a radar',
+     'Le C2 est en place. Il est maintenant temps de déployer un <strong>radar</strong> — le capteur chargé de détecter les menaces aériennes. Cliquez sur <strong>Radars</strong> dans le sélecteur de sous-menu.',
+     'The C2 is in place. It is now time to deploy a <strong>radar</strong> — the sensor responsible for detecting airborne threats. Click <strong>Radars</strong> in the sub-menu selector.',
+     '#entity-type-seg', 'entities', null, null],
+
+    /* ── 19 ────────────────────────────────────────── Ajouter un radar */
+    ['Ajouter un radar',
+     'Add a radar',
+     'Cliquez sur <strong>+ Ajouter un radar</strong>. Un cercle bleu apparaît sur la carte. Conseil : positionnez-le sur l\'un des sommets identifiés lors de la recherche — une hauteur dominante maximise la couverture de détection. Faites-le glisser vers ce sommet.',
+     'Click <strong>+ Add a radar</strong>. A blue circle appears on the map. Tip: position it on one of the summits identified during the search — dominant high ground maximises detection coverage. Drag it to that summit.',
+     '#tab-entities', 'entities', 'radars', null],
+
+    /* ── 20 ────────────────────────────────────────── Configurer le radar */
+    ['Configurer le radar',
+     'Configure the radar',
+     'Configurez votre radar :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Rmax</strong> — portée maximale en ligne de vue dégagée (40 km par défaut)</li><li><strong>Az min / Az max</strong> — secteur de surveillance en degrés (0–360 pour omnidirectionnel)</li><li><strong>Él min / Él max</strong> — fenêtre d\'élévation (0–30° couvre la plupart des menaces)</li><li><strong>Hant / Hmât</strong> — hauteur antenne + mât en mètres</li><li><strong>C2 parent</strong> — sélectionnez le C2 créé précédemment</li></ul>Lorsque vous avez terminé, cliquez <strong>▶</strong>.',
+     'Configure your radar:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Rmax</strong> — maximum range in clear line of sight (40 km default)</li><li><strong>Az min / Az max</strong> — surveillance sector in degrees (0–360 for omnidirectional)</li><li><strong>El min / El max</strong> — elevation window (0–30° covers most threats)</li><li><strong>Hant / Hmast</strong> — antenna + mast height in metres</li><li><strong>Parent C2</strong> — select the C2 created previously</li></ul>When done, click <strong>▶</strong>.',
+     '#pane-radars', 'entities', 'radars', null],
+
+    /* ── 21 ────────────────────────────────────────── Aller sur Lanceurs */
+    ['Déployer un lanceur',
+     'Deploy a launcher',
+     'Radar en place. Il est maintenant temps de déployer un <strong>lanceur</strong> — la batterie de missiles qui intercepte les menaces détectées. Cliquez sur <strong>Lanceurs</strong> dans le sélecteur de sous-menu.',
+     'Radar in place. It is now time to deploy a <strong>launcher</strong> — the missile battery that intercepts detected threats. Click <strong>Launchers</strong> in the sub-menu selector.',
+     '#entity-type-seg', 'entities', null, null],
+
+    /* ── 22 ────────────────────────────────────────── Ajouter un lanceur */
+    ['Ajouter un lanceur',
+     'Add a launcher',
+     'Cliquez sur <strong>+ Ajouter un lanceur</strong>. Un triangle orange apparaît sur la carte. Conseil tactique : placez le lanceur à l\'intérieur de la zone de déploiement (rectangle orange), à une distance raisonnable du C2 pour maintenir la liaison de données, mais suffisamment dispersé pour réduire la vulnérabilité à une frappe unique.',
+     'Click <strong>+ Add a launcher</strong>. An orange triangle appears on the map. Tactical tip: place the launcher inside the deployment zone (orange rectangle), at a reasonable distance from the C2 to maintain the data link, but dispersed enough to reduce vulnerability to a single strike.',
+     '#tab-entities', 'entities', 'launchers', null],
+
+    /* ── 23 ────────────────────────────────────────── Configurer le lanceur */
+    ['Configurer le lanceur',
+     'Configure the launcher',
+     'Configurez votre lanceur :<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Type de missile</strong> — choisissez le missile adapté à votre scénario (MSAM portée moyenne ~10 km ou longue portée ~35 km)</li><li><strong>Type de liaison</strong> — Fibre (fixe, fiable) ou Radio (flexible, sensible aux masques)</li><li><strong>Distance max C2</strong> — seuil d\'alerte selon la portée de la liaison choisie</li><li><strong>C2 parent</strong> — sélectionnez le C2 créé précédemment</li></ul>Lorsque vous avez terminé, cliquez <strong>▶</strong>.',
+     'Configure your launcher:<ul style="margin:6px 0 0 14px;padding:0;line-height:1.8"><li><strong>Missile type</strong> — choose the missile suited to your scenario (MSAM medium range ~10 km or long range ~35 km)</li><li><strong>Link type</strong> — Fibre (fixed, reliable) or Radio (flexible, susceptible to masking)</li><li><strong>Max C2 distance</strong> — alert threshold based on the range of the chosen link</li><li><strong>Parent C2</strong> — select the C2 created previously</li></ul>When done, click <strong>▶</strong>.',
+     '#pane-launchers', 'entities', 'launchers', null],
   ];
 
-  // Guards: step index → { ok(), hintFR, hintEN }
+  // Guards: step index → { ok(), hintFR, hintEN, autoAdvance? }
   // A step with a guard blocks Next until ok() returns true.
+  // autoAdvance:true → automatically proceeds to next step once ok() becomes true.
   const GUARDS = {
-    2:  { ok: () => document.querySelector('#unit-alt-seg button.on')?.dataset?.u === 'ft',
-          hintFR: 'Action requise : cliquez sur « ft » dans la ligne Altitude.',
-          hintEN: 'Action required: click "ft" in the Altitude row.' },
-    4:  { ok: () => !!document.getElementById('show-missile-rings')?.checked,
-          hintFR: 'Action requise : cochez « Marque portée missile ».',
-          hintEN: 'Action required: check "Missile range mark".' },
-    7:  { ok: () => c2nodes.length > 0,
-          hintFR: 'Action requise : ajoutez un nœud C2 en cliquant le bouton ci-dessus, puis faites-le glisser sur la carte.',
-          hintEN: 'Action required: add a C2 node by clicking the button above, then drag it on the map.' },
-    10: { ok: () => radars.length > 0,
-          hintFR: 'Action requise : ajoutez un radar en cliquant le bouton ci-dessus, puis faites-le glisser sur la carte.',
-          hintEN: 'Action required: add a radar by clicking the button above, then drag it on the map.' },
-    17: { ok: () => launchers.length > 0,
-          hintFR: 'Action requise : ajoutez un lanceur en cliquant le bouton ci-dessus, puis positionnez-le sur la carte.',
-          hintEN: 'Action required: add a launcher by clicking the button above, then position it on the map.' },
-    26: { ok: () => _engBMarker !== null,
-          hintFR: 'Action requise : cliquez « Tracer la trajectoire », puis cliquez une première fois sur la carte (point A), puis une deuxième fois (point B).',
-          hintEN: 'Action required: click "Draw trajectory", then click once on the map (point A), then once more (point B).' },
+    4: { ok: () => !!document.getElementById('acc-units')?.classList.contains('open'),
+         hintFR: 'Action requise : cliquez sur l\'en-tête « Unités de mesure » pour ouvrir le menu.',
+         hintEN: 'Action required: click the "Measurement units" header to open the menu.',
+         autoAdvance: true },
+    5: { ok: () => document.querySelector('#unit-alt-seg button.on')?.dataset?.u === 'ft'
+                && document.querySelector('#unit-dist-seg button.on')?.dataset?.u === 'nm'
+                && document.querySelector('#unit-time-seg button.on')?.dataset?.u === 'sec',
+         hintFR: 'Action requise : sélectionnez ft (altitude), nm (distance) et s (temps).',
+         hintEN: 'Action required: select ft (altitude), nm (distance) and s (time).',
+         autoAdvance: true },
+    6: { ok: () => !!document.getElementById('acc-display')?.classList.contains('open'),
+         hintFR: 'Action requise : cliquez sur l\'en-tête « Affichage et coordonnées » pour ouvrir le menu.',
+         hintEN: 'Action required: click the "Display and coordinates" header to open the menu.',
+         autoAdvance: true },
+    7: { ok: () => !!document.getElementById('show-missile-rings')?.checked && !!document.getElementById('missile-rings-all')?.checked,
+         hintFR: 'Action requise : activez « Marque portée missile » et « Tous lanceurs ».',
+         hintEN: 'Action required: enable "Missile range mark" and "All launchers".',
+         autoAdvance: true },
+    10: { ok: () => !document.getElementById('acc-units')?.classList.contains('open')
+                 && !document.getElementById('acc-display')?.classList.contains('open')
+                 && !!document.getElementById('acc-peaks')?.classList.contains('open'),
+          hintFR: 'Action requise : repliez « Unités » et « Affichage & Coordonnées », puis dépliez « Recherche Sommets Locaux ».',
+          hintEN: 'Action required: collapse "Units" and "Display & Coordinates", then expand "Local Summit Search".',
+          autoAdvance: true },
+    11: { ok: () => { const el = document.getElementById('peak-status'); return !!el && el.style.display !== 'none'; },
+          hintFR: 'Action requise : définissez une zone de recherche, réglez le nombre sur 10, puis cliquez « Lancer la recherche ».',
+          hintEN: 'Action required: define a search zone, set the count to 10, then click "Run search".' },
+    13: { ok: () => !!document.querySelector('.tab-btn[data-tab="entities"]')?.classList.contains('active'),
+          hintFR: 'Action requise : cliquez sur l\'onglet DÉPLOIEMENT.',
+          hintEN: 'Action required: click the DEPLOYMENT tab.',
+          autoAdvance: true },
+    14: { ok: () => !!document.querySelector('#entity-type-seg button[data-e="c2"]')?.classList.contains('on'),
+          hintFR: 'Action requise : cliquez sur « C2 » dans le sélecteur de sous-menu.',
+          hintEN: 'Action required: click "C2" in the sub-menu selector.',
+          autoAdvance: true },
+    15: { ok: () => c2nodes.length > 0,
+          hintFR: 'Action requise : cliquez sur « + Ajouter un nœud C2 ».',
+          hintEN: 'Action required: click "+ Add a C2 node".',
+          autoAdvance: true },
+    17: { ok: () => !!document.querySelector('#entity-type-seg button[data-e="radars"]')?.classList.contains('on'),
+          hintFR: 'Action requise : cliquez sur « Radars » dans le sélecteur de sous-menu.',
+          hintEN: 'Action required: click "Radars" in the sub-menu selector.',
+          autoAdvance: true },
+    18: { ok: () => radars.length > 0,
+          hintFR: 'Action requise : cliquez sur « + Ajouter un radar ».',
+          hintEN: 'Action required: click "+ Add a radar".',
+          autoAdvance: true },
+    20: { ok: () => !!document.querySelector('#entity-type-seg button[data-e="launchers"]')?.classList.contains('on'),
+          hintFR: 'Action requise : cliquez sur « Lanceurs » dans le sélecteur de sous-menu.',
+          hintEN: 'Action required: click "Launchers" in the sub-menu selector.',
+          autoAdvance: true },
+    21: { ok: () => launchers.length > 0,
+          hintFR: 'Action requise : cliquez sur « + Ajouter un lanceur ».',
+          hintEN: 'Action required: click "+ Add a launcher".',
+          autoAdvance: true },
   };
+
+  // Leaflet layer added by the tutorial (Pau deployment zone rectangle).
+  let _tutoMapLayer = null;
+  function _tutoRemoveMapLayer() {
+    if (_tutoMapLayer) { map.removeLayer(_tutoMapLayer); _tutoMapLayer = null; }
+  }
+
+  function closeAccordion(id) {
+    if (!id) return;
+    const body = document.getElementById(id);
+    if (body && body.classList.contains('open')) {
+      const btn = document.querySelector(`.acc-btn[aria-controls="${id}"]`);
+      if (btn) { btn.setAttribute('aria-expanded','false'); body.classList.remove('open'); }
+    }
+  }
 
   // ON_ENTER hooks: called after tab/pane switch when entering a step.
   const ON_ENTER = {
-    11: () => { if (radars.length > 0) selectEntity('radar', radars[0].id); },
+    4: () => closeAccordion('acc-units'),
+    6: () => closeAccordion('acc-display'),
+    19: () => { if (radars.length > 0) selectEntity('radar', radars[0].id); },
+    22: () => { if (launchers.length > 0) selectEntity('launcher', launchers[0].id); },
+    9: () => {
+      _tutoRemoveMapLayer();
+      const PAU_LAT = 43.2951, PAU_LNG = -0.3708;
+      const D_LAT = 0.08985, D_LNG = 0.12362;
+      _tutoMapLayer = L.rectangle(
+        [[PAU_LAT - D_LAT, PAU_LNG - D_LNG], [PAU_LAT + D_LAT, PAU_LNG + D_LNG]],
+        { color: '#ff6600', weight: 3, fill: true, fillColor: '#ff6600', fillOpacity: 0.08, dashArray: '8 4' }
+      ).addTo(map);
+      map.fitBounds(_tutoMapLayer.getBounds(), { padding: [40, 40] });
+    },
   };
 
   const N = STEPS.length;
@@ -6652,10 +6664,17 @@ async function runEngCalc() {
     const hintEl  = document.getElementById('tuto-hint');
     const ok = guardOk();
     nextBtn.classList.toggle('locked', !ok);
-    if (ok && hintEl.dataset.auto === '1') {
-      hintEl.style.display = 'none';
-      hintEl.textContent = '';
-      delete hintEl.dataset.auto;
+    if (ok) {
+      if (hintEl.dataset.auto === '1') {
+        hintEl.style.display = 'none';
+        hintEl.textContent = '';
+        delete hintEl.dataset.auto;
+      }
+      const g = GUARDS[cur];
+      if (g && g.autoAdvance) {
+        stopGuardPoll();
+        setTimeout(() => next(), 350);
+      }
     }
   }
   function showHint(msg) {
@@ -6708,6 +6727,7 @@ async function runEngCalc() {
     cur = Math.max(0, Math.min(N-1, idx));
     hideHint();
     stopGuardPoll();
+    _tutoRemoveMapLayer();
     const s = STEPS[cur];
     const l = L();
     const [titleFr, titleEn, textFr, textEn, sel, tab, subPane, acc] = s;
@@ -6745,28 +6765,38 @@ async function runEngCalc() {
 
     // Spotlight
     const PAD = 10;
-    let el = sel ? document.querySelector(sel) : null;
-    if (el) {
-      el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
-      const r = el.getBoundingClientRect();
-      const x = r.left - PAD, y = r.top - PAD;
-      const w = r.width + PAD*2, h = r.height + PAD*2;
-      hole.setAttribute('x', Math.max(0,x));
-      hole.setAttribute('y', Math.max(0,y));
-      hole.setAttribute('width', Math.max(w,10));
-      hole.setAttribute('height', Math.max(h,10));
-      ring.style.display = '';
-      ring.style.left   = `${Math.max(0,x)}px`;
-      ring.style.top    = `${Math.max(0,y)}px`;
-      ring.style.width  = `${Math.max(w,10)}px`;
-      ring.style.height = `${Math.max(h,10)}px`;
-      placeCard(card, {x, y, w, h});
-    } else {
-      hole.setAttribute('width', 0); hole.setAttribute('height', 0);
+    if (sel === '@full') {
+      // No dark overlay — entire screen visible; card anchored bottom-left of viewport.
+      hole.setAttribute('x', 0); hole.setAttribute('y', 0);
+      hole.setAttribute('width', '100%'); hole.setAttribute('height', '100%');
       ring.style.display = 'none';
-      const vw = window.innerWidth, vh = window.innerHeight;
-      card.style.left = `${Math.max(8,(vw - card.offsetWidth) / 2)}px`;
-      card.style.top  = `${Math.max(8,(vh - card.offsetHeight) / 2)}px`;
+      const ch = card.offsetHeight || 200;
+      card.style.left = '8px';
+      card.style.top  = `${Math.max(8, window.innerHeight - ch - 8)}px`;
+    } else {
+      let el = sel ? document.querySelector(sel) : null;
+      if (el) {
+        el.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+        const r = el.getBoundingClientRect();
+        const x = r.left - PAD, y = r.top - PAD;
+        const w = r.width + PAD*2, h = r.height + PAD*2;
+        hole.setAttribute('x', Math.max(0,x));
+        hole.setAttribute('y', Math.max(0,y));
+        hole.setAttribute('width', Math.max(w,10));
+        hole.setAttribute('height', Math.max(h,10));
+        ring.style.display = '';
+        ring.style.left   = `${Math.max(0,x)}px`;
+        ring.style.top    = `${Math.max(0,y)}px`;
+        ring.style.width  = `${Math.max(w,10)}px`;
+        ring.style.height = `${Math.max(h,10)}px`;
+        placeCard(card, {x, y, w, h});
+      } else {
+        hole.setAttribute('width', 0); hole.setAttribute('height', 0);
+        ring.style.display = 'none';
+        const vw = window.innerWidth, vh = window.innerHeight;
+        card.style.left = `${Math.max(8,(vw - card.offsetWidth) / 2)}px`;
+        card.style.top  = `${Math.max(8,(vh - card.offsetHeight) / 2)}px`;
+      }
     }
   }
 
@@ -6822,6 +6852,7 @@ async function runEngCalc() {
 
   function stop() {
     stopGuardPoll();
+    _tutoRemoveMapLayer();
     document.getElementById('tutorial-overlay').style.display = 'none';
     document.getElementById('tuto-hole').setAttribute('width', 0);
     document.getElementById('tuto-hole').setAttribute('height', 0);
