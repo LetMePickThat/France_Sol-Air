@@ -1317,87 +1317,96 @@
          ONGLET 4 — ENGAGEMENT (Trajectoire menace 2 points)
          ============================================================ -->
     <div id="tab-engagement" class="tab-panel" role="tabpanel">
-      <div class="entity-pane active" id="pane-threat">
+      <div id="pane-threat" class="tab-scroll">
 
-        <!-- Formulaire 2-points -->
-        <div class="entity-list-scroll" style="overflow-y:auto;flex:1">
+        <!-- Accordéon Trajectoire simple -->
+        <div class="acc-item">
+          <button class="acc-btn" aria-expanded="true" aria-controls="acc-traj-simple">
+            <span data-i18n="engSimpleTraj">Trajectoire simple</span>
+            <span class="acc-chevron">▼</span>
+          </button>
+          <div class="acc-body open" id="acc-traj-simple">
 
-          <!-- Point A -->
-          <div style="border-bottom:1px solid var(--line);padding:10px 14px">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointA">Point de départ (A)</div>
-            <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
-              <input type="text" id="eng-a-lat" placeholder="Lat" onchange="_engUpdateCoordA()">
-              <input type="text" id="eng-a-lon" placeholder="Lon" onchange="_engUpdateCoordA()">
-            </div></div>
-            <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
-              <input type="number" id="eng-a-speed" value="900" min="50" max="5000" step="10" style="flex:1">
-              <span class="unit-tag">km/h</span>
-            </div></div>
-            <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
-              <input type="number" id="eng-a-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
-              <span class="unit-tag">m</span>
-            </div></div>
-          </div>
-
-          <!-- Point B -->
-          <div style="border-bottom:1px solid var(--line);padding:10px 14px">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointB">Point d'arrivée (B)</div>
-            <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
-              <input type="text" id="eng-b-lat" placeholder="Lat" onchange="_engUpdateCoordB()">
-              <input type="text" id="eng-b-lon" placeholder="Lon" onchange="_engUpdateCoordB()">
-            </div></div>
-            <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
-              <input type="number" id="eng-b-speed" value="900" min="50" max="5000" step="10" style="flex:1">
-              <span class="unit-tag">km/h</span>
-            </div></div>
-            <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
-              <input type="number" id="eng-b-alt" value="500" min="0" max="30000" step="100" style="flex:1">
-              <span class="unit-tag">m</span>
-            </div></div>
-          </div>
-
-          <!-- Résultats -->
-          <div style="padding:8px 14px">
-            <div id="sim-det-status" style="display:none"></div>
-          </div>
-        </div>
-
-        <!-- Bannière mode dessin carte -->
-        <div id="eng-pick-banner" style="display:none;padding:7px 18px;background:var(--accent-light);border-top:2px solid var(--accent);font-size:12px;color:var(--accent);text-align:center;font-weight:600"></div>
-
-        <div class="entity-pane-footer">
-          <button class="btn-add" id="btn-eng-draw" style="border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engDrawBtn">Tracer la trajectoire</button>
-          <button class="btn-add" id="btn-eng-calc" style="margin-top:6px;border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engCalcBtn">Calculer</button>
-          <button class="btn-add" id="btn-eng-clear" style="margin-top:6px;border-color:var(--line);color:var(--txt-dim)" data-i18n="engClear">Effacer</button>
-        </div>
-
-        <!-- Éléments legacy conservés dans le DOM pour les event listeners existants -->
-        <div style="display:none" aria-hidden="true">
-          <div id="sim-lock-banner"></div>
-          <div id="threat-wp-list"></div>
-          <div id="sim-panel">
-            <div id="sim-speed-seg">
-              <button class="on" data-spd="1">×1</button><button data-spd="5">×5</button>
-              <button data-spd="10">×10</button><button data-spd="100">×100</button>
+            <!-- Point A -->
+            <div style="border-bottom:1px solid var(--line);padding:10px 0 10px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointA">Point de départ (A)</div>
+              <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
+                <input type="text" id="eng-a-lat" placeholder="Lat" onchange="_engUpdateCoordA()">
+                <input type="text" id="eng-a-lon" placeholder="Lon" onchange="_engUpdateCoordA()">
+              </div></div>
+              <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
+                <input type="number" id="eng-a-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+                <span class="unit-tag">km/h</span>
+              </div></div>
+              <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
+                <input type="number" id="eng-a-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
+                <span class="unit-tag">m</span>
+              </div></div>
             </div>
-            <button id="sim-play"></button>
-            <button id="sim-pause"></button>
-            <button id="sim-stop"></button>
-            <div id="sim-progress-wrap">
-              <div id="sim-progress-bg"></div>
-              <div id="sim-progress-ticks"></div>
-              <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
+
+            <!-- Point B -->
+            <div style="border-bottom:1px solid var(--line);padding:10px 0 10px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-dim);margin-bottom:6px" data-i18n="engPointB">Point d'arrivée (B)</div>
+              <div class="radar-params"><label data-i18n="pPos">Position</label><div class="multi-input">
+                <input type="text" id="eng-b-lat" placeholder="Lat" onchange="_engUpdateCoordB()">
+                <input type="text" id="eng-b-lon" placeholder="Lon" onchange="_engUpdateCoordB()">
+              </div></div>
+              <div class="radar-params"><label data-i18n="engWpSpeed">Vitesse</label><div class="multi-input">
+                <input type="number" id="eng-b-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+                <span class="unit-tag">km/h</span>
+              </div></div>
+              <div class="radar-params"><label data-i18n="engWpAlt">Altitude</label><div class="multi-input">
+                <input type="number" id="eng-b-alt" value="500" min="0" max="30000" step="100" style="flex:1">
+                <span class="unit-tag">m</span>
+              </div></div>
             </div>
-            <span id="sim-time-elapsed"></span>
-            <span id="sim-time-total"></span>
+
+            <!-- Résultats -->
+            <div style="padding:8px 0">
+              <div id="sim-det-status" style="display:none"></div>
+            </div>
+
+            <!-- Bannière mode dessin carte -->
+            <div id="eng-pick-banner" style="display:none;padding:7px 0;font-size:12px;color:var(--accent);text-align:center;font-weight:600"></div>
+
+            <!-- Boutons d'action -->
+            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 8px">
+              <button class="btn-add" id="btn-eng-draw" style="border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engDrawBtn">Tracer la trajectoire</button>
+              <button class="btn-add" id="btn-eng-calc" style="border-color:var(--accent);color:var(--accent);font-weight:700" data-i18n="engCalcBtn">Calculer</button>
+              <button class="btn-add" id="btn-eng-clear" style="border-color:var(--line);color:var(--txt-dim)" data-i18n="engClear">Effacer</button>
+            </div>
+
           </div>
-          <div id="threat-hint"></div>
-          <button id="btn-draw-threat"></button>
-          <button id="btn-calc-seq"></button>
-          <button id="btn-clear-threat"></button>
         </div>
 
       </div>
+
+      <!-- Éléments legacy conservés dans le DOM pour les event listeners existants -->
+      <div style="display:none" aria-hidden="true">
+        <div id="sim-lock-banner"></div>
+        <div id="threat-wp-list"></div>
+        <div id="sim-panel">
+          <div id="sim-speed-seg">
+            <button class="on" data-spd="1">×1</button><button data-spd="5">×5</button>
+            <button data-spd="10">×10</button><button data-spd="100">×100</button>
+          </div>
+          <button id="sim-play"></button>
+          <button id="sim-pause"></button>
+          <button id="sim-stop"></button>
+          <div id="sim-progress-wrap">
+            <div id="sim-progress-bg"></div>
+            <div id="sim-progress-ticks"></div>
+            <input type="range" id="sim-progress" min="0" max="1000" step="1" value="0">
+          </div>
+          <span id="sim-time-elapsed"></span>
+          <span id="sim-time-total"></span>
+        </div>
+        <div id="threat-hint"></div>
+        <button id="btn-draw-threat"></button>
+        <button id="btn-calc-seq"></button>
+        <button id="btn-clear-threat"></button>
+      </div>
+
     </div>
 
     <!-- ============================================================
@@ -3691,6 +3700,7 @@ const I18N = {
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
     engWpAlt:'Altitude', engWpSpeed:'Vitesse',
     engClear:'Effacer', engCalcBtn:'Calculer',
+    engSimpleTraj:'Trajectoire simple',
     engPointA:'Point de départ (A)', engPointB:"Point d'arrivée (B)",
     engPickHint:'Cliquer sur la carte pour placer le point',
     engPointsRequired:'Définissez les points A et B avant de calculer.',
@@ -3798,6 +3808,7 @@ const I18N = {
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
     engWpAlt:'Altitude', engWpSpeed:'Speed',
     engClear:'Clear', engCalcBtn:'Calculate',
+    engSimpleTraj:'Simple trajectory',
     engPointA:'Starting point (A)', engPointB:'Arrival point (B)',
     engPickHint:'Click on the map to place the point',
     engPointsRequired:'Define points A and B before calculating.',
