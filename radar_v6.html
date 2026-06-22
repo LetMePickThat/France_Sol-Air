@@ -1386,6 +1386,60 @@
             <span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body" id="acc-attaque-cdt">
+
+            <!-- Placement du point attaqué -->
+            <div style="margin-bottom:10px">
+              <button class="btn-add" id="cdt-place-btn"
+                      style="border-color:var(--accent);color:var(--accent);font-weight:700"
+                      data-i18n="cdtPlaceBtn">Placer le point CdT</button>
+              <div id="cdt-coords" style="font-size:11px;color:var(--txt-dim);margin-top:4px;min-height:14px;font-family:monospace"></div>
+            </div>
+
+            <!-- Paramètres menace -->
+            <div class="radar-params">
+              <label data-i18n="engWpSpeed">Vitesse</label>
+              <div class="multi-input">
+                <input type="number" id="cdt-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+                <span class="unit-tag">km/h</span>
+              </div>
+            </div>
+            <div class="radar-params">
+              <label data-i18n="engWpAlt">Altitude</label>
+              <div class="multi-input">
+                <input type="number" id="cdt-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
+                <span class="unit-tag">m</span>
+              </div>
+            </div>
+
+            <!-- Statut calcul -->
+            <div id="cdt-status" style="display:none;font-size:11px;color:var(--txt-dim);margin:6px 0 4px;padding:3px 0 3px 8px;border-left:3px solid var(--line)"></div>
+
+            <!-- Légende des 3 frontières -->
+            <div id="cdt-legend" style="display:none;font-size:11px;margin:2px 0 8px">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+                <span style="width:18px;height:3px;background:#f90;display:inline-block;flex-shrink:0;border-radius:2px"></span>
+                <span data-i18n="cdtLegDet">Frontière de détection</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+                <span style="width:18px;height:3px;background:#e33;display:inline-block;flex-shrink:0;border-radius:2px"></span>
+                <span data-i18n="cdtLegFire">Frontière de tir</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="width:18px;height:3px;background:#3b3;display:inline-block;flex-shrink:0;border-radius:2px"></span>
+                <span data-i18n="cdtLegPip">Frontière de destruction</span>
+              </div>
+            </div>
+
+            <!-- Boutons action -->
+            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 8px">
+              <button class="btn-add" id="cdt-calc-btn"
+                      style="border-color:var(--accent);color:var(--accent);font-weight:700"
+                      data-i18n="engCalcBtn">Calculer</button>
+              <button class="btn-add" id="cdt-clear-btn"
+                      style="border-color:var(--line);color:var(--txt-dim)"
+                      data-i18n="engClear">Effacer</button>
+            </div>
+
           </div>
         </div>
 
@@ -2164,6 +2218,7 @@ map.on('click', e => {
   if (peakDrawing)     { peakHandleClick(e);        return; }
   if (threatDrawing)   { threatHandleClick(e);      return; }
   if (typeof _engDrawState !== 'undefined' && _engDrawState) { engHandleMapClick(e); return; }
+  if (typeof _cdtPickMode !== 'undefined' && _cdtPickMode)  { cdtHandleMapClick(e); return; }
   deselectAll();
 });
 
@@ -3714,6 +3769,12 @@ const I18N = {
     engPointA:'Point de départ (A)', engPointB:"Point d'arrivée (B)",
     engPickHint:'Cliquer sur la carte pour placer le point',
     engPointsRequired:'Définissez les points A et B avant de calculer.',
+    cdtPlaceBtn:'Placer le point CdT', cdtPlaceActive:'Annuler le placement',
+    cdtNoPoint:'Placez d\'abord le point CdT sur la carte.',
+    cdtNoRadar:'Aucun radar configuré dans le déploiement.',
+    cdtComputing: pct => `Calcul 360°… ${pct} %`,
+    cdtDone: (n, N) => `Terminé — ${n}/${N} azimuths détectés`,
+    cdtLegDet:'Frontière de détection', cdtLegFire:'Frontière de tir', cdtLegPip:'Frontière de destruction',
     simSection:'Simulation', simPlay:'▶ Jouer', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation en cours — édition suspendue',
     detAnalyzing: pct => `Analyse détection… ${pct} %`,
@@ -3822,6 +3883,12 @@ const I18N = {
     engPointA:'Starting point (A)', engPointB:'Arrival point (B)',
     engPickHint:'Click on the map to place the point',
     engPointsRequired:'Define points A and B before calculating.',
+    cdtPlaceBtn:'Place CdT point', cdtPlaceActive:'Cancel placement',
+    cdtNoPoint:'Place the CdT point on the map first.',
+    cdtNoRadar:'No radar configured in the deployment.',
+    cdtComputing: pct => `360° computation… ${pct} %`,
+    cdtDone: (n, N) => `Done — ${n}/${N} azimuths detected`,
+    cdtLegDet:'Detection frontier', cdtLegFire:'Fire frontier', cdtLegPip:'Destruction frontier',
     simSection:'Simulation', simPlay:'▶ Play', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation running — editing suspended',
     detAnalyzing: pct => `Detection analysis… ${pct} %`,
@@ -6408,6 +6475,302 @@ async function runEngCalc() {
     showDetSummary();     // re-render summary with PIP info appended
   }
 }
+
+/* =========================================================================
+   ATTAQUE CdT — Analyse omnidirectionnelle 360° sur un point attaqué
+   ========================================================================= */
+
+let _cdtPoint    = null;   // { lat, lng } Leaflet LatLng
+let _cdtMarker   = null;   // Leaflet marker
+let _cdtPickMode = false;  // true : attend un clic carte pour placer le point
+let _cdtVersion  = 0;      // jeton d'invalidation (annule un calcul en cours)
+let _cdtDetLayer  = null;  // polygon Leaflet — frontière détection
+let _cdtFireLayer = null;  // polygon Leaflet — frontière tir (t_tir_first)
+let _cdtPipLayer  = null;  // polygon Leaflet — frontière destruction (PIPs)
+
+const CDT_N_AZ   = 72;    // nombre d'azimuths analysés (pas 5°)
+const CDT_STEP_KM = 1.0;  // pas de marche de détection (km)
+
+/* Point à distance dist_km sur le bearing brg_deg depuis (lat, lon) */
+function cdtDestPoint(lat, lon, brg_deg, dist_km) {
+  const R  = 6371;
+  const d  = dist_km / R;
+  const br = brg_deg * Math.PI / 180;
+  const φ1 = lat * Math.PI / 180;
+  const λ1 = lon * Math.PI / 180;
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(d) + Math.cos(φ1) * Math.sin(d) * Math.cos(br));
+  const λ2 = λ1 + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(φ1),
+                               Math.cos(d) - Math.sin(φ1) * Math.sin(φ2));
+  return { lat: φ2 * 180 / Math.PI, lon: ((λ2 * 180 / Math.PI) + 540) % 360 - 180 };
+}
+
+/* Icône marqueur CdT : croix de visée rouge */
+function cdtMarkerIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<svg width="28" height="28" viewBox="-14 -14 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+             <circle r="9" fill="rgba(200,0,0,0.15)" stroke="#cc0000" stroke-width="2"/>
+             <line x1="-14" y1="0" x2="-10" y2="0" stroke="#cc0000" stroke-width="2"/>
+             <line x1="10"  y1="0" x2="14"  y2="0" stroke="#cc0000" stroke-width="2"/>
+             <line x1="0" y1="-14" x2="0" y2="-10" stroke="#cc0000" stroke-width="2"/>
+             <line x1="0" y1="10"  x2="0" y2="14"  stroke="#cc0000" stroke-width="2"/>
+             <circle r="2" fill="#cc0000"/>
+           </svg>`,
+    iconSize: [28, 28], iconAnchor: [14, 14]
+  });
+}
+
+/* Résout le PIP pour une menace ligne droite à vitesse constante.
+   threatFn(t_s) → {lat, lon, alt} — variante de solvePIPScan sans état global. */
+function solvePIPCdt(launcher, cfg, T_fire, threatFn) {
+  const { kinematics: kin, envelope: env } = cfg;
+  const T_avail = T_fire + kin.launchDelay_s;
+  const T_end   = T_avail + kin.maxFlightTime_s + 60;
+  const gFn = T => {
+    const p = threatFn(T);
+    if (!p) return NaN;
+    const D   = slantRange3D_m(launcher, p);
+    const tof = missileTimeToReach(cfg, D, Math.max(0, p.alt || 0), 0.5);
+    return isFinite(tof) ? (T - T_avail) - tof : NaN;
+  };
+  let lo = null, hi = null, gLo;
+  for (let T = T_avail; T <= T_end; T += 1.0) {
+    const g = gFn(T);
+    if (isNaN(g)) { lo = null; continue; }
+    if (lo === null) { lo = T; gLo = g; continue; }
+    if (gLo * g <= 0) { hi = T; break; }
+    lo = T; gLo = g;
+  }
+  if (hi === null) return { valid: false };
+  let T_int = (lo + hi) / 2;
+  for (let i = 0; i < 8 && (hi - lo) > 0.3; i++) {
+    T_int = (lo + hi) / 2;
+    const gMid = gFn(T_int);
+    if (isNaN(gMid) || gLo * gMid <= 0) hi = T_int;
+    else { lo = T_int; gLo = gMid; }
+  }
+  const pF = threatFn(T_int);
+  if (!pF) return { valid: false };
+  const D = slantRange3D_m(launcher, pF);
+  if (D < env.slantRangeMin_m)                return { valid: false };
+  if (D > env.slantRangeMax_m)                return { valid: false };
+  if ((pF.alt || 0) < (env.altMin_m  || 0))  return { valid: false };
+  if ((pF.alt || 0) > (env.altMax_m  || 1e9)) return { valid: false };
+  const tof_a = T_int - T_avail;
+  if (env.tofMax_s && tof_a > env.tofMax_s)   return { valid: false };
+  if (env.vFloor_ms && interpMissileV(kin.velocityProfile, tof_a) < env.vFloor_ms)
+    return { valid: false };
+  return { valid: true, pip: pF, T_intercept: T_int, D_m: D };
+}
+
+/* Supprime les couches carte CdT */
+function _clearCdtLayers() {
+  [_cdtDetLayer, _cdtFireLayer, _cdtPipLayer].forEach(l => { if (l) map.removeLayer(l); });
+  _cdtDetLayer = _cdtFireLayer = _cdtPipLayer = null;
+}
+
+/* Réinitialise tout l'état Attaque CdT */
+function clearAttaqueCdt() {
+  _cdtVersion++;
+  _clearCdtLayers();
+  if (_cdtMarker) { map.removeLayer(_cdtMarker); _cdtMarker = null; }
+  _cdtPoint = null;
+  _cdtPickMode = false;
+  const btn = document.getElementById('cdt-place-btn');
+  if (btn) { btn.classList.remove('on'); btn.textContent = t('cdtPlaceBtn'); }
+  map.getContainer().style.cursor = '';
+  document.getElementById('cdt-coords').textContent = '';
+  const st = document.getElementById('cdt-status');
+  st.style.display = 'none'; st.textContent = '';
+  document.getElementById('cdt-legend').style.display = 'none';
+  document.getElementById('cdt-calc-btn').disabled = false;
+}
+
+/* Active / désactive le mode placement du point CdT */
+function cdtTogglePickMode() {
+  _cdtPickMode = !_cdtPickMode;
+  const btn = document.getElementById('cdt-place-btn');
+  if (_cdtPickMode) {
+    btn.classList.add('on');
+    btn.textContent = t('cdtPlaceActive');
+    map.getContainer().style.cursor = 'crosshair';
+  } else {
+    btn.classList.remove('on');
+    btn.textContent = t('cdtPlaceBtn');
+    map.getContainer().style.cursor = '';
+  }
+}
+
+/* Gère le clic carte en mode placement CdT */
+function cdtHandleMapClick(e) {
+  _cdtPickMode = false;
+  const btn = document.getElementById('cdt-place-btn');
+  btn.classList.remove('on');
+  btn.textContent = t('cdtPlaceBtn');
+  map.getContainer().style.cursor = '';
+
+  _cdtPoint = e.latlng;
+  if (_cdtMarker) map.removeLayer(_cdtMarker);
+  _cdtMarker = L.marker([_cdtPoint.lat, _cdtPoint.lng], {
+    icon: cdtMarkerIcon(), zIndexOffset: 1500
+  }).addTo(map);
+  document.getElementById('cdt-coords').textContent =
+    `${_cdtPoint.lat.toFixed(4)}, ${_cdtPoint.lng.toFixed(4)}`;
+}
+
+/* Moteur principal : analyse 360° pour tous les azimuths */
+async function computeAttaqueCdt() {
+  if (!_cdtPoint)     { alert(t('cdtNoPoint'));  return; }
+  if (!radars.length) { alert(t('cdtNoRadar'));  return; }
+
+  _cdtVersion++;
+  const myVer = _cdtVersion;
+  _clearCdtLayers();
+
+  const statusEl = document.getElementById('cdt-status');
+  statusEl.style.display = 'block';
+  statusEl.textContent   = t('cdtComputing', 0);
+  document.getElementById('cdt-legend').style.display = 'none';
+  document.getElementById('cdt-calc-btn').disabled = true;
+
+  const speedKmh = Math.max(50, Math.min(5000,
+    parseFloat(document.getElementById('cdt-speed').value) || 900));
+  const alt_m = Math.max(0,
+    parseFloat(document.getElementById('cdt-alt').value) || 5000);
+  const v_ms  = speedKmh / 3.6;
+
+  /* Distance de départ de la marche : dépasse légèrement la portée radar max */
+  const D_max_km = Math.min(400,
+    Math.max(...radars.map(r => r.rmax || 50)) + 30);
+
+  /* Altitudes terrain des radars (cache partagé) */
+  const radarElevs = await Promise.all(radars.map(r =>
+    (r.terrAlt !== null && !isNaN(r.terrAlt))
+      ? Promise.resolve(r.terrAlt)
+      : fetchSpotElevation(r.lat, r.lon)
+  ));
+  if (myVer !== _cdtVersion) return;
+
+  /* Lanceurs équipés d'un missile */
+  const armedLaunchers = launchers.filter(
+    l => l.missileType && _missileConfigs[l.missileType]
+  );
+
+  const detPoints  = [];
+  const firePoints = [];
+  const pipPoints  = [];
+  let   nDet = 0;
+
+  for (let iAz = 0; iAz < CDT_N_AZ; iAz++) {
+    if (myVer !== _cdtVersion) return;
+
+    if (iAz % 6 === 0) {
+      statusEl.textContent = t('cdtComputing', Math.round(iAz / CDT_N_AZ * 100));
+      await new Promise(res => setTimeout(res, 0));
+    }
+
+    const brg = iAz * (360 / CDT_N_AZ);
+
+    /* Position de la menace à l'instant t_s : ligne droite, cap brg, vitesse v_ms */
+    const threatFn = t_s => {
+      const d_km = D_max_km - v_ms * t_s / 1000;
+      if (d_km < 0) return null;
+      const p = cdtDestPoint(_cdtPoint.lat, _cdtPoint.lng, brg, d_km);
+      return { lat: p.lat, lon: p.lon, alt: alt_m };
+    };
+
+    /* --- Marche de détection : D_max_km → 0, pas CDT_STEP_KM --- */
+    let detResult = null;
+
+    for (let d_km = D_max_km; d_km >= 0 && !detResult; d_km -= CDT_STEP_KM) {
+      const pos = cdtDestPoint(_cdtPoint.lat, _cdtPoint.lng, brg, d_km);
+      const t_s = (D_max_km - d_km) * 1000 / v_ms;
+
+      for (let ri = 0; ri < radars.length && !detResult; ri++) {
+        const r  = radars[ri];
+        const zR = radarElevs[ri];
+        if (isNaN(zR)) continue;
+
+        /* 1. Portée */
+        const distM = haversineKm(r.lat, r.lon, pos.lat, pos.lon) * 1000;
+        if (distM > r.rmax * 1000 || distM < 1) continue;
+
+        /* 2. Secteur azimut */
+        const az = geoAzimuth(r.lat, r.lon, pos.lat, pos.lon);
+        if (!idxSector(az, r.azmin, r.azmax)) continue;
+
+        /* 3. Secteur élévation */
+        const hR    = zR + (r.hant || 0);
+        const elDeg = Math.atan2(alt_m - hR, distM) * 180 / Math.PI;
+        if (elDeg < r.elmin || elDeg > r.elmax) continue;
+
+        /* 4. LOS terrain */
+        const los = await checkLOSAsync(r.lat, r.lon, hR, pos.lat, pos.lon, alt_m);
+        if (myVer !== _cdtVersion) return;
+        if (los.clear) detResult = { lat: pos.lat, lon: pos.lon, d_km, t_det: t_s, radarId: r.id };
+      }
+    }
+
+    if (!detResult) continue;
+    nDet++;
+    detPoints.push([detResult.lat, detResult.lon]);
+
+    /* --- Délai C2 → t_tir_min --- */
+    const c2res = getC2EngDelay(detResult.radarId);
+    if (!c2res || !armedLaunchers.length) continue;
+
+    const t_tir_min = detResult.t_det + c2res.delay;
+
+    /* --- Balayage t_tir_first : premier tir cinématiquement faisable ≥ t_tir_min --- */
+    const T_max_scan = t_tir_min + detResult.d_km * 1000 / v_ms + 60;
+    let bestPip = null;
+
+    for (const l of armedLaunchers) {
+      const cfg = _missileConfigs[l.missileType];
+      for (let t_fire = t_tir_min; t_fire <= T_max_scan; t_fire += 1.0) {
+        const res = solvePIPCdt(l, cfg, t_fire, threatFn);
+        if (res.valid) {
+          if (!bestPip || res.T_intercept < bestPip.T_intercept) {
+            bestPip = { ...res, t_tir_first: t_fire, firePos: threatFn(t_fire) };
+          }
+          break;
+        }
+      }
+    }
+
+    if (bestPip) {
+      if (bestPip.firePos) firePoints.push([bestPip.firePos.lat, bestPip.firePos.lon]);
+      pipPoints.push([bestPip.pip.lat, bestPip.pip.lon]);
+    }
+  }
+
+  if (myVer !== _cdtVersion) return;
+  document.getElementById('cdt-calc-btn').disabled = false;
+  statusEl.textContent = t('cdtDone', nDet, CDT_N_AZ);
+
+  /* Rendu des 3 frontières comme polygones Leaflet fermés */
+  if (detPoints.length >= 3)
+    _cdtDetLayer = L.polygon(detPoints, {
+      color: '#f90', weight: 2.5, fill: true, fillOpacity: 0.07, fillColor: '#f90'
+    }).addTo(map);
+
+  if (firePoints.length >= 3)
+    _cdtFireLayer = L.polygon(firePoints, {
+      color: '#e33', weight: 2.5, fill: true, fillOpacity: 0.07, fillColor: '#e33'
+    }).addTo(map);
+
+  if (pipPoints.length >= 3)
+    _cdtPipLayer = L.polygon(pipPoints, {
+      color: '#3b3', weight: 2.5, fill: true, fillOpacity: 0.10, fillColor: '#3b3'
+    }).addTo(map);
+
+  if (nDet > 0)
+    document.getElementById('cdt-legend').style.display = 'block';
+}
+
+document.getElementById('cdt-place-btn').addEventListener('click', cdtTogglePickMode);
+document.getElementById('cdt-calc-btn').addEventListener('click', computeAttaqueCdt);
+document.getElementById('cdt-clear-btn').addEventListener('click', clearAttaqueCdt);
 
 /* ═══════════════════════════════════════════════════════════════════════
    TUTORIEL INTERACTIF
