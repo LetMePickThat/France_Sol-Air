@@ -2256,7 +2256,7 @@ map.on('click', e => {
   if (peakDrawing)     { peakHandleClick(e);        return; }
   if (threatDrawing)   { threatHandleClick(e);      return; }
   if (typeof _engDrawState !== 'undefined' && _engDrawState) { engHandleMapClick(e); return; }
-  if (typeof _apdPickMode !== 'undefined' && _apdPickMode)  { apdHandleMapClick(e); return; }
+  if (_apd.pickMode)  { apdHandleMapClick(e); return; }
   deselectAll();
 });
 
@@ -4965,7 +4965,7 @@ function renderThreatUI() {
       if (wp.marker.dragging) { wp.marker.dragging.disable(); wp.marker.dragging.enable(); }
     }
     /* Si sim active, verrouiller les marqueurs nouvellement créés */
-    if (simState !== 'stopped' && wp.marker?.dragging) wp.marker.dragging.disable();
+    if (_sim.state !== 'stopped' && wp.marker?.dragging) wp.marker.dragging.disable();
   });
   updateSimPanel();
 }
@@ -5022,7 +5022,7 @@ function threatHandleClick(e) {
 }
 
 function clearThreat() {
-  if (simState !== 'stopped') simStop();
+  if (_sim.state !== 'stopped') stopSim();
   invalidateDetection();
   threatWaypoints.forEach(wp => { if (wp.marker) map.removeLayer(wp.marker); });
   threatWaypoints = [];
@@ -5056,17 +5056,19 @@ document.getElementById('btn-calc-seq').addEventListener('click', runSequenceCal
 /* =========================================================================
    SIMULATION ENGINE — lecture de trajectoire menace
    ========================================================================= */
-let simState    = 'stopped'; // 'stopped' | 'playing' | 'paused'
-let simSpeed    = 1;
-let simCurrentT = 0;   // secondes écoulées depuis le début
-let simTotalT   = 0;   // durée totale de la trajectoire (s)
-let simLastTs   = 0;   // timestamp du dernier frame rAF (0 = forcer reset)
-let simRafId    = null;
-let simMarker   = null;
-let _simTofCache = [];
+const _sim = {
+  state:       'stopped', // 'stopped' | 'playing' | 'paused'
+  speed:       1,
+  currentT:    0,         // secondes écoulées depuis le début
+  totalT:      0,         // durée totale de la trajectoire (s)
+  lastTs:      0,         // timestamp du dernier frame rAF (0 = forcer reset)
+  rafId:       null,
+  marker:      null,
+  tofCache:    [],
+  lastDetState:'INIT',    // sentinel : évite setIcon inutile à chaque frame
+};
 
 /* ---- Detection state ---- */
-let simLastDetState = 'INIT'; // sentinel : évite setIcon inutile à chaque frame
 let _detSamples     = null;   // null = analyse non faite/périmée, Array = analysé
 let _detLines       = [];     // L.polyline colorées de détection
 let _detStale       = true;
@@ -5121,13 +5123,13 @@ function makeSimMarkerIcon(state) {
 }
 
 function simPosAtTime(t) {
-  const n = _simTofCache.length;
+  const n = _sim.tofCache.length;
   if (!n || !threatWaypoints.length) return null;
   if (t <= 0) return { lat: threatWaypoints[0].lat, lon: threatWaypoints[0].lon };
-  if (t >= _simTofCache[n-1]) return { lat: threatWaypoints[n-1].lat, lon: threatWaypoints[n-1].lon };
+  if (t >= _sim.tofCache[n-1]) return { lat: threatWaypoints[n-1].lat, lon: threatWaypoints[n-1].lon };
   for (let i = 1; i < n; i++) {
-    if (t <= _simTofCache[i]) {
-      const f = (t - _simTofCache[i-1]) / (_simTofCache[i] - _simTofCache[i-1]);
+    if (t <= _sim.tofCache[i]) {
+      const f = (t - _sim.tofCache[i-1]) / (_sim.tofCache[i] - _sim.tofCache[i-1]);
       const a = threatWaypoints[i-1], b = threatWaypoints[i];
       return { lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f };
     }
@@ -5147,26 +5149,26 @@ function detStateAtTime(t) {
 }
 
 function simUpdateMarker() {
-  const pos = simPosAtTime(simCurrentT);
+  const pos = simPosAtTime(_sim.currentT);
   if (!pos) return;
-  const detState = detStateAtTime(simCurrentT); // true | false | null
-  if (!simMarker) {
-    simMarker = L.marker([pos.lat, pos.lon], {
+  const detState = detStateAtTime(_sim.currentT); // true | false | null
+  if (!_sim.marker) {
+    _sim.marker = L.marker([pos.lat, pos.lon], {
       icon: makeSimMarkerIcon(detState), interactive: false, zIndexOffset: 3000
     }).addTo(map);
-    simLastDetState = detState;
+    _sim.lastDetState = detState;
   } else {
-    simMarker.setLatLng([pos.lat, pos.lon]);
-    if (detState !== simLastDetState) {
-      simMarker.setIcon(makeSimMarkerIcon(detState));
-      simLastDetState = detState;
+    _sim.marker.setLatLng([pos.lat, pos.lon]);
+    if (detState !== _sim.lastDetState) {
+      _sim.marker.setIcon(makeSimMarkerIcon(detState));
+      _sim.lastDetState = detState;
     }
   }
 }
 
 function simHideMarker() {
-  if (simMarker) { map.removeLayer(simMarker); simMarker = null; }
-  simLastDetState = 'INIT';
+  if (_sim.marker) { map.removeLayer(_sim.marker); _sim.marker = null; }
+  _sim.lastDetState = 'INIT';
 }
 
 /* ---- Overlay de détection ---- */
@@ -5237,7 +5239,7 @@ function showDetSummary() {
   // Ordres de tir + fenêtres d'engagement
   for (let i = 0; i < _fireOrders.length; i++) {
     const fo = _fireOrders[i];
-    const inTraj  = fo.t <= simTotalT;
+    const inTraj  = fo.t <= _sim.totalT;
     const timeStr = fmtTime(fo.t);
     lines.push(isEn
       ? `⚡ Fire order T+${timeStr} (${escapeHtml(fo.c2Name)})${inTraj ? '' : ' — beyond trajectory'}`
@@ -5351,7 +5353,7 @@ function renderFireOrderMarkers() {
   clearFireOrderMarkers();
   const isEn = document.documentElement.dataset.lang === 'en';
   _fireOrders.forEach(fo => {
-    if (fo.t > simTotalT) return; // hors trajectoire : pas de marqueur carte
+    if (fo.t > _sim.totalT) return; // hors trajectoire : pas de marqueur carte
     const label = isEn
       ? `Fire order T+${fmtTime(fo.t)} (${fo.c2Name})`
       : `Ordre de tir T+${fmtTime(fo.t)} (${fo.c2Name})`;
@@ -5557,7 +5559,7 @@ function solvePIP(launcher, cfg, T_fire) {
 
 /* Meilleur lanceur pour un ordre de tir.
    1) Essai à fo.t (solvePIP, vitesse constante).
-   2) Si aucun valide → balayage en avant (solvePIPScan, oracle) jusqu'à simTotalT.
+   2) Si aucun valide → balayage en avant (solvePIPScan, oracle) jusqu'à _sim.totalT.
    3) Champ t_tir : instant de tir effectif utilisé (peut dépasser fo.t si délai d'entrée enveloppe). */
 function bestPIPForFO(fo) {
   const cfgList = launchers
@@ -5576,7 +5578,7 @@ function bestPIPForFO(fo) {
   const STEP = 1.0;
   let earliest = null;
   for (const { l, cfg } of cfgList) {
-    for (let t_tir = fo.t + STEP; t_tir <= simTotalT + 0.01; t_tir += STEP) {
+    for (let t_tir = fo.t + STEP; t_tir <= _sim.totalT + 0.01; t_tir += STEP) {
       const res = solvePIPScan(l, cfg, t_tir);
       if (res.valid) {
         const cand = { ...res, launcherId: l.id, launcherName: l.name, t_tir };
@@ -5708,17 +5710,17 @@ function solvePIPLive(launcher, cfg, T_fire, tCurrent) {
   return { valid: true, pip: pF, T_intercept: T_int, D_m: D };
 }
 
-/* Balayage complet [t_tir_min, simTotalT] pour un lanceur.
+/* Balayage complet [t_tir_min, _sim.totalT] pour un lanceur.
    Retourne tous les segments faisables + instants clés + motif de fermeture.
    Sémantique spec §5 : fermeture cinétique vs fermeture par fin de données. */
 async function computeEngWinForLauncher(launcher, cfg, t_tir_min, myVer) {
   const STEP = 1.0;
   const segments = [];
   let segStart = null, pipFirst = null, pipLast = null, lastValid = false, k = 0;
-  for (let t_tir = t_tir_min; t_tir <= simTotalT + 0.01; t_tir += STEP) {
+  for (let t_tir = t_tir_min; t_tir <= _sim.totalT + 0.01; t_tir += STEP) {
     if (myVer !== _detVersion) return null;
     if (++k % 15 === 0) await new Promise(r => setTimeout(r, 0));
-    const res = solvePIPScan(launcher, cfg, Math.min(t_tir, simTotalT));
+    const res = solvePIPScan(launcher, cfg, Math.min(t_tir, _sim.totalT));
     if (res.valid && !lastValid) {
       segStart = t_tir;
       if (!pipFirst) pipFirst = { ...res, t_tir };
@@ -5732,7 +5734,7 @@ async function computeEngWinForLauncher(launcher, cfg, t_tir_min, myVer) {
   }
   /* Fenêtre encore ouverte à la fin des données trajectoire */
   if (lastValid && segStart !== null)
-    segments.push({ t_start: segStart, t_end: simTotalT, close_reason: 'data_exhausted' });
+    segments.push({ t_start: segStart, t_end: _sim.totalT, close_reason: 'data_exhausted' });
   return {
     launcherId:   launcher.id,
     launcherName: launcher.name,
@@ -5798,7 +5800,7 @@ function renderPIPOverlay() {
   _pipResults.forEach((res, i) => {
     if (!res || !res.pip || !res.launcherId) return;
     const fo = _fireOrders[i];
-    if (!fo || fo.t > simTotalT) return;
+    if (!fo || fo.t > _sim.totalT) return;
     const l = launchers.find(x => x.id === res.launcherId);
     if (!l) return;
     const color = res.valid ? '#e65100' : '#757575';
@@ -5818,7 +5820,7 @@ function renderPIPOverlay() {
     _engWindows.forEach((win, i) => {
       if (!win || !win.feasible || !win.pip_last) return;
       const fo = _fireOrders[i];
-      if (!fo || fo.t > simTotalT) return;
+      if (!fo || fo.t > _sim.totalT) return;
       if (win.t_tir_last - win.t_tir_first < 1) return; /* fenêtre trop étroite */
       const l = launchers.find(x => x.id === win.launcherId);
       if (!l) return;
@@ -5928,7 +5930,7 @@ function renderProgressGradient() {
   const bg    = document.getElementById('sim-progress-bg');
   const ticks = document.getElementById('sim-progress-ticks');
   if (!bg || !ticks) return;
-  if (!_detSamples || !_detSamples.length || simTotalT <= 0) {
+  if (!_detSamples || !_detSamples.length || _sim.totalT <= 0) {
     bg.style.background = 'var(--line)';
     ticks.innerHTML = '';
     return;
@@ -5938,8 +5940,8 @@ function renderProgressGradient() {
   let segStart = 0, segDet = _detSamples[0].detected;
   for (let i = 1; i < _detSamples.length; i++) {
     if (_detSamples[i].detected !== segDet) {
-      segs.push({ det: segDet, start: segStart, end: _detSamples[i].t / simTotalT * 100 });
-      segStart = _detSamples[i].t / simTotalT * 100;
+      segs.push({ det: segDet, start: segStart, end: _detSamples[i].t / _sim.totalT * 100 });
+      segStart = _detSamples[i].t / _sim.totalT * 100;
       segDet = _detSamples[i].detected;
     }
   }
@@ -5951,8 +5953,8 @@ function renderProgressGradient() {
   bg.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
   // Repères d'ordre de tir (traits verticaux orange) — seulement dans la trajectoire
   const isEn = document.documentElement.dataset.lang === 'en';
-  ticks.innerHTML = _fireOrders.filter(fo => fo.t <= simTotalT).map(fo => {
-    const pct  = (fo.t / simTotalT * 100).toFixed(2);
+  ticks.innerHTML = _fireOrders.filter(fo => fo.t <= _sim.totalT).map(fo => {
+    const pct  = (fo.t / _sim.totalT * 100).toFixed(2);
     const tip  = isEn ? `Fire order T+${fmtTime(fo.t)}` : `Ordre de tir T+${fmtTime(fo.t)}`;
     return `<div title="${tip}" style="position:absolute;left:${pct}%;top:2px;bottom:2px;width:3px;background:#e65100;border-radius:2px;transform:translateX(-50%)"></div>`;
   }).join('');
@@ -5992,7 +5994,7 @@ function updateRealtimeFireOrders() {
   if (!_fireOrders.length) return;
   const isEn = document.documentElement.dataset.lang === 'en';
   _fireOrders.forEach((fo, i) => {
-    if (_shownFO.has(i) || fo.t > simCurrentT || fo.t > simTotalT) return;
+    if (_shownFO.has(i) || fo.t > _sim.currentT || fo.t > _sim.totalT) return;
     const label = isEn
       ? `Fire order T+${fmtTime(fo.t)} (${fo.c2Name})`
       : `Ordre de tir T+${fmtTime(fo.t)} (${fo.c2Name})`;
@@ -6011,9 +6013,9 @@ function updateRealtimeFireOrders() {
 /* ---- Calcul de la séquence d'engagement (bouton) ---- */
 async function runSequenceCalc() {
   if (_detAnalyzing || !threatWaypoints.length) return;
-  if (simState !== 'stopped') return;
-  _simTofCache = computeThreatTOF();
-  simTotalT    = _simTofCache[_simTofCache.length - 1] || 0;
+  if (_sim.state !== 'stopped') return;
+  _sim.tofCache = computeThreatTOF();
+  _sim.totalT    = _sim.tofCache[_sim.tofCache.length - 1] || 0;
   _detAnalyzing = true;
   const btn = document.getElementById('btn-calc-seq');
   if (btn) btn.disabled = true;
@@ -6060,7 +6062,7 @@ function sampleThreatPath(stepM = 250) {
 }
 
 /* ---- Analyse de détection (async) ---- */
-/* doEngWindows : true uniquement depuis runSequenceCalc (pas depuis simPlay) */
+/* doEngWindows : true uniquement depuis runSequenceCalc (pas depuis playSim) */
 /* Portée effective d'un radar pour une SER cible donnée : R_eff = min(rmax, calDist × (ser/calSer)^¼) */
 function radarEffRangeM(r, targetSer) {
   const hard = r.rmax * 1000;
@@ -6164,16 +6166,16 @@ async function runDetectionAnalysis(onProgress, doEngWindows = false) {
 function simUpdateUI() {
   const prog = document.getElementById('sim-progress');
   if (!prog) return;
-  const maxSteps = Math.max(1, Math.round(simTotalT * 10));
+  const maxSteps = Math.max(1, Math.round(_sim.totalT * 10));
   prog.max   = maxSteps;
-  prog.value = Math.round(simCurrentT * 10);
-  document.getElementById('sim-time-elapsed').textContent = 'T+' + fmtTime(simCurrentT);
-  document.getElementById('sim-time-total').textContent   = '/ ' + fmtTime(simTotalT);
+  prog.value = Math.round(_sim.currentT * 10);
+  document.getElementById('sim-time-elapsed').textContent = 'T+' + fmtTime(_sim.currentT);
+  document.getElementById('sim-time-total').textContent   = '/ ' + fmtTime(_sim.totalT);
 }
 
 function simRefreshButtons() {
-  document.getElementById('sim-play').disabled  = (simState === 'playing');
-  document.getElementById('sim-pause').disabled = (simState !== 'playing');
+  document.getElementById('sim-play').disabled  = (_sim.state === 'playing');
+  document.getElementById('sim-pause').disabled = (_sim.state !== 'playing');
   document.getElementById('sim-stop').disabled  = false;
 }
 
@@ -6187,14 +6189,14 @@ function setSimLocked(locked) {
   });
 }
 
-async function simPlay() {
+async function playSim() {
   if (_detAnalyzing || !threatWaypoints.length) return;
-  _simTofCache = computeThreatTOF();
-  simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
-  if (simTotalT <= 0) return;
+  _sim.tofCache = computeThreatTOF();
+  _sim.totalT = _sim.tofCache[_sim.tofCache.length - 1] || 0;
+  if (_sim.totalT <= 0) return;
 
-  const restart = simState === 'stopped' || simCurrentT >= simTotalT;
-  if (restart) simCurrentT = 0;
+  const restart = _sim.state === 'stopped' || _sim.currentT >= _sim.totalT;
+  if (restart) _sim.currentT = 0;
 
   /* Analyse silencieuse si nécessaire (sans afficher l'overlay statique) */
   if (_detStale || _detSamples === null) {
@@ -6220,25 +6222,25 @@ async function simPlay() {
     _shownFO = new Set();
   }
 
-  simState = 'playing';
+  _sim.state = 'playing';
   setSimLocked(true);
-  simLastTs = 0;
-  simRafId = requestAnimationFrame(simTick);
+  _sim.lastTs = 0;
+  _sim.rafId = requestAnimationFrame(tickSim);
   simRefreshButtons();
 }
 
-function simPause() {
-  if (simState !== 'playing') return;
-  if (simRafId) { cancelAnimationFrame(simRafId); simRafId = null; }
-  simState = 'paused';
+function pauseSim() {
+  if (_sim.state !== 'playing') return;
+  if (_sim.rafId) { cancelAnimationFrame(_sim.rafId); _sim.rafId = null; }
+  _sim.state = 'paused';
   setSimLocked(false);
   simRefreshButtons();
 }
 
-function simStop() {
-  if (simRafId) { cancelAnimationFrame(simRafId); simRafId = null; }
-  simState = 'stopped';
-  simCurrentT = 0;
+function stopSim() {
+  if (_sim.rafId) { cancelAnimationFrame(_sim.rafId); _sim.rafId = null; }
+  _sim.state = 'stopped';
+  _sim.currentT = 0;
   simHideMarker();
   clearTrace();
   clearFireOrderMarkers();
@@ -6255,32 +6257,32 @@ function simStop() {
   simUpdateUI();
 }
 
-function simTick(ts) {
-  if (simState !== 'playing') return;
-  if (simLastTs > 0) {
-    const dt = (ts - simLastTs) / 1000 * simSpeed;
-    simCurrentT = Math.min(simCurrentT + dt, simTotalT);
+function tickSim(ts) {
+  if (_sim.state !== 'playing') return;
+  if (_sim.lastTs > 0) {
+    const dt = (ts - _sim.lastTs) / 1000 * _sim.speed;
+    _sim.currentT = Math.min(_sim.currentT + dt, _sim.totalT);
   }
-  simLastTs = ts;
+  _sim.lastTs = ts;
   simUpdateMarker();
-  updateTrace(simCurrentT);
+  updateTrace(_sim.currentT);
   updateRealtimeFireOrders();
-  updateRealtimePIPs(simCurrentT);
+  updateRealtimePIPs(_sim.currentT);
   simUpdateUI();
-  if (simCurrentT >= simTotalT) {
+  if (_sim.currentT >= _sim.totalT) {
     /* Auto-pause en fin de trajectoire */
-    simRafId = null;
-    simState = 'paused';
+    _sim.rafId = null;
+    _sim.state = 'paused';
     setSimLocked(false);
     simRefreshButtons();
     return;
   }
-  simRafId = requestAnimationFrame(simTick);
+  _sim.rafId = requestAnimationFrame(tickSim);
 }
 
 function simSetTime(t) {
-  simCurrentT = Math.max(0, Math.min(t, simTotalT));
-  simLastTs = 0; /* empêche un saut de temps sur le prochain tick */
+  _sim.currentT = Math.max(0, Math.min(t, _sim.totalT));
+  _sim.lastTs = 0; /* empêche un saut de temps sur le prochain tick */
   simUpdateMarker();
   simUpdateUI();
 }
@@ -6293,11 +6295,11 @@ function updateSimPanel() {
   const btnCalc = document.getElementById('btn-calc-seq');
   if (btnCalc) btnCalc.style.display = hasWps ? '' : 'none';
   if (hasWps) {
-    _simTofCache = computeThreatTOF();
-    simTotalT = _simTofCache[_simTofCache.length - 1] || 0;
-    if (simState === 'stopped') simUpdateUI();
-  } else if (simState !== 'stopped') {
-    simStop();
+    _sim.tofCache = computeThreatTOF();
+    _sim.totalT = _sim.tofCache[_sim.tofCache.length - 1] || 0;
+    if (_sim.state === 'stopped') simUpdateUI();
+  } else if (_sim.state !== 'stopped') {
+    stopSim();
   }
 }
 
@@ -6305,20 +6307,20 @@ function updateSimPanel() {
 document.querySelectorAll('#sim-speed-seg button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#sim-speed-seg button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
-  simSpeed = parseInt(b.dataset.spd);
+  _sim.speed = parseInt(b.dataset.spd);
 }));
 
-document.getElementById('sim-play').addEventListener('click', simPlay);
-document.getElementById('sim-pause').addEventListener('click', simPause);
-document.getElementById('sim-stop').addEventListener('click', simStop);
+document.getElementById('sim-play').addEventListener('click', playSim);
+document.getElementById('sim-pause').addEventListener('click', pauseSim);
+document.getElementById('sim-stop').addEventListener('click', stopSim);
 
 /* Barre de progression — drag scrubber */
 document.getElementById('sim-progress').addEventListener('input', function() {
   if (!threatWaypoints.length) return;
-  if (!_simTofCache.length) { _simTofCache = computeThreatTOF(); simTotalT = _simTofCache[_simTofCache.length-1] || 0; }
+  if (!_sim.tofCache.length) { _sim.tofCache = computeThreatTOF(); _sim.totalT = _sim.tofCache[_sim.tofCache.length-1] || 0; }
   simSetTime(+this.value / 10);
   /* Si arrêté : afficher le marqueur sans démarrer */
-  if (simState === 'stopped' && simCurrentT > 0) simUpdateMarker();
+  if (_sim.state === 'stopped' && _sim.currentT > 0) simUpdateMarker();
 });
 
 /* =========================================================================
@@ -6497,8 +6499,8 @@ async function runEngCalc() {
   ];
   nextThreatWpId = 3;
 
-  _simTofCache = computeThreatTOF();
-  simTotalT    = _simTofCache[_simTofCache.length - 1] || 0;
+  _sim.tofCache = computeThreatTOF();
+  _sim.totalT    = _sim.tofCache[_sim.tofCache.length - 1] || 0;
 
   /* Effacer la preview avant que threatRefreshPolyline ne prenne le relais */
   if (_engPreviewLine) { map.removeLayer(_engPreviewLine); _engPreviewLine = null; }
@@ -6540,13 +6542,15 @@ async function runEngCalc() {
    ATTAQUE POINT À DÉFENDRE — Analyse omnidirectionnelle 360° sur un point attaqué
    ========================================================================= */
 
-let _apdPoint    = null;   // { lat, lng } Leaflet LatLng
-let _apdMarker   = null;   // Leaflet marker
-let _apdPickMode = false;  // true : attend un clic carte pour placer le point
-let _apdVersion  = 0;      // jeton d'invalidation (annule un calcul en cours)
-let _apdDetLayer  = null;  // polygon Leaflet — frontière détection
-let _apdFireLayer = null;  // polygon Leaflet — frontière tir (t_tir_first)
-let _apdPipLayer  = null;  // polygon Leaflet — frontière destruction (PIPs)
+const _apd = {
+  point:    null,   // { lat, lng } Leaflet LatLng
+  marker:   null,   // Leaflet marker
+  pickMode: false,  // true : attend un clic carte
+  version:  0,      // jeton d'invalidation (annule un calcul en cours)
+  detLayer:  null,  // polygon Leaflet — frontière détection
+  fireLayer: null,  // polygon Leaflet — frontière tir (t_tir_first)
+  pipLayer:  null,  // polygon Leaflet — frontière destruction (PIPs)
+};
 
 const APD_N_AZ   = 180;   // nombre d'azimuths analysés (pas 2°)
 const APD_STEP_KM = 0.2;  // pas de marche de détection (km)
@@ -6625,17 +6629,17 @@ function solvePIPApd(launcher, cfg, T_fire, threatFn) {
 
 /* Supprime les couches carte APD */
 function _clearApdLayers() {
-  [_apdDetLayer, _apdFireLayer, _apdPipLayer].forEach(l => { if (l) map.removeLayer(l); });
-  _apdDetLayer = _apdFireLayer = _apdPipLayer = null;
+  [_apd.detLayer, _apd.fireLayer, _apd.pipLayer].forEach(l => { if (l) map.removeLayer(l); });
+  _apd.detLayer = _apd.fireLayer = _apd.pipLayer = null;
 }
 
 /* Réinitialise tout l'état Attaque point à défendre */
 function clearAttaqueApd() {
-  _apdVersion++;
+  _apd.version++;
   _clearApdLayers();
-  if (_apdMarker) { map.removeLayer(_apdMarker); _apdMarker = null; }
-  _apdPoint = null;
-  _apdPickMode = false;
+  if (_apd.marker) { map.removeLayer(_apd.marker); _apd.marker = null; }
+  _apd.point = null;
+  _apd.pickMode = false;
   const btn = document.getElementById('apd-place-btn');
   if (btn) { btn.classList.remove('on'); btn.textContent = t('engApdPlaceBtn'); }
   map.getContainer().style.cursor = '';
@@ -6648,9 +6652,9 @@ function clearAttaqueApd() {
 
 /* Active / désactive le mode placement du point à défendre */
 function apdTogglePickMode() {
-  _apdPickMode = !_apdPickMode;
+  _apd.pickMode = !_apd.pickMode;
   const btn = document.getElementById('apd-place-btn');
-  if (_apdPickMode) {
+  if (_apd.pickMode) {
     btn.classList.add('on');
     btn.textContent = t('engApdPlaceActive');
     map.getContainer().style.cursor = 'crosshair';
@@ -6663,28 +6667,28 @@ function apdTogglePickMode() {
 
 /* Gère le clic carte en mode placement du point à défendre */
 function apdHandleMapClick(e) {
-  _apdPickMode = false;
+  _apd.pickMode = false;
   const btn = document.getElementById('apd-place-btn');
   btn.classList.remove('on');
   btn.textContent = t('engApdPlaceBtn');
   map.getContainer().style.cursor = '';
 
-  _apdPoint = e.latlng;
-  if (_apdMarker) map.removeLayer(_apdMarker);
-  _apdMarker = L.marker([_apdPoint.lat, _apdPoint.lng], {
+  _apd.point = e.latlng;
+  if (_apd.marker) map.removeLayer(_apd.marker);
+  _apd.marker = L.marker([_apd.point.lat, _apd.point.lng], {
     icon: apdMarkerIcon(), zIndexOffset: 1500
   }).addTo(map);
   document.getElementById('apd-coords').textContent =
-    `${_apdPoint.lat.toFixed(4)}, ${_apdPoint.lng.toFixed(4)}`;
+    `${_apd.point.lat.toFixed(4)}, ${_apd.point.lng.toFixed(4)}`;
 }
 
 /* Moteur principal : analyse 360° pour tous les azimuths */
 async function runApdAnalysis() {
-  if (!_apdPoint)     { alert(t('engApdNoPoint'));  return; }
+  if (!_apd.point)     { alert(t('engApdNoPoint'));  return; }
   if (!radars.length) { alert(t('engApdNoRadar'));  return; }
 
-  _apdVersion++;
-  const myVer = _apdVersion;
+  _apd.version++;
+  const myVer = _apd.version;
   _clearApdLayers();
 
   const statusEl = document.getElementById('apd-status');
@@ -6711,7 +6715,7 @@ async function runApdAnalysis() {
       ? Promise.resolve(r.terrAlt)
       : fetchSpotElevation(r.lat, r.lon)
   ));
-  if (myVer !== _apdVersion) return;
+  if (myVer !== _apd.version) return;
 
   /* Lanceurs équipés d'un missile */
   const armedLaunchers = launchers.filter(
@@ -6724,7 +6728,7 @@ async function runApdAnalysis() {
   let   nDet = 0;
 
   for (let iAz = 0; iAz < APD_N_AZ; iAz++) {
-    if (myVer !== _apdVersion) return;
+    if (myVer !== _apd.version) return;
 
     if (iAz % 12 === 0) {
       statusEl.textContent = t('engApdComputing', Math.round(iAz / APD_N_AZ * 100));
@@ -6740,7 +6744,7 @@ async function runApdAnalysis() {
     const threatFn = t_s => {
       const d_km = D_max_km - v_ms * t_s / 1000;
       if (d_km < 0) return null;
-      const p = apdDestPoint(_apdPoint.lat, _apdPoint.lng, brg, d_km);
+      const p = apdDestPoint(_apd.point.lat, _apd.point.lng, brg, d_km);
       return { lat: p.lat, lon: p.lon, alt: threatAltAMSL };
     };
 
@@ -6748,7 +6752,7 @@ async function runApdAnalysis() {
     let detResult = null;
 
     for (let d_km = D_max_km; d_km >= 0 && !detResult; d_km -= APD_STEP_KM) {
-      const pos = apdDestPoint(_apdPoint.lat, _apdPoint.lng, brg, d_km);
+      const pos = apdDestPoint(_apd.point.lat, _apd.point.lng, brg, d_km);
       const t_s = (D_max_km - d_km) * 1000 / v_ms;
 
       for (let ri = 0; ri < radars.length && !detResult; ri++) {
@@ -6768,7 +6772,7 @@ async function runApdAnalysis() {
         let altAMSL = alt_m;
         if (agl) {
           const terrT = await fetchSpotElevation(pos.lat, pos.lon);
-          if (myVer !== _apdVersion) return;
+          if (myVer !== _apd.version) return;
           altAMSL = (isNaN(terrT) ? 0 : terrT) + alt_m;
         }
 
@@ -6779,7 +6783,7 @@ async function runApdAnalysis() {
 
         /* 5. LOS terrain */
         const los = await checkLOSAsync(r.lat, r.lon, hR, pos.lat, pos.lon, altAMSL);
-        if (myVer !== _apdVersion) return;
+        if (myVer !== _apd.version) return;
         if (los.clear) {
           detResult = { lat: pos.lat, lon: pos.lon, d_km, t_det: t_s, radarId: r.id };
           threatAltAMSL = altAMSL; // mise à jour du closure pour le scan PIP
@@ -6820,23 +6824,23 @@ async function runApdAnalysis() {
     }
   }
 
-  if (myVer !== _apdVersion) return;
+  if (myVer !== _apd.version) return;
   document.getElementById('apd-calc-btn').disabled = false;
   statusEl.textContent = t('engApdDone', nDet, APD_N_AZ);
 
   /* Rendu des 3 frontières comme polygones Leaflet fermés */
   if (detPoints.length >= 3)
-    _apdDetLayer = L.polygon(detPoints, {
+    _apd.detLayer = L.polygon(detPoints, {
       color: '#f90', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#f90'
     }).addTo(map);
 
   if (firePoints.length >= 3)
-    _apdFireLayer = L.polygon(firePoints, {
+    _apd.fireLayer = L.polygon(firePoints, {
       color: '#e33', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#e33'
     }).addTo(map);
 
   if (pipPoints.length >= 3)
-    _apdPipLayer = L.polygon(pipPoints, {
+    _apd.pipLayer = L.polygon(pipPoints, {
       color: '#3b3', weight: 1.5, fill: true, fillOpacity: 0.10, fillColor: '#3b3'
     }).addTo(map);
 
