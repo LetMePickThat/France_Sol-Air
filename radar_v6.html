@@ -6488,8 +6488,8 @@ let _cdtDetLayer  = null;  // polygon Leaflet — frontière détection
 let _cdtFireLayer = null;  // polygon Leaflet — frontière tir (t_tir_first)
 let _cdtPipLayer  = null;  // polygon Leaflet — frontière destruction (PIPs)
 
-const CDT_N_AZ   = 72;    // nombre d'azimuths analysés (pas 5°)
-const CDT_STEP_KM = 1.0;  // pas de marche de détection (km)
+const CDT_N_AZ   = 180;   // nombre d'azimuths analysés (pas 2°)
+const CDT_STEP_KM = 0.2;  // pas de marche de détection (km)
 
 /* Point à distance dist_km sur le bearing brg_deg depuis (lat, lon) */
 function cdtDestPoint(lat, lon, brg_deg, dist_km) {
@@ -6664,7 +6664,7 @@ async function computeAttaqueCdt() {
   for (let iAz = 0; iAz < CDT_N_AZ; iAz++) {
     if (myVer !== _cdtVersion) return;
 
-    if (iAz % 6 === 0) {
+    if (iAz % 12 === 0) {
       statusEl.textContent = t('cdtComputing', Math.round(iAz / CDT_N_AZ * 100));
       await new Promise(res => setTimeout(res, 0));
     }
@@ -6751,17 +6751,17 @@ async function computeAttaqueCdt() {
   /* Rendu des 3 frontières comme polygones Leaflet fermés */
   if (detPoints.length >= 3)
     _cdtDetLayer = L.polygon(detPoints, {
-      color: '#f90', weight: 2.5, fill: true, fillOpacity: 0.07, fillColor: '#f90'
+      color: '#f90', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#f90'
     }).addTo(map);
 
   if (firePoints.length >= 3)
     _cdtFireLayer = L.polygon(firePoints, {
-      color: '#e33', weight: 2.5, fill: true, fillOpacity: 0.07, fillColor: '#e33'
+      color: '#e33', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#e33'
     }).addTo(map);
 
   if (pipPoints.length >= 3)
     _cdtPipLayer = L.polygon(pipPoints, {
-      color: '#3b3', weight: 2.5, fill: true, fillOpacity: 0.10, fillColor: '#3b3'
+      color: '#3b3', weight: 1.5, fill: true, fillOpacity: 0.10, fillColor: '#3b3'
     }).addTo(map);
 
   if (nDet > 0)
