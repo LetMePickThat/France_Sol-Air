@@ -1408,6 +1408,7 @@
               <div class="multi-input">
                 <input type="number" id="cdt-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
                 <span class="unit-tag">m</span>
+                <span id="cdt-ref-label" style="font-size:10px;color:var(--txt-dim);white-space:nowrap">AGL</span>
               </div>
             </div>
 
@@ -2234,7 +2235,7 @@ function toggleMobilePanel(open) {
   if (fab) fab.setAttribute('aria-expanded', String(nowOpen));
 }
 document.getElementById('mobile-backdrop').addEventListener('click', () => toggleMobilePanel(false));
-document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); }));
+document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); const lbl=document.getElementById('cdt-ref-label'); if(lbl) lbl.textContent=refMode.toUpperCase(); }));
 document.getElementById('coord-format').addEventListener('change', e => { coordFormat = e.target.value; renderAll(true); });
 
 /* =========================================================================
@@ -6638,6 +6639,7 @@ async function computeAttaqueCdt() {
   const alt_m = Math.max(0,
     parseFloat(document.getElementById('cdt-alt').value) || 5000);
   const v_ms  = speedKmh / 3.6;
+  const agl   = (refMode === 'agl');
 
   /* Distance de départ de la marche : dépasse légèrement la portée radar max */
   const D_max_km = Math.min(400,
@@ -6671,12 +6673,15 @@ async function computeAttaqueCdt() {
 
     const brg = iAz * (360 / CDT_N_AZ);
 
-    /* Position de la menace à l'instant t_s : ligne droite, cap brg, vitesse v_ms */
+    /* Position de la menace à l'instant t_s : ligne droite, cap brg, vitesse v_ms.
+       threatAltAMSL est mis à jour dès la détection pour que le PIP scanner
+       utilise l'altitude réelle observée au point de détection. */
+    let threatAltAMSL = alt_m; // sera corrigé en AGL après la marche
     const threatFn = t_s => {
       const d_km = D_max_km - v_ms * t_s / 1000;
       if (d_km < 0) return null;
       const p = cdtDestPoint(_cdtPoint.lat, _cdtPoint.lng, brg, d_km);
-      return { lat: p.lat, lon: p.lon, alt: alt_m };
+      return { lat: p.lat, lon: p.lon, alt: threatAltAMSL };
     };
 
     /* --- Marche de détection : D_max_km → 0, pas CDT_STEP_KM --- */
@@ -6699,15 +6704,26 @@ async function computeAttaqueCdt() {
         const az = geoAzimuth(r.lat, r.lon, pos.lat, pos.lon);
         if (!idxSector(az, r.azmin, r.azmax)) continue;
 
-        /* 3. Secteur élévation */
+        /* 3. Altitude cible AMSL : corrigée selon refMode */
+        let altAMSL = alt_m;
+        if (agl) {
+          const terrT = await fetchSpotElevation(pos.lat, pos.lon);
+          if (myVer !== _cdtVersion) return;
+          altAMSL = (isNaN(terrT) ? 0 : terrT) + alt_m;
+        }
+
+        /* 4. Secteur élévation */
         const hR    = zR + (r.hant || 0);
-        const elDeg = Math.atan2(alt_m - hR, distM) * 180 / Math.PI;
+        const elDeg = Math.atan2(altAMSL - hR, distM) * 180 / Math.PI;
         if (elDeg < r.elmin || elDeg > r.elmax) continue;
 
-        /* 4. LOS terrain */
-        const los = await checkLOSAsync(r.lat, r.lon, hR, pos.lat, pos.lon, alt_m);
+        /* 5. LOS terrain */
+        const los = await checkLOSAsync(r.lat, r.lon, hR, pos.lat, pos.lon, altAMSL);
         if (myVer !== _cdtVersion) return;
-        if (los.clear) detResult = { lat: pos.lat, lon: pos.lon, d_km, t_det: t_s, radarId: r.id };
+        if (los.clear) {
+          detResult = { lat: pos.lat, lon: pos.lon, d_km, t_det: t_s, radarId: r.id };
+          threatAltAMSL = altAMSL; // mise à jour du closure pour le scan PIP
+        }
       }
     }
 
