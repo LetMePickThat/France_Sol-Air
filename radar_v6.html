@@ -1689,7 +1689,7 @@ let refMode = 'agl';
 let coordFormat = 'DMS';
 let globalDemSampler = null;
 
-let radars = [ { id: 1, name: "Radar 1", lat: 48.8566, lon: 2.3522, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: null, calSer: null } ];
+let radars = [ { id: 1, name: "Radar 1", lat: 48.8566, lon: 2.3522, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: 40, calSer: 1 } ];
 let nextRadarId = 2;
 let activeRadarId = 1;
 
@@ -2216,7 +2216,7 @@ function updateRadar(id, field, val) {
   else { const deg = parseCoord(val); if(!isNaN(deg)) { r[field] = deg; r.terrAlt = null; markCoverageStale(); } }
   renderRadarsUI();
 }
-document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: null, calSer: null }); selectEntity('radar', id); });
+document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: 40, calSer: 1 }); selectEntity('radar', id); });
 map.on('click', e => {
   if (_offlineDrawing) { offlineAddVert(e.latlng); return; }
   if (peakDrawing)     { peakHandleClick(e);        return; }
@@ -3561,8 +3561,8 @@ function importKMLString(xmlStr) {
       parentC2Id: getInt(pm, 'spm:parentC2Id'),    /* sera remappé */
       maxDistC2:  getNum(pm, 'spm:maxDistC2', 0),
       linkType:   getStr(pm, 'spm:linkType', 'fiber'),
-      calDist:    getNum(pm, 'spm:calDist', null),
-      calSer:     getNum(pm, 'spm:calSer',  null),
+      calDist:    getNum(pm, 'spm:calDist', 40),
+      calSer:     getNum(pm, 'spm:calSer',  1),
       _origId:    getInt(pm, 'spm:id'),
       marker: null, terrAlt: null, pinned: false,
     });
