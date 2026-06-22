@@ -1395,71 +1395,71 @@
           </div>
         </div>
 
-        <!-- Accordéon Attaque CdT -->
+        <!-- Accordéon Attaque point à défendre -->
         <div class="acc-item">
-          <button class="acc-btn" aria-expanded="false" aria-controls="acc-attaque-cdt">
-            <span data-i18n="engAttaqueCdt">Attaque point à défendre</span>
+          <button class="acc-btn" aria-expanded="false" aria-controls="acc-attaque-apd">
+            <span data-i18n="engAttaqueApd">Attaque point à défendre</span>
             <span class="acc-chevron">▼</span>
           </button>
-          <div class="acc-body" id="acc-attaque-cdt">
+          <div class="acc-body" id="acc-attaque-apd">
 
             <!-- Placement du point attaqué -->
             <div style="margin-bottom:10px">
-              <button class="btn-add" id="cdt-place-btn"
+              <button class="btn-add" id="apd-place-btn"
                       style="border-color:var(--accent);color:var(--accent);font-weight:700"
-                      data-i18n="cdtPlaceBtn">Placer le point à défendre</button>
-              <div id="cdt-coords" style="font-size:11px;color:var(--txt-dim);margin-top:4px;min-height:14px;font-family:monospace"></div>
+                      data-i18n="engApdPlaceBtn">Placer le point à défendre</button>
+              <div id="apd-coords" style="font-size:11px;color:var(--txt-dim);margin-top:4px;min-height:14px;font-family:monospace"></div>
             </div>
 
             <!-- Paramètres menace -->
             <div class="radar-params">
               <label data-i18n="engWpSpeed">Vitesse</label>
               <div class="multi-input">
-                <input type="number" id="cdt-speed" value="900" min="50" max="5000" step="10" style="flex:1">
+                <input type="number" id="apd-speed" value="900" min="50" max="5000" step="10" style="flex:1">
                 <span class="unit-tag">km/h</span>
               </div>
             </div>
             <div class="radar-params">
               <label data-i18n="engWpAlt">Altitude</label>
               <div class="multi-input">
-                <input type="number" id="cdt-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
+                <input type="number" id="apd-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
                 <span class="unit-tag">m</span>
-                <span id="cdt-ref-label" style="font-size:10px;color:var(--txt-dim);white-space:nowrap">AGL</span>
+                <span id="apd-ref-label" style="font-size:10px;color:var(--txt-dim);white-space:nowrap">AGL</span>
               </div>
             </div>
             <div class="radar-params">
               <label data-i18n="pSer">SER</label>
               <div class="multi-input">
-                <input type="number" id="cdt-ser" value="1" min="0" step="0.1" style="flex:1">
+                <input type="number" id="apd-ser" value="1" min="0" step="0.1" style="flex:1">
                 <span class="unit-tag">m²</span>
               </div>
             </div>
 
             <!-- Statut calcul -->
-            <div id="cdt-status" style="display:none;font-size:11px;color:var(--txt-dim);margin:6px 0 4px;padding:3px 0 3px 8px;border-left:3px solid var(--line)"></div>
+            <div id="apd-status" style="display:none;font-size:11px;color:var(--txt-dim);margin:6px 0 4px;padding:3px 0 3px 8px;border-left:3px solid var(--line)"></div>
 
             <!-- Légende des 3 frontières -->
-            <div id="cdt-legend" style="display:none;font-size:11px;margin:2px 0 8px">
+            <div id="apd-legend" style="display:none;font-size:11px;margin:2px 0 8px">
               <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
                 <span style="width:18px;height:3px;background:#f90;display:inline-block;flex-shrink:0;border-radius:2px"></span>
-                <span data-i18n="cdtLegDet">Frontière de détection</span>
+                <span data-i18n="engApdLegDet">Frontière de détection</span>
               </div>
               <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
                 <span style="width:18px;height:3px;background:#e33;display:inline-block;flex-shrink:0;border-radius:2px"></span>
-                <span data-i18n="cdtLegFire">Frontière de tir</span>
+                <span data-i18n="engApdLegFire">Frontière de tir</span>
               </div>
               <div style="display:flex;align-items:center;gap:7px">
                 <span style="width:18px;height:3px;background:#3b3;display:inline-block;flex-shrink:0;border-radius:2px"></span>
-                <span data-i18n="cdtLegPip">Frontière de destruction</span>
+                <span data-i18n="engApdLegPip">Frontière de destruction</span>
               </div>
             </div>
 
             <!-- Boutons action -->
             <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 8px">
-              <button class="btn-add" id="cdt-calc-btn"
+              <button class="btn-add" id="apd-calc-btn"
                       style="border-color:var(--accent);color:var(--accent);font-weight:700"
                       data-i18n="engCalcBtn">Calculer</button>
-              <button class="btn-add" id="cdt-clear-btn"
+              <button class="btn-add" id="apd-clear-btn"
                       style="border-color:var(--line);color:var(--txt-dim)"
                       data-i18n="engClear">Effacer</button>
             </div>
@@ -2245,7 +2245,7 @@ map.on('click', e => {
   if (peakDrawing)     { peakHandleClick(e);        return; }
   if (threatDrawing)   { threatHandleClick(e);      return; }
   if (typeof _engDrawState !== 'undefined' && _engDrawState) { engHandleMapClick(e); return; }
-  if (typeof _cdtPickMode !== 'undefined' && _cdtPickMode)  { cdtHandleMapClick(e); return; }
+  if (typeof _apdPickMode !== 'undefined' && _apdPickMode)  { apdHandleMapClick(e); return; }
   deselectAll();
 });
 
@@ -2261,7 +2261,7 @@ function toggleMobilePanel(open) {
   if (fab) fab.setAttribute('aria-expanded', String(nowOpen));
 }
 document.getElementById('mobile-backdrop').addEventListener('click', () => toggleMobilePanel(false));
-document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); const lbl=document.getElementById('cdt-ref-label'); if(lbl) lbl.textContent=refMode.toUpperCase(); }));
+document.querySelectorAll('#ref button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('#ref button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); refMode=b.dataset.v; markCoverageStale(); renderRadarsUI(); const lbl=document.getElementById('apd-ref-label'); if(lbl) lbl.textContent=refMode.toUpperCase(); }));
 document.getElementById('coord-format').addEventListener('change', e => { coordFormat = e.target.value; renderAll(true); });
 
 /* =========================================================================
@@ -3799,16 +3799,16 @@ const I18N = {
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
     engWpAlt:'Altitude', engWpSpeed:'Vitesse', pSer:'SER',
     engClear:'Effacer', engCalcBtn:'Calculer',
-    engSimpleTraj:'Trajectoire simple', engAttaqueCdt:'Attaque point à défendre',
+    engSimpleTraj:'Trajectoire simple', engAttaqueApd:'Attaque point à défendre',
     engPointA:'Point de départ (A)', engPointB:"Point d'arrivée (B)",
     engPickHint:'Cliquer sur la carte pour placer le point',
     engPointsRequired:'Définissez les points A et B avant de calculer.',
-    cdtPlaceBtn:'Placer le point à défendre', cdtPlaceActive:'Annuler le placement',
-    cdtNoPoint:'Placez d\'abord le point CdT sur la carte.',
-    cdtNoRadar:'Aucun radar configuré dans le déploiement.',
-    cdtComputing: pct => `Calcul 360°… ${pct} %`,
-    cdtDone: (n, N) => `Terminé — ${n}/${N} azimuths détectés`,
-    cdtLegDet:'Frontière de détection', cdtLegFire:'Frontière de tir', cdtLegPip:'Frontière de destruction',
+    engApdPlaceBtn:'Placer le point à défendre', engApdPlaceActive:'Annuler le placement',
+    engApdNoPoint:'Placez d\'abord le point à défendre sur la carte.',
+    engApdNoRadar:'Aucun radar configuré dans le déploiement.',
+    engApdComputing: pct => `Calcul 360°… ${pct} %`,
+    engApdDone: (n, N) => `Terminé — ${n}/${N} azimuths détectés`,
+    engApdLegDet:'Frontière de détection', engApdLegFire:'Frontière de tir', engApdLegPip:'Frontière de destruction',
     simSection:'Simulation', simPlay:'▶ Jouer', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation en cours — édition suspendue',
     detAnalyzing: pct => `Analyse détection… ${pct} %`,
@@ -3914,16 +3914,16 @@ const I18N = {
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
     engWpAlt:'Altitude', engWpSpeed:'Speed', pSer:'RCS',
     engClear:'Clear', engCalcBtn:'Calculate',
-    engSimpleTraj:'Simple trajectory', engAttaqueCdt:'Attack defended point',
+    engSimpleTraj:'Simple trajectory', engAttaqueApd:'Attack defended point',
     engPointA:'Starting point (A)', engPointB:'Arrival point (B)',
     engPickHint:'Click on the map to place the point',
     engPointsRequired:'Define points A and B before calculating.',
-    cdtPlaceBtn:'Place defended point', cdtPlaceActive:'Cancel placement',
-    cdtNoPoint:'Place the CdT point on the map first.',
-    cdtNoRadar:'No radar configured in the deployment.',
-    cdtComputing: pct => `360° computation… ${pct} %`,
-    cdtDone: (n, N) => `Done — ${n}/${N} azimuths detected`,
-    cdtLegDet:'Detection frontier', cdtLegFire:'Fire frontier', cdtLegPip:'Destruction frontier',
+    engApdPlaceBtn:'Place defended point', engApdPlaceActive:'Cancel placement',
+    engApdNoPoint:'Place the defended point on the map first.',
+    engApdNoRadar:'No radar configured in the deployment.',
+    engApdComputing: pct => `360° computation… ${pct} %`,
+    engApdDone: (n, N) => `Done — ${n}/${N} azimuths detected`,
+    engApdLegDet:'Detection frontier', engApdLegFire:'Fire frontier', engApdLegPip:'Destruction frontier',
     simSection:'Simulation', simPlay:'▶ Play', simPause:'⏸ Pause', simStop:'⏹ Stop',
     simLockBanner:'Simulation running — editing suspended',
     detAnalyzing: pct => `Detection analysis… ${pct} %`,
@@ -6521,22 +6521,22 @@ async function runEngCalc() {
 }
 
 /* =========================================================================
-   ATTAQUE CdT — Analyse omnidirectionnelle 360° sur un point attaqué
+   ATTAQUE POINT À DÉFENDRE — Analyse omnidirectionnelle 360° sur un point attaqué
    ========================================================================= */
 
-let _cdtPoint    = null;   // { lat, lng } Leaflet LatLng
-let _cdtMarker   = null;   // Leaflet marker
-let _cdtPickMode = false;  // true : attend un clic carte pour placer le point
-let _cdtVersion  = 0;      // jeton d'invalidation (annule un calcul en cours)
-let _cdtDetLayer  = null;  // polygon Leaflet — frontière détection
-let _cdtFireLayer = null;  // polygon Leaflet — frontière tir (t_tir_first)
-let _cdtPipLayer  = null;  // polygon Leaflet — frontière destruction (PIPs)
+let _apdPoint    = null;   // { lat, lng } Leaflet LatLng
+let _apdMarker   = null;   // Leaflet marker
+let _apdPickMode = false;  // true : attend un clic carte pour placer le point
+let _apdVersion  = 0;      // jeton d'invalidation (annule un calcul en cours)
+let _apdDetLayer  = null;  // polygon Leaflet — frontière détection
+let _apdFireLayer = null;  // polygon Leaflet — frontière tir (t_tir_first)
+let _apdPipLayer  = null;  // polygon Leaflet — frontière destruction (PIPs)
 
-const CDT_N_AZ   = 180;   // nombre d'azimuths analysés (pas 2°)
-const CDT_STEP_KM = 0.2;  // pas de marche de détection (km)
+const APD_N_AZ   = 180;   // nombre d'azimuths analysés (pas 2°)
+const APD_STEP_KM = 0.2;  // pas de marche de détection (km)
 
 /* Point à distance dist_km sur le bearing brg_deg depuis (lat, lon) */
-function cdtDestPoint(lat, lon, brg_deg, dist_km) {
+function apdDestPoint(lat, lon, brg_deg, dist_km) {
   const R  = 6371;
   const d  = dist_km / R;
   const br = brg_deg * Math.PI / 180;
@@ -6548,8 +6548,8 @@ function cdtDestPoint(lat, lon, brg_deg, dist_km) {
   return { lat: φ2 * 180 / Math.PI, lon: ((λ2 * 180 / Math.PI) + 540) % 360 - 180 };
 }
 
-/* Icône marqueur CdT : croix de visée rouge */
-function cdtMarkerIcon() {
+/* Icône marqueur point à défendre : croix de visée rouge */
+function apdMarkerIcon() {
   return L.divIcon({
     className: '',
     html: `<svg width="28" height="28" viewBox="-14 -14 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6566,7 +6566,7 @@ function cdtMarkerIcon() {
 
 /* Résout le PIP pour une menace ligne droite à vitesse constante.
    threatFn(t_s) → {lat, lon, alt} — variante de solvePIPScan sans état global. */
-function solvePIPCdt(launcher, cfg, T_fire, threatFn) {
+function solvePIPApd(launcher, cfg, T_fire, threatFn) {
   const { kinematics: kin, envelope: env } = cfg;
   const T_avail = T_fire + kin.launchDelay_s;
   const T_end   = T_avail + kin.maxFlightTime_s + 60;
@@ -6607,87 +6607,87 @@ function solvePIPCdt(launcher, cfg, T_fire, threatFn) {
   return { valid: true, pip: pF, T_intercept: T_int, D_m: D };
 }
 
-/* Supprime les couches carte CdT */
-function _clearCdtLayers() {
-  [_cdtDetLayer, _cdtFireLayer, _cdtPipLayer].forEach(l => { if (l) map.removeLayer(l); });
-  _cdtDetLayer = _cdtFireLayer = _cdtPipLayer = null;
+/* Supprime les couches carte APD */
+function _clearApdLayers() {
+  [_apdDetLayer, _apdFireLayer, _apdPipLayer].forEach(l => { if (l) map.removeLayer(l); });
+  _apdDetLayer = _apdFireLayer = _apdPipLayer = null;
 }
 
-/* Réinitialise tout l'état Attaque CdT */
-function clearAttaqueCdt() {
-  _cdtVersion++;
-  _clearCdtLayers();
-  if (_cdtMarker) { map.removeLayer(_cdtMarker); _cdtMarker = null; }
-  _cdtPoint = null;
-  _cdtPickMode = false;
-  const btn = document.getElementById('cdt-place-btn');
-  if (btn) { btn.classList.remove('on'); btn.textContent = t('cdtPlaceBtn'); }
+/* Réinitialise tout l'état Attaque point à défendre */
+function clearAttaqueApd() {
+  _apdVersion++;
+  _clearApdLayers();
+  if (_apdMarker) { map.removeLayer(_apdMarker); _apdMarker = null; }
+  _apdPoint = null;
+  _apdPickMode = false;
+  const btn = document.getElementById('apd-place-btn');
+  if (btn) { btn.classList.remove('on'); btn.textContent = t('engApdPlaceBtn'); }
   map.getContainer().style.cursor = '';
-  document.getElementById('cdt-coords').textContent = '';
-  const st = document.getElementById('cdt-status');
+  document.getElementById('apd-coords').textContent = '';
+  const st = document.getElementById('apd-status');
   st.style.display = 'none'; st.textContent = '';
-  document.getElementById('cdt-legend').style.display = 'none';
-  document.getElementById('cdt-calc-btn').disabled = false;
+  document.getElementById('apd-legend').style.display = 'none';
+  document.getElementById('apd-calc-btn').disabled = false;
 }
 
-/* Active / désactive le mode placement du point CdT */
-function cdtTogglePickMode() {
-  _cdtPickMode = !_cdtPickMode;
-  const btn = document.getElementById('cdt-place-btn');
-  if (_cdtPickMode) {
+/* Active / désactive le mode placement du point à défendre */
+function apdTogglePickMode() {
+  _apdPickMode = !_apdPickMode;
+  const btn = document.getElementById('apd-place-btn');
+  if (_apdPickMode) {
     btn.classList.add('on');
-    btn.textContent = t('cdtPlaceActive');
+    btn.textContent = t('engApdPlaceActive');
     map.getContainer().style.cursor = 'crosshair';
   } else {
     btn.classList.remove('on');
-    btn.textContent = t('cdtPlaceBtn');
+    btn.textContent = t('engApdPlaceBtn');
     map.getContainer().style.cursor = '';
   }
 }
 
-/* Gère le clic carte en mode placement CdT */
-function cdtHandleMapClick(e) {
-  _cdtPickMode = false;
-  const btn = document.getElementById('cdt-place-btn');
+/* Gère le clic carte en mode placement du point à défendre */
+function apdHandleMapClick(e) {
+  _apdPickMode = false;
+  const btn = document.getElementById('apd-place-btn');
   btn.classList.remove('on');
-  btn.textContent = t('cdtPlaceBtn');
+  btn.textContent = t('engApdPlaceBtn');
   map.getContainer().style.cursor = '';
 
-  _cdtPoint = e.latlng;
-  if (_cdtMarker) map.removeLayer(_cdtMarker);
-  _cdtMarker = L.marker([_cdtPoint.lat, _cdtPoint.lng], {
-    icon: cdtMarkerIcon(), zIndexOffset: 1500
+  _apdPoint = e.latlng;
+  if (_apdMarker) map.removeLayer(_apdMarker);
+  _apdMarker = L.marker([_apdPoint.lat, _apdPoint.lng], {
+    icon: apdMarkerIcon(), zIndexOffset: 1500
   }).addTo(map);
-  document.getElementById('cdt-coords').textContent =
-    `${_cdtPoint.lat.toFixed(4)}, ${_cdtPoint.lng.toFixed(4)}`;
+  document.getElementById('apd-coords').textContent =
+    `${_apdPoint.lat.toFixed(4)}, ${_apdPoint.lng.toFixed(4)}`;
 }
 
 /* Moteur principal : analyse 360° pour tous les azimuths */
-async function computeAttaqueCdt() {
-  if (!_cdtPoint)     { alert(t('cdtNoPoint'));  return; }
-  if (!radars.length) { alert(t('cdtNoRadar'));  return; }
+async function runApdAnalysis() {
+  if (!_apdPoint)     { alert(t('engApdNoPoint'));  return; }
+  if (!radars.length) { alert(t('engApdNoRadar'));  return; }
 
-  _cdtVersion++;
-  const myVer = _cdtVersion;
-  _clearCdtLayers();
+  _apdVersion++;
+  const myVer = _apdVersion;
+  _clearApdLayers();
 
-  const statusEl = document.getElementById('cdt-status');
+  const statusEl = document.getElementById('apd-status');
   statusEl.style.display = 'block';
-  statusEl.textContent   = t('cdtComputing', 0);
-  document.getElementById('cdt-legend').style.display = 'none';
-  document.getElementById('cdt-calc-btn').disabled = true;
+  statusEl.textContent   = t('engApdComputing', 0);
+  document.getElementById('apd-legend').style.display = 'none';
+  document.getElementById('apd-calc-btn').disabled = true;
 
   const speedKmh = Math.max(50, Math.min(5000,
-    parseFloat(document.getElementById('cdt-speed').value) || 900));
+    parseFloat(document.getElementById('apd-speed').value) || 900));
   const alt_m = Math.max(0,
-    parseFloat(document.getElementById('cdt-alt').value) || 5000);
+    parseFloat(document.getElementById('apd-alt').value) || 5000);
   const v_ms  = speedKmh / 3.6;
   const agl   = (refMode === 'agl');
-  const cdtSer = Math.max(0, parseFloat(document.getElementById('cdt-ser')?.value) || 1);
+  const apdSer = Math.max(0, parseFloat(document.getElementById('apd-ser')?.value) || 1);
 
   /* Distance de départ de la marche : dépasse légèrement la portée effective max */
   const D_max_km = Math.min(400,
-    Math.max(...radars.map(r => radarEffRangeM(r, cdtSer) / 1000)) + 30);
+    Math.max(...radars.map(r => radarEffRangeM(r, apdSer) / 1000)) + 30);
 
   /* Altitudes terrain des radars (cache partagé) */
   const radarElevs = await Promise.all(radars.map(r =>
@@ -6695,7 +6695,7 @@ async function computeAttaqueCdt() {
       ? Promise.resolve(r.terrAlt)
       : fetchSpotElevation(r.lat, r.lon)
   ));
-  if (myVer !== _cdtVersion) return;
+  if (myVer !== _apdVersion) return;
 
   /* Lanceurs équipés d'un missile */
   const armedLaunchers = launchers.filter(
@@ -6707,15 +6707,15 @@ async function computeAttaqueCdt() {
   const pipPoints  = [];
   let   nDet = 0;
 
-  for (let iAz = 0; iAz < CDT_N_AZ; iAz++) {
-    if (myVer !== _cdtVersion) return;
+  for (let iAz = 0; iAz < APD_N_AZ; iAz++) {
+    if (myVer !== _apdVersion) return;
 
     if (iAz % 12 === 0) {
-      statusEl.textContent = t('cdtComputing', Math.round(iAz / CDT_N_AZ * 100));
+      statusEl.textContent = t('engApdComputing', Math.round(iAz / APD_N_AZ * 100));
       await new Promise(res => setTimeout(res, 0));
     }
 
-    const brg = iAz * (360 / CDT_N_AZ);
+    const brg = iAz * (360 / APD_N_AZ);
 
     /* Position de la menace à l'instant t_s : ligne droite, cap brg, vitesse v_ms.
        threatAltAMSL est mis à jour dès la détection pour que le PIP scanner
@@ -6724,15 +6724,15 @@ async function computeAttaqueCdt() {
     const threatFn = t_s => {
       const d_km = D_max_km - v_ms * t_s / 1000;
       if (d_km < 0) return null;
-      const p = cdtDestPoint(_cdtPoint.lat, _cdtPoint.lng, brg, d_km);
+      const p = apdDestPoint(_apdPoint.lat, _apdPoint.lng, brg, d_km);
       return { lat: p.lat, lon: p.lon, alt: threatAltAMSL };
     };
 
-    /* --- Marche de détection : D_max_km → 0, pas CDT_STEP_KM --- */
+    /* --- Marche de détection : D_max_km → 0, pas APD_STEP_KM --- */
     let detResult = null;
 
-    for (let d_km = D_max_km; d_km >= 0 && !detResult; d_km -= CDT_STEP_KM) {
-      const pos = cdtDestPoint(_cdtPoint.lat, _cdtPoint.lng, brg, d_km);
+    for (let d_km = D_max_km; d_km >= 0 && !detResult; d_km -= APD_STEP_KM) {
+      const pos = apdDestPoint(_apdPoint.lat, _apdPoint.lng, brg, d_km);
       const t_s = (D_max_km - d_km) * 1000 / v_ms;
 
       for (let ri = 0; ri < radars.length && !detResult; ri++) {
@@ -6742,7 +6742,7 @@ async function computeAttaqueCdt() {
 
         /* 1. Portée */
         const distM = haversineKm(r.lat, r.lon, pos.lat, pos.lon) * 1000;
-        if (distM > radarEffRangeM(r, cdtSer) || distM < 1) continue;
+        if (distM > radarEffRangeM(r, apdSer) || distM < 1) continue;
 
         /* 2. Secteur azimut */
         const az = geoAzimuth(r.lat, r.lon, pos.lat, pos.lon);
@@ -6752,7 +6752,7 @@ async function computeAttaqueCdt() {
         let altAMSL = alt_m;
         if (agl) {
           const terrT = await fetchSpotElevation(pos.lat, pos.lon);
-          if (myVer !== _cdtVersion) return;
+          if (myVer !== _apdVersion) return;
           altAMSL = (isNaN(terrT) ? 0 : terrT) + alt_m;
         }
 
@@ -6763,7 +6763,7 @@ async function computeAttaqueCdt() {
 
         /* 5. LOS terrain */
         const los = await checkLOSAsync(r.lat, r.lon, hR, pos.lat, pos.lon, altAMSL);
-        if (myVer !== _cdtVersion) return;
+        if (myVer !== _apdVersion) return;
         if (los.clear) {
           detResult = { lat: pos.lat, lon: pos.lon, d_km, t_det: t_s, radarId: r.id };
           threatAltAMSL = altAMSL; // mise à jour du closure pour le scan PIP
@@ -6788,7 +6788,7 @@ async function computeAttaqueCdt() {
     for (const l of armedLaunchers) {
       const cfg = _missileConfigs[l.missileType];
       for (let t_fire = t_tir_min; t_fire <= T_max_scan; t_fire += 1.0) {
-        const res = solvePIPCdt(l, cfg, t_fire, threatFn);
+        const res = solvePIPApd(l, cfg, t_fire, threatFn);
         if (res.valid) {
           if (!bestPip || res.T_intercept < bestPip.T_intercept) {
             bestPip = { ...res, t_tir_first: t_fire, firePos: threatFn(t_fire) };
@@ -6804,33 +6804,33 @@ async function computeAttaqueCdt() {
     }
   }
 
-  if (myVer !== _cdtVersion) return;
-  document.getElementById('cdt-calc-btn').disabled = false;
-  statusEl.textContent = t('cdtDone', nDet, CDT_N_AZ);
+  if (myVer !== _apdVersion) return;
+  document.getElementById('apd-calc-btn').disabled = false;
+  statusEl.textContent = t('engApdDone', nDet, APD_N_AZ);
 
   /* Rendu des 3 frontières comme polygones Leaflet fermés */
   if (detPoints.length >= 3)
-    _cdtDetLayer = L.polygon(detPoints, {
+    _apdDetLayer = L.polygon(detPoints, {
       color: '#f90', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#f90'
     }).addTo(map);
 
   if (firePoints.length >= 3)
-    _cdtFireLayer = L.polygon(firePoints, {
+    _apdFireLayer = L.polygon(firePoints, {
       color: '#e33', weight: 1.5, fill: true, fillOpacity: 0.07, fillColor: '#e33'
     }).addTo(map);
 
   if (pipPoints.length >= 3)
-    _cdtPipLayer = L.polygon(pipPoints, {
+    _apdPipLayer = L.polygon(pipPoints, {
       color: '#3b3', weight: 1.5, fill: true, fillOpacity: 0.10, fillColor: '#3b3'
     }).addTo(map);
 
   if (nDet > 0)
-    document.getElementById('cdt-legend').style.display = 'block';
+    document.getElementById('apd-legend').style.display = 'block';
 }
 
-document.getElementById('cdt-place-btn').addEventListener('click', cdtTogglePickMode);
-document.getElementById('cdt-calc-btn').addEventListener('click', computeAttaqueCdt);
-document.getElementById('cdt-clear-btn').addEventListener('click', clearAttaqueCdt);
+document.getElementById('apd-place-btn').addEventListener('click', apdTogglePickMode);
+document.getElementById('apd-calc-btn').addEventListener('click', runApdAnalysis);
+document.getElementById('apd-clear-btn').addEventListener('click', clearAttaqueApd);
 
 /* ═══════════════════════════════════════════════════════════════════════
    TUTORIEL INTERACTIF
