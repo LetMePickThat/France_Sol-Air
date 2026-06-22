@@ -1689,7 +1689,7 @@ let refMode = 'agl';
 let coordFormat = 'DMS';
 let globalDemSampler = null;
 
-let radars = [ { id: 1, name: "Radar 1", lat: 48.8566, lon: 2.3522, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false } ];
+let radars = [ { id: 1, name: "Radar 1", lat: 48.8566, lon: 2.3522, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: null, calSer: null } ];
 let nextRadarId = 2;
 let activeRadarId = 1;
 
@@ -2170,6 +2170,9 @@ function renderRadarsUI() {
         <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(r.maxDistC2||0).toFixed(2)}" onchange="updateRadar(${r.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateRadar(${r.id},'linkType','fiber')" class="${(r.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateRadar(${r.id},'linkType','radio')" class="${r.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
         <div class="radar-params"><label>${t('radarHMat')}</label><div class="multi-input"><input type="number" step="${altStep()}" min="0" value="${+altV(r.hmat||0).toFixed(1)}" onchange="updateRadar(${r.id},'hmat',this.value)" style="flex:1"><span class="unit-tag">${altU()}</span></div></div>
+        <div style="border-top:1px dashed var(--line);margin:5px 0 3px;font-size:10px;color:var(--txt-dim);letter-spacing:.04em;text-transform:uppercase">${t('pCalibSection')}</div>
+        <div class="radar-params"><label>${t('pCalibDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${r.calDist !== null ? +distV(r.calDist).toFixed(2) : ''}" placeholder="—" onchange="updateRadar(${r.id},'calDist',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
+        <div class="radar-params"><label>${t('pCalibSer')}</label><div class="multi-input"><input type="number" step="0.001" min="0" value="${r.calSer !== null ? r.calSer : ''}" placeholder="—" onchange="updateRadar(${r.id},'calSer',this.value)" style="flex:1"><span class="unit-tag">m²</span></div></div>
         <div class="elev-badge" data-rid="${r.id}">${r.terrAlt !== null ? formatAltBadge(r) : '…'}</div>
       </div>`;
     container.appendChild(div);
@@ -2210,10 +2213,12 @@ function updateRadar(id, field, val) {
   else if(field === 'rmax') { r.rmax = distFromU(parseFloat(val)||0); markCoverageStale(); }
   else if(['hant','hmat'].includes(field)) { r[field] = altFromU(parseFloat(val)||0); markCoverageStale(); }
   else if(['elmin','elmax','azmin','azmax'].includes(field)) { r[field] = parseFloat(val); markCoverageStale(); }
+  else if(field === 'calDist') { r.calDist = (val === '' || val === null) ? null : (distFromU(parseFloat(val)) || null); }
+  else if(field === 'calSer')  { r.calSer  = (val === '' || val === null) ? null : (parseFloat(val) || null); }
   else { const deg = parseCoord(val); if(!isNaN(deg)) { r[field] = deg; r.terrAlt = null; markCoverageStale(); } }
   renderRadarsUI();
 }
-document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false }); selectEntity('radar', id); });
+document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: null, calSer: null }); selectEntity('radar', id); });
 map.on('click', e => {
   if (_offlineDrawing) { offlineAddVert(e.latlng); return; }
   if (peakDrawing)     { peakHandleClick(e);        return; }
@@ -3144,6 +3149,8 @@ ${extDataBlock(fields)}
       'spm:parentC2Id': r.parentC2Id ?? '',
       'spm:maxDistC2': r.maxDistC2 ?? 0,
       'spm:linkType': r.linkType ?? 'fiber',
+      'spm:calDist': r.calDist ?? '',
+      'spm:calSer':  r.calSer  ?? '',
     }, kmlRadarBalloon(r, isEn))
   ).join('');
 
@@ -3556,6 +3563,8 @@ function importKMLString(xmlStr) {
       parentC2Id: getInt(pm, 'spm:parentC2Id'),    /* sera remappé */
       maxDistC2:  getNum(pm, 'spm:maxDistC2', 0),
       linkType:   getStr(pm, 'spm:linkType', 'fiber'),
+      calDist:    getNum(pm, 'spm:calDist', null),
+      calSer:     getNum(pm, 'spm:calSer',  null),
       _origId:    getInt(pm, 'spm:id'),
       marker: null, terrAlt: null, pinned: false,
     });
@@ -3677,6 +3686,7 @@ const I18N = {
     pName:'Nom', pPos:'Position', pHeight:'Hauteur radar', pRange:'Portée maximale',
     pSites:'Sites min/max (°)', pAzimuth:'Azimut (°)', pActive:'Actif', pDelete:'✖', altUnknown:'Alt. inconnue',
     radarHMat:'H. mat comm.',
+    pCalibSection:'Calibration', pCalibDist:'Portée calib.', pCalibSer:'SER calib.',
     targetAtmo:'Cible & atmosphère', altRef:'Référence d\'altitude', altAGL:'Sol (AGL)', altAMSL:'Mer (AMSL)',
     altTargets:'Altitudes cibles', refraction:'Facteur de réfraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — géométrique', kDry:'1.15 — air sec', kSuper:'1.6 — surréfraction',
@@ -3792,6 +3802,7 @@ const I18N = {
     pName:'Name', pPos:'Position', pHeight:'Radar height', pRange:'Max range',
     pSites:'Elevation min/max (°)', pAzimuth:'Azimuth (°)', pActive:'Active', pDelete:'✖', altUnknown:'Unknown alt.',
     radarHMat:'Comm mast ht',
+    pCalibSection:'Calibration', pCalibDist:'Calib. range', pCalibSer:'Calib. RCS',
     targetAtmo:'Target & atmosphere', altRef:'Alt. reference', altAGL:'Ground (AGL)', altAMSL:'Sea level (AMSL)',
     altTargets:'Target altitudes', refraction:'Refraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — geometric', kDry:'1.15 — dry air', kSuper:'1.6 — super-refraction',
