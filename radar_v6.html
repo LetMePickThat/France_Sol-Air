@@ -6,8 +6,8 @@
 <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
 <title>Intervisibilité Radar — Étude d'implantation — Système de Design de l'État</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous"></script>
 
 <style>
   /* =========================================================================
@@ -1688,11 +1688,14 @@ function renderAll(skipLines = false) {
   renderLaunchersUI();
   renderC2UI();
   _batchingRenders = false;
+  drawRings();
+  drawMissileRings();
   if (!skipLines) updateEntityLines();
   renderThreatUI();
   _fsaScheduleAuto();
 }
-const R_E = 6371000;
+const R_E    = 6371000;
+const R_E_KM = R_E / 1000;
 const R_MERC = 6378137;
 const TERRA_URL = (z,x,y)=>`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
 
@@ -2005,8 +2008,15 @@ function drawRings() {
 }
 
 /* Cache de tuiles Terrarium décodées (Float32Array par tuile) — partagé par
-   fetchSpotElevation, checkLOSAsync, buildDEM et searchPeaks */
-const _elevTileCache   = new Map();  // key "z/tx/ty" → Float32Array | null
+   fetchSpotElevation, checkLOSAsync, buildDEM et searchPeaks.
+   LRU avec éviction à 200 tuiles pour éviter la croissance mémoire illimitée. */
+class _LRUMap {
+  constructor(max) { this._max = max; this._m = new Map(); }
+  has(k)    { return this._m.has(k); }
+  get(k)    { if (!this._m.has(k)) return undefined; const v = this._m.get(k); this._m.delete(k); this._m.set(k, v); return v; }
+  set(k, v) { if (this._m.has(k)) this._m.delete(k); else if (this._m.size >= this._max) this._m.delete(this._m.keys().next().value); this._m.set(k, v); return this; }
+}
+const _elevTileCache   = new _LRUMap(200); // key "z/tx/ty" → Float32Array | null
 const _elevTilePending = new Map();  // key → Promise en cours de chargement
 
 /**
@@ -2164,6 +2174,7 @@ function makeDraggable(marker, type, id, entityList) {
 
 function renderRadarsUI() {
   if (_renderingUI) return; _renderingUI = true; const container = document.getElementById('radars-list'); container.innerHTML = '';
+  try {
   for (const r of radars) {
     const isAct = r.id === activeRadarId; 
     const isPinned = !!r.pinned;
@@ -2209,10 +2220,9 @@ function renderRadarsUI() {
       r.marker.setTooltipContent(r.name);
     }
   }
-  drawRings();
   if (!_batchingRenders) updateEntityLines();
-  _renderingUI = false;
   updateEntityCounts();
+  } finally { _renderingUI = false; }
 }
 
 function removeRadar(id) {
@@ -2238,6 +2248,7 @@ function updateRadar(id, field, val) {
   else if(field === 'calSer')  { r.calSer  = (val === '' || val === null) ? null : (parseFloat(val) || null); }
   else { const deg = parseCoord(val); if(!isNaN(deg)) { r[field] = deg; r.terrAlt = null; markCoverageStale(); } }
   renderRadarsUI();
+  if (field === 'rmax' || field === 'lat' || field === 'lon') drawRings();
 }
 document.getElementById('btn-add-radar').addEventListener('click', () => { markCoverageStale(); const center = map.getCenter(); const id = nextRadarId++; radars.push({ id, name: `Radar ${id}`, lat: center.lat, lon: center.lng, hant: 20, hmat: 10, rmax: 40, elmin: -5, elmax: 40, azmin: 0, azmax: 360, marker: null, terrAlt: null, parentC2Id: null, maxDistC2: 0, linkType: 'fiber', pinned: false, calDist: 40, calSer: 1 }); selectEntity('radar', id); });
 map.on('click', e => {
@@ -2279,7 +2290,7 @@ function renderLaunchersUI() {
   if (_renderingLaunchersUI) return; _renderingLaunchersUI = true;
   const container = document.getElementById('launchers-list');
   container.innerHTML = '';
-
+  try {
   for (const l of launchers) {
     const isAct = l.id === activeLauncherId; 
     const isPinned = !!l.pinned;
@@ -2329,10 +2340,9 @@ function renderLaunchersUI() {
       l.marker.setTooltipContent(l.name);
     }
   }
-  drawMissileRings();
   if (!_batchingRenders) updateEntityLines();
-  _renderingLaunchersUI = false;
   updateEntityCounts();
+  } finally { _renderingLaunchersUI = false; }
 }
 
 function removeLauncher(id) {
@@ -2360,6 +2370,7 @@ function updateLauncher(id, field, val) {
   else if (field === 'missileType') { l.missileType = val; }
   else { const deg = parseCoord(val); if (!isNaN(deg)) { l[field] = deg; l.terrAlt = null; } }
   renderLaunchersUI();
+  if (field === 'missileType' || field === 'lat' || field === 'lon') drawMissileRings();
 }
 
 document.getElementById('btn-add-launcher').addEventListener('click', () => {
@@ -2401,7 +2412,7 @@ const launcherLines = new Map();
 const c2c2Lines     = new Map();   
 let distCircles = [];
 
-function haversineKm(lat1,lon1,lat2,lon2){const R=6371,r=Math.PI/180,dLat=(lat2-lat1)*r,dLon=(lon2-lon1)*r,a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(a));}
+function haversineKm(lat1,lon1,lat2,lon2){const r=Math.PI/180,dLat=(lat2-lat1)*r,dLon=(lon2-lon1)*r,a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;return 2*R_E_KM*Math.asin(Math.sqrt(a));}
 
 async function checkLOSAsync(lat1,lon1,h1,lat2,lon2,h2){
   /* Note : h1 et h2 sont toujours >= 1 (appliqué par hmin() dans updateEntityLines).
@@ -2546,6 +2557,7 @@ function c2Icon(isAct) {
 
 function renderC2UI() {
   if (_renderingC2UI) return; _renderingC2UI = true; const container = document.getElementById('c2-list'); container.innerHTML = '';
+  try {
   for (const c of c2nodes) {
     const isAct = c.id === activeC2Id; 
     const isPinned = !!c.pinned;
@@ -2600,8 +2612,8 @@ function renderC2UI() {
     }
   }
   if (!_batchingRenders) updateEntityLines();
-  _renderingC2UI = false;
   updateEntityCounts();
+  } finally { _renderingC2UI = false; }
 }
 
 function removeC2(id) {
@@ -2736,7 +2748,7 @@ async function buildDEM(bbox, zoom, onProgress, isCancelled) {
     for (let ty = ty0; ty <= ty1; ty++)
       jobs.push([tx, ty]);
 
-  let done = 0;
+  let done = 0, nullTiles = 0;
   const CONC = 8;
   for (let i = 0; i < jobs.length; i += CONC) {
     if (isCancelled && isCancelled()) return null;
@@ -2746,7 +2758,7 @@ async function buildDEM(bbox, zoom, onProgress, isCancelled) {
     for (let j = 0; j < batch.length; j++) {
       done++;
       const arr = arrs[j];
-      if (!arr) continue;
+      if (!arr) { nullTiles++; continue; }
       const [tx, ty] = batch[j];
       const ox = (tx - tx0) * 256, oy = (ty - ty0) * 256;
       for (let yy = 0; yy < 256; yy++)
@@ -2755,7 +2767,7 @@ async function buildDEM(bbox, zoom, onProgress, isCancelled) {
     }
     if (onProgress) onProgress(done, jobs.length);
   }
-  return { elev, W, H, originPx: tx0*256, originPy: ty0*256, worldPx, nTiles: jobs.length };
+  return { elev, W, H, originPx: tx0*256, originPy: ty0*256, worldPx, nTiles: jobs.length, nullTiles };
 }
 
 function makeSampler(dem){
@@ -2878,12 +2890,14 @@ async function compute(){
     map.fitBounds([[bbox.s, bbox.w], [bbox.n, bbox.e]]);
     renderRadarsUI();
     const km2 = coveredCells * (groundRes * groundRes) / 1e6;
+    const nullWarn = (dem.nullTiles > 0 && dem.nullTiles / dem.nTiles > 0.05)
+      ? `<br><span style="color:#c00">⚠ ${t('warnNullTiles', dem.nullTiles, dem.nTiles)}</span>` : '';
     const resultsEl = document.getElementById('results');
     resultsEl.style.display = 'block';
     resultsEl.innerHTML =
       `<b>${t('resNetwork')} :</b> ${t('resNetworkVal', radars.length)}<br>` +
       `<b>${t('resDEM')} :</b> ${t('resDEMVal', altFmt(groundRes), altU(), zoom)}<br>` +
-      `<b>${t('resCov')} :</b> ${t('resCovVal', km2.toFixed(0))}`;
+      `<b>${t('resCov')} :</b> ${t('resCovVal', km2.toFixed(0))}${nullWarn}`;
     coverageExists = true;
     coverageStale  = false;
     document.getElementById('stale-banner').classList.remove('show');
@@ -3114,7 +3128,7 @@ function kmlC2Balloon(c, isEn) {
 /* ---------- Export ---------- */
 /* Génère les coordonnées KML d'un cercle géodésique (N points, rayon en km) */
 function kmlCircleCoords(lat, lon, radiusKm, nPts = 72) {
-  const R    = 6371;
+  const R    = R_E_KM;
   const latR = lat * Math.PI / 180;
   const lonR = lon * Math.PI / 180;
   const d    = radiusKm / R;
@@ -3464,10 +3478,10 @@ function _fsaInitAutosaveBanner() {
   const banner = document.getElementById('fsa-autosave-banner');
   if (!banner) return;
   banner.innerHTML = isEn
-    ? `<strong>Unsaved session found</strong> (${ts} — R:${r} L:${l} C2:${c})<br>
+    ? `<strong>Unsaved session found</strong> (${escapeHtml(ts)} — R:${r} L:${l} C2:${c})<br>
        <button onclick="_fsaApply(_fsaParse(localStorage.getItem('fsa_autosave')),false);this.closest('#fsa-autosave-banner').style.display='none'">Restore</button>
        <button onclick="this.closest('#fsa-autosave-banner').style.display='none'" style="margin-left:6px;border-color:var(--line);color:var(--txt-dim);">Dismiss</button>`
-    : `<strong>Session non sauvegardée trouvée</strong> (${ts} — R:${r} L:${l} C2:${c})<br>
+    : `<strong>Session non sauvegardée trouvée</strong> (${escapeHtml(ts)} — R:${r} L:${l} C2:${c})<br>
        <button onclick="_fsaApply(_fsaParse(localStorage.getItem('fsa_autosave')),false);this.closest('#fsa-autosave-banner').style.display='none'">Restaurer</button>
        <button onclick="this.closest('#fsa-autosave-banner').style.display='none'" style="margin-left:6px;border-color:var(--line);color:var(--txt-dim);">Ignorer</button>`;
   banner.style.display = 'block';
@@ -3728,6 +3742,7 @@ const I18N = {
     errNoRadar:'Ajoutez au moins un radar.', errNoAlt:'Renseignez au moins une altitude cible.', errDEM:'Échec du chargement des tuiles de relief.',
     resNetwork:'Réseau', resNetworkVal:(n)=>`${n} radar(s) calculé(s)`, resDEM:'Résolution DEM',
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Couverture Totale', resCovVal:(k)=>`~${k} km²`,
+    warnNullTiles:(n,tot)=>`${n}/${tot} tuiles manquantes — couverture partielle`,
     noData:'Hors données',
     launcherNetwork:'Lance-missiles', addLauncher:'+ Ajouter un lanceur', launcherHint:'Glisser-déposer pour repositionner. Clic carte = désélection.', launcherDefaultName:'Lanceur',
     launcherHAnt:'H. mat comm.', launcherMissileType:'Type de missile', launcherMissileNone:'— (non configuré)',
@@ -3844,6 +3859,7 @@ const I18N = {
     errNoRadar:'Please add at least one radar.', errNoAlt:'Please enter at least one target altitude.', errDEM:'Failed to load terrain tiles.',
     resNetwork:'Network', resNetworkVal:(n)=>`${n} radar(s) computed`, resDEM:'DEM resolution',
     resDEMVal:(r,u,z)=>`~${r} ${u} (zoom ${z})`, resCov:'Total Coverage', resCovVal:(k)=>`~${k} km²`,
+    warnNullTiles:(n,tot)=>`${n}/${tot} missing tiles — partial coverage`,
     noData:'No data',
     launcherNetwork:'Missile launchers', addLauncher:'+ Add launcher', launcherHint:'Drag and drop the unit to reposition.', launcherDefaultName:'Launcher',
     launcherHAnt:'Mast ht', launcherMissileType:'Missile type', launcherMissileNone:'— (not configured)',
@@ -6537,7 +6553,7 @@ const APD_STEP_KM = 0.2;  // pas de marche de détection (km)
 
 /* Point à distance dist_km sur le bearing brg_deg depuis (lat, lon) */
 function apdDestPoint(lat, lon, brg_deg, dist_km) {
-  const R  = 6371;
+  const R  = R_E_KM;
   const d  = dist_km / R;
   const br = brg_deg * Math.PI / 180;
   const φ1 = lat * Math.PI / 180;
