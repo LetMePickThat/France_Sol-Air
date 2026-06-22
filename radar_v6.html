@@ -1081,13 +1081,20 @@
             </div>
           </div>
         </div>
-        <!-- Altitudes cibles — accordéon -->
+        <!-- Configuration cibles — accordéon -->
         <div class="acc-item">
           <button class="acc-btn" aria-expanded="false" aria-controls="acc-alttargets">
-            <span data-i18n="altTargets">Altitudes cibles</span>
+            <span data-i18n="altTargets">Configuration cibles</span>
             <span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body" id="acc-alttargets">
+            <div class="radar-params" style="margin-bottom:6px">
+              <label data-i18n="pSer">SER</label>
+              <div class="multi-input">
+                <input type="number" id="cov-ser" value="1" min="0" step="0.1" style="flex:1">
+                <span class="unit-tag">m²</span>
+              </div>
+            </div>
             <div id="alt-list"></div>
           </div>
         </div>
@@ -3702,7 +3709,7 @@ const I18N = {
     radarHMat:'H. mat comm.',
     pCalibLabel: () => `Portée / SER calib. (${distU()} / m²)`,
     targetAtmo:'Cible & atmosphère', altRef:'Référence d\'altitude', altAGL:'Sol (AGL)', altAMSL:'Mer (AMSL)',
-    altTargets:'Altitudes cibles', refraction:'Facteur de réfraction k',
+    altTargets:'Configuration cibles', refraction:'Facteur de réfraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — géométrique', kDry:'1.15 — air sec', kSuper:'1.6 — surréfraction',
     computeBtn:'Calculer la couverture', cancelCoverage:'Annuler le calcul', staleBanner:'Résultats périmés — recalculer pour mettre à jour', clearCoverage:'Supprimer la couverture',
     peakSection:'Recherche Sommets Locaux', peakDrawZone:'Zone de recherche', peakDrawActive:'Annuler le dessin',
@@ -3818,7 +3825,7 @@ const I18N = {
     radarHMat:'Comm mast ht',
     pCalibLabel: () => `Calib. range / RCS (${distU()} / m²)`,
     targetAtmo:'Target & atmosphere', altRef:'Alt. reference', altAGL:'Ground (AGL)', altAMSL:'Sea level (AMSL)',
-    altTargets:'Target altitudes', refraction:'Refraction k',
+    altTargets:'Target configuration', refraction:'Refraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — geometric', kDry:'1.15 — dry air', kSuper:'1.6 — super-refraction',
     computeBtn:'Compute coverage', cancelCoverage:'Cancel computation', staleBanner:'Stale results — recalculate to update', clearCoverage:'Clear coverage',
     peakSection:'Local Summit Search', peakDrawZone:'Draw search zone', peakDrawActive:'Cancel drawing',
@@ -6967,9 +6974,9 @@ document.getElementById('cdt-clear-btn').addEventListener('click', clearAttaqueC
      'Switch to the COVERAGE tab. It computes the actual visibility of each radar by accounting for terrain using the AWS Terrarium Digital Elevation Model (~30 m resolution in France). Computation uses raycasting: for each point on the map, the system checks whether the line of sight between that point and the radar clears the terrain.',
      '.tab-btn[data-tab="coverage"]', 'coverage', null, null],
 
-    /* ── 22 ────────────────────────────────────────── Altitudes cibles */
-    ['Altitudes cibles',
-     'Target altitudes',
+    /* ── 22 ────────────────────────────────────────── Configuration cibles */
+    ['Configuration cibles',
+     'Target configuration',
      'Définissez les altitudes auxquelles vous souhaitez calculer la couverture (référence AGL = au-dessus du sol, ou AMSL = au-dessus du niveau de la mer). Valeurs par défaut : 0, 5, 40 et 500 m — elles couvrent les drones rasants, les hélicoptères, les avions bas et les cibles à moyenne altitude. Chaque altitude produit une couche de couleur différente sur la carte. Vous pouvez en ajouter ou en supprimer selon votre besoin opérationnel.',
      'Define the altitudes at which you want to compute coverage (AGL = above ground level, or AMSL = above mean sea level). Defaults: 0, 5, 40, and 500 m — covering low-flying drones, helicopters, low-altitude aircraft, and medium-altitude targets. Each altitude produces a different colour layer on the map. Add or remove values according to your operational requirement.',
      '#acc-alttargets', 'coverage', null, 'acc-alttargets'],
