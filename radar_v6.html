@@ -1091,7 +1091,7 @@
             <div class="radar-params" style="margin-bottom:6px">
               <label data-i18n="pSer">SER</label>
               <div class="multi-input">
-                <input type="number" id="cov-ser" value="1" min="0" step="0.1" style="flex:1">
+                <input type="number" id="cov-ser" value="1" min="0" step="0.1" style="flex:1" onchange="markCoverageStale()">
                 <span class="unit-tag">m²</span>
               </div>
             </div>
@@ -2774,6 +2774,7 @@ async function compute(){
   const btnCancel = document.getElementById('btn-cancel-coverage');
   if(radars.length === 0) { alert(t('errNoRadar')); return; }
   const altData = getAltData(); const thr = altData.map(e => e.value); if(!thr.length){ alert(t('errNoAlt')); return; }
+  const covSer = Math.max(0, parseFloat(document.getElementById('cov-ser')?.value) || 1);
 
   _coverageAborted = false;
   busyEl.classList.add('show'); btnGo.disabled=true; btnCancel.style.display='block'; msgEl.textContent=t('msgZone');
@@ -2801,7 +2802,15 @@ async function compute(){
     const r = radars[ri]; const latRad = r.lat*Math.PI/180; const cosLat0 = Math.cos(latRad);
     const zRadarTerr = sample(r.lon, r.lat); if(isNaN(zRadarTerr)) continue;
     
-    r.terrAlt = zRadarTerr; const zR = zRadarTerr + parseFloat(r.hant); const rMaxMeters = r.rmax * 1000;
+    r.terrAlt = zRadarTerr; const zR = zRadarTerr + parseFloat(r.hant);
+    const rMaxMeters = (() => {
+      const hard = r.rmax * 1000;
+      if (r.calDist > 0 && r.calSer > 0 && covSer >= 0) {
+        const rEff = r.calDist * 1000 * Math.pow(covSer / r.calSer, 0.25);
+        return Math.min(hard, rEff);
+      }
+      return hard;
+    })();
     const elMin = r.elmin * Math.PI/180; const elMax = r.elmax * Math.PI/180; const tanMin = Math.tan(elMin); const tanMax = Math.tan(elMax);
 
     let nAz = Math.ceil(2 * Math.PI * rMaxMeters / Math.max(dr, 30));
