@@ -2170,9 +2170,7 @@ function renderRadarsUI() {
         <div class="radar-params"><label>${t('rC2MaxDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${+distV(r.maxDistC2||0).toFixed(2)}" onchange="updateRadar(${r.id},'maxDistC2',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
         <div class="radar-params"><label>${t('rLinkType')}</label><div class="seg" style="flex:1"><button onclick="updateRadar(${r.id},'linkType','fiber')" class="${(r.linkType||'fiber')==='fiber'?'on':''}">${t('linkFiber')}</button><button onclick="updateRadar(${r.id},'linkType','radio')" class="${r.linkType==='radio'?'on':''}">${t('linkRadio')}</button></div></div>
         <div class="radar-params"><label>${t('radarHMat')}</label><div class="multi-input"><input type="number" step="${altStep()}" min="0" value="${+altV(r.hmat||0).toFixed(1)}" onchange="updateRadar(${r.id},'hmat',this.value)" style="flex:1"><span class="unit-tag">${altU()}</span></div></div>
-        <div style="border-top:1px dashed var(--line);margin:5px 0 3px;font-size:10px;color:var(--txt-dim);letter-spacing:.04em;text-transform:uppercase">${t('pCalibSection')}</div>
-        <div class="radar-params"><label>${t('pCalibDist')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${r.calDist !== null ? +distV(r.calDist).toFixed(2) : ''}" placeholder="—" onchange="updateRadar(${r.id},'calDist',this.value)" style="flex:1"><span class="unit-tag">${distU()}</span></div></div>
-        <div class="radar-params"><label>${t('pCalibSer')}</label><div class="multi-input"><input type="number" step="0.001" min="0" value="${r.calSer !== null ? r.calSer : ''}" placeholder="—" onchange="updateRadar(${r.id},'calSer',this.value)" style="flex:1"><span class="unit-tag">m²</span></div></div>
+        <div class="radar-params"><label>${t('pCalibLabel')}</label><div class="multi-input"><input type="number" step="${distStep()}" min="0" value="${r.calDist !== null ? +distV(r.calDist).toFixed(2) : ''}" placeholder="—" onchange="updateRadar(${r.id},'calDist',this.value)"><input type="number" step="0.001" min="0" value="${r.calSer !== null ? r.calSer : ''}" placeholder="—" onchange="updateRadar(${r.id},'calSer',this.value)"></div></div>
         <div class="elev-badge" data-rid="${r.id}">${r.terrAlt !== null ? formatAltBadge(r) : '…'}</div>
       </div>`;
     container.appendChild(div);
@@ -3686,7 +3684,7 @@ const I18N = {
     pName:'Nom', pPos:'Position', pHeight:'Hauteur radar', pRange:'Portée maximale',
     pSites:'Sites min/max (°)', pAzimuth:'Azimut (°)', pActive:'Actif', pDelete:'✖', altUnknown:'Alt. inconnue',
     radarHMat:'H. mat comm.',
-    pCalibSection:'Calibration', pCalibDist:'Portée calib.', pCalibSer:'SER calib.',
+    pCalibLabel: () => `Portée / SER calib. (${distU()} / m²)`,
     targetAtmo:'Cible & atmosphère', altRef:'Référence d\'altitude', altAGL:'Sol (AGL)', altAMSL:'Mer (AMSL)',
     altTargets:'Altitudes cibles', refraction:'Facteur de réfraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — géométrique', kDry:'1.15 — air sec', kSuper:'1.6 — surréfraction',
@@ -3802,7 +3800,7 @@ const I18N = {
     pName:'Name', pPos:'Position', pHeight:'Radar height', pRange:'Max range',
     pSites:'Elevation min/max (°)', pAzimuth:'Azimuth (°)', pActive:'Active', pDelete:'✖', altUnknown:'Unknown alt.',
     radarHMat:'Comm mast ht',
-    pCalibSection:'Calibration', pCalibDist:'Calib. range', pCalibSer:'Calib. RCS',
+    pCalibLabel: () => `Calib. range / RCS (${distU()} / m²)`,
     targetAtmo:'Target & atmosphere', altRef:'Alt. reference', altAGL:'Ground (AGL)', altAMSL:'Sea level (AMSL)',
     altTargets:'Target altitudes', refraction:'Refraction k',
     kStd:'4/3 — standard (1.33)', kGeo:'1.0 — geometric', kDry:'1.15 — dry air', kSuper:'1.6 — super-refraction',
