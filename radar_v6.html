@@ -2803,14 +2803,7 @@ async function compute(){
     const zRadarTerr = sample(r.lon, r.lat); if(isNaN(zRadarTerr)) continue;
     
     r.terrAlt = zRadarTerr; const zR = zRadarTerr + parseFloat(r.hant);
-    const rMaxMeters = (() => {
-      const hard = r.rmax * 1000;
-      if (r.calDist > 0 && r.calSer > 0 && covSer >= 0) {
-        const rEff = r.calDist * 1000 * Math.pow(covSer / r.calSer, 0.25);
-        return Math.min(hard, rEff);
-      }
-      return hard;
-    })();
+    const rMaxMeters = radarEffRangeM(r, covSer);
     const elMin = r.elmin * Math.PI/180; const elMax = r.elmax * Math.PI/180; const tanMin = Math.tan(elMin); const tanMax = Math.tan(elMax);
 
     let nAz = Math.ceil(2 * Math.PI * rMaxMeters / Math.max(dr, 30));
@@ -6052,6 +6045,14 @@ function sampleThreatPath(stepM = 250) {
 
 /* ---- Analyse de détection (async) ---- */
 /* doEngWindows : true uniquement depuis runSequenceCalc (pas depuis simPlay) */
+/* Portée effective d'un radar pour une SER cible donnée : R_eff = min(rmax, calDist × (ser/calSer)^¼) */
+function radarEffRangeM(r, targetSer) {
+  const hard = r.rmax * 1000;
+  if (r.calDist > 0 && r.calSer > 0 && targetSer >= 0)
+    return Math.min(hard, r.calDist * 1000 * Math.pow(targetSer / r.calSer, 0.25));
+  return hard;
+}
+
 async function runDetectionAnalysis(onProgress, doEngWindows = false) {
   const myVer = _detVersion;
   const samples = sampleThreatPath(250);
@@ -6083,6 +6084,7 @@ async function runDetectionAnalysis(onProgress, doEngWindows = false) {
   ));
   if (myVer !== _detVersion) return;
 
+  const engSer = Math.max(0, parseFloat(document.getElementById('eng-ser')?.value) || 1);
   const total  = samples.length;
   const result = [];
 
@@ -6103,7 +6105,7 @@ async function runDetectionAnalysis(onProgress, doEngWindows = false) {
 
       /* 1. Distance */
       const distM = haversineKm(r.lat, r.lon, s.lat, s.lon) * 1000;
-      if (distM > r.rmax * 1000 || distM < 1) continue;
+      if (distM > radarEffRangeM(r, engSer) || distM < 1) continue;
 
       /* 2. Secteur azimut */
       const az = geoAzimuth(r.lat, r.lon, s.lat, s.lon);
@@ -6681,10 +6683,11 @@ async function computeAttaqueCdt() {
     parseFloat(document.getElementById('cdt-alt').value) || 5000);
   const v_ms  = speedKmh / 3.6;
   const agl   = (refMode === 'agl');
+  const cdtSer = Math.max(0, parseFloat(document.getElementById('cdt-ser')?.value) || 1);
 
-  /* Distance de départ de la marche : dépasse légèrement la portée radar max */
+  /* Distance de départ de la marche : dépasse légèrement la portée effective max */
   const D_max_km = Math.min(400,
-    Math.max(...radars.map(r => r.rmax || 50)) + 30);
+    Math.max(...radars.map(r => radarEffRangeM(r, cdtSer) / 1000)) + 30);
 
   /* Altitudes terrain des radars (cache partagé) */
   const radarElevs = await Promise.all(radars.map(r =>
@@ -6739,7 +6742,7 @@ async function computeAttaqueCdt() {
 
         /* 1. Portée */
         const distM = haversineKm(r.lat, r.lon, pos.lat, pos.lon) * 1000;
-        if (distM > r.rmax * 1000 || distM < 1) continue;
+        if (distM > radarEffRangeM(r, cdtSer) || distM < 1) continue;
 
         /* 2. Secteur azimut */
         const az = geoAzimuth(r.lat, r.lon, pos.lat, pos.lon);
