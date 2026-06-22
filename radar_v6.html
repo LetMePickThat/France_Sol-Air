@@ -3925,6 +3925,12 @@ function peakHandleClick(e) { peakAddVert(e.latlng); }
 
 async function searchPeaks() {
   if (peakVerts.length < 3) { alert(t('peakNoZone')); return; }
+  if (peakDrawing) {
+    peakDrawing = false;
+    const btn = document.getElementById('btn-draw-zone');
+    btn.classList.remove('on'); btn.textContent = t('peakDrawZone');
+    document.getElementById('peak-hint').style.display = 'none';
+  }
   const N = Math.max(1, Math.min(200, parseInt(document.getElementById('peak-count').value) || 20));
   const statusEl = document.getElementById('peak-status');
   statusEl.textContent = '…'; statusEl.style.display = 'block';
