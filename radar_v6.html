@@ -1361,6 +1361,15 @@
               </div></div>
             </div>
 
+            <!-- SER cible -->
+            <div class="radar-params" style="padding:6px 0 2px">
+              <label data-i18n="pSer">SER</label>
+              <div class="multi-input">
+                <input type="number" id="eng-ser" value="1" min="0" step="0.1" style="flex:1">
+                <span class="unit-tag">m²</span>
+              </div>
+            </div>
+
             <!-- Résultats -->
             <div style="padding:8px 0">
               <div id="sim-det-status" style="display:none"></div>
@@ -1409,6 +1418,13 @@
                 <input type="number" id="cdt-alt" value="5000" min="0" max="30000" step="100" style="flex:1">
                 <span class="unit-tag">m</span>
                 <span id="cdt-ref-label" style="font-size:10px;color:var(--txt-dim);white-space:nowrap">AGL</span>
+              </div>
+            </div>
+            <div class="radar-params">
+              <label data-i18n="pSer">SER</label>
+              <div class="multi-input">
+                <input type="number" id="cdt-ser" value="1" min="0" step="0.1" style="flex:1">
+                <span class="unit-tag">m²</span>
               </div>
             </div>
 
@@ -3772,7 +3788,7 @@ const I18N = {
     tabRadars:'Radars', tabLaunchers:'Lanceurs', tabC2:'C2',
     engThreatBtn:'Trajectoire menace', engThreatActive:'Terminer édition trajectoire',
     engThreatHint:'Cliquez sur la carte pour ajouter un point de navigation. Glissez pour déplacer. Clic molette pour supprimer.',
-    engWpAlt:'Altitude', engWpSpeed:'Vitesse',
+    engWpAlt:'Altitude', engWpSpeed:'Vitesse', pSer:'SER',
     engClear:'Effacer', engCalcBtn:'Calculer',
     engSimpleTraj:'Trajectoire simple', engAttaqueCdt:'Attaque point à défendre',
     engPointA:'Point de départ (A)', engPointB:"Point d'arrivée (B)",
@@ -3887,7 +3903,7 @@ const I18N = {
     tabRadars:'Radars', tabLaunchers:'Launchers', tabC2:'C2',
     engThreatBtn:'Threat trajectory', engThreatActive:'Done editing trajectory',
     engThreatHint:'Click on the map to add a navigation waypoint. Drag to reposition. Middle-click to delete.',
-    engWpAlt:'Altitude', engWpSpeed:'Speed',
+    engWpAlt:'Altitude', engWpSpeed:'Speed', pSer:'RCS',
     engClear:'Clear', engCalcBtn:'Calculate',
     engSimpleTraj:'Simple trajectory', engAttaqueCdt:'Attack defended point',
     engPointA:'Starting point (A)', engPointB:'Arrival point (B)',
