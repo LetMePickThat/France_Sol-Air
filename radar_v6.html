@@ -81,7 +81,21 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  #app { display: grid; grid-template-columns: 400px 1fr; height: 100vh; }
+  #app { display: grid; grid-template-columns: 400px 1fr; height: 100vh; transition: grid-template-columns .25s ease; }
+  #app.panel-collapsed { grid-template-columns: 0px 1fr; }
+  #app.panel-collapsed #panel { overflow: hidden; border-right: none; }
+
+  #panel-toggle {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    z-index: 1000;
+    width: 20px; height: 48px;
+    background: var(--panel); border: 1px solid var(--line); border-left: none;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text); box-shadow: 2px 0 6px rgba(0,0,0,.15);
+    transition: background .15s;
+  }
+  #panel-toggle:hover { background: var(--accent); color: #fff; }
 
   /* Focus visible — obligatoire DSFR (tous éléments interactifs) */
   :focus-visible {
@@ -101,6 +115,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0;
   }
 
   /* En-tête institutionnel DSFR */
@@ -1530,6 +1545,7 @@
   </div>
 
   <div id="map-container">
+    <button id="panel-toggle" title="Replier/déployer le panneau" aria-label="Replier le panneau">◀</button>
     <div id="map"></div>
     <!-- Sélecteur de fond de carte — overlay flottant top-right -->
     <div id="basemap-overlay">
@@ -7350,6 +7366,19 @@ document.getElementById('go').addEventListener('click',compute);
 loadMissileConfigs();
 fsaRenderSlots();
 _fsaInitAutosaveBanner();
+
+/* ── Bouton repli panneau ── */
+(function(){
+  const btn = document.getElementById('panel-toggle');
+  const app = document.getElementById('app');
+  btn.addEventListener('click', function(){
+    const collapsed = app.classList.toggle('panel-collapsed');
+    btn.textContent = collapsed ? '▶' : '◀';
+    btn.setAttribute('aria-label', collapsed ? 'Déployer le panneau' : 'Replier le panneau');
+    btn.title = collapsed ? 'Déployer le panneau' : 'Replier le panneau';
+    setTimeout(function(){ map.invalidateSize(); }, 260);
+  });
+})();
 </script>
 
 </body>
