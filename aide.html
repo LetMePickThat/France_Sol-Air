@@ -273,6 +273,8 @@
       <div class="nav-group">
         <h2>Onglet ENGAGEMENT</h2>
         <a href="#engagement">Trajectoire &amp; analyse</a>
+        <a href="#engagement" class="sub">Trajectoire simple</a>
+        <a href="#engagement" class="sub">Point à défendre</a>
       </div>
       <div class="nav-group">
         <h2>Référence</h2>
@@ -309,6 +311,8 @@
       <div class="nav-group">
         <h2>ENGAGEMENT tab</h2>
         <a href="#engagement">Trajectory &amp; analysis</a>
+        <a href="#engagement" class="sub">Simple trajectory</a>
+        <a href="#engagement" class="sub">Defended point</a>
       </div>
       <div class="nav-group">
         <h2>Reference</h2>
@@ -370,10 +374,11 @@
         <img src="images/Aide_image_IHM.png" alt="Schéma de l'interface France Sol-Air" style="width:100%; border:1px solid var(--line); display:block; margin:16px 0;">
 
         <h3>Choix du fond de carte</h3>
-        <p>En haut du panneau de commandes, trois boutons permettent de choisir le fond cartographique affiché derrière les unités et la couverture :</p>
+        <p>En haut à droite de la carte, quatre boutons permettent de choisir le fond cartographique affiché derrière les unités et la couverture :</p>
         <ul>
           <li><span class="ui-badge">Plan clair</span> — fond routier OpenStreetMap, idéal en plein jour pour identifier les voies d'accès et les agglomérations.</li>
           <li><span class="ui-badge grey">Plan sombre</span> — fond sombre CARTO, recommandé pour réduire la fatigue visuelle lors d'une utilisation prolongée ou nocturne.</li>
+          <li><span class="ui-badge grey">Satellite</span> — imagerie satellitaire Esri World Imagery, utile pour identifier la nature du terrain (forêt, bâti, eau).</li>
           <li><span class="ui-badge grey">Élévation</span> — carte hypsométrique colorée par altitude, utile pour appréhender rapidement le relief d'une zone avant d'y placer des unités. Les couleurs progressent du bleu (zones basses) vers le blanc (sommets).</li>
         </ul>
 
@@ -383,7 +388,7 @@
           <li><span class="ui-badge">OUTILS</span> — réglages d'affichage, choix du fond de carte, barre de géocodage, <strong>sauvegardes locales</strong> (3 emplacements + auto-save), import/export KML, export PNG, téléchargement hors-ligne, recherche de sommets locaux et convertisseur de coordonnées DMS.</li>
           <li><span class="ui-badge">DÉPLOIEMENT</span> — création et configuration des radars, lanceurs et nœuds C2 déployés sur la carte.</li>
           <li><span class="ui-badge">COUVERTURE</span> — définition des altitudes cibles, choix du modèle atmosphérique (facteur de réfraction k) et mode de calcul Rapide / Haute Précision.</li>
-          <li><span class="ui-badge">ENGAGEMENT</span> — définition d'une trajectoire de menace (deux points A/B avec vitesse et altitude) et calcul de la fenêtre d'engagement cinétique.</li>
+          <li><span class="ui-badge">ENGAGEMENT</span> — deux modes d'analyse cinétique : <em>Trajectoire simple</em> (A→B avec calcul de détection, ordre de tir, PIP et fenêtre d'engagement) et <em>Attaque point à défendre</em> (analyse 360° des frontières de détection, de tir et de destruction autour d'un point sensible).</li>
         </ul>
 
         <h3>Commandes de calcul et préférences</h3>
@@ -419,10 +424,11 @@
         <img src="images/Aide_image_IHM.png" alt="France Sol-Air interface diagram" style="width:100%; border:1px solid var(--line); display:block; margin:16px 0;">
 
         <h3>Base map selection</h3>
-        <p>At the top of the control panel, three buttons let you choose the background map displayed behind units and coverage:</p>
+        <p>At the top-right of the map, four buttons let you choose the background map displayed behind units and coverage:</p>
         <ul>
           <li><span class="ui-badge">Map (light)</span> — OpenStreetMap road map, ideal in daytime for identifying access routes and built-up areas.</li>
           <li><span class="ui-badge grey">Map (dark)</span> — CARTO dark background, recommended to reduce eye strain during extended or night-time use.</li>
+          <li><span class="ui-badge grey">Satellite</span> — Esri World Imagery, useful for assessing terrain type (forest, buildings, water).</li>
           <li><span class="ui-badge grey">Elevation</span> — hypsometric map coloured by altitude, useful for quickly assessing the terrain of an area before positioning units. Colours range from blue (low ground) to white (peaks).</li>
         </ul>
 
@@ -432,7 +438,7 @@
           <li><span class="ui-badge">TOOLS</span> — display settings, base map selection, geocode search bar, <strong>local saves</strong> (3 named slots + auto-save), KML import/export, PNG export, offline tile download, local summit search and DMS coordinate converter.</li>
           <li><span class="ui-badge">DEPLOYMENT</span> — create and configure radars, launchers and C2 nodes deployed on the map.</li>
           <li><span class="ui-badge">COVERAGE</span> — define target altitudes, choose the atmospheric model (refraction factor k) and set the computation mode (Fast / High Precision).</li>
-          <li><span class="ui-badge">ENGAGEMENT</span> — define a two-point threat trajectory (A/B with speed and altitude) and compute the kinematic engagement window.</li>
+          <li><span class="ui-badge">ENGAGEMENT</span> — two kinematic analysis modes: <em>Simple trajectory</em> (A→B with detection, fire order, PIP and engagement window) and <em>Attack on defended point</em> (360° analysis of detection, fire and destruction frontiers around a sensitive point).</li>
         </ul>
 
         <h3>Computation controls and preferences</h3>
@@ -606,8 +612,13 @@
             <tr><td>C2 parent</td><td>Nœud C2 hiérarchiquement supérieur.</td><td>—</td></tr>
             <tr><td>Dist. max C2</td><td>Contrainte de distance maximale vers le C2. 0 = sans contrainte.</td><td>km</td></tr>
             <tr><td>Liaison</td><td>Fibre ou Radio (même logique que pour les radars).</td><td>—</td></tr>
+            <tr><td>Type de missile</td><td>Missile embarqué sur ce lanceur. Obligatoire pour le calcul d'engagement. Deux configs intégrées : <strong>MSAM Générique (Portée Moyenne)</strong> (~10 km, TDV max 20 s) et <strong>MSAM Générique MK1 (Longue Portée)</strong> (~35 km, TDV max 120 s).</td><td>—</td></tr>
           </tbody>
         </table>
+        <div class="callout tip">
+          <strong>Anneau de portée missile</strong>
+          La case <strong>Marque portée missile</strong> (onglet OUTILS) affiche un cercle de portée maximale autour de chaque lanceur équipé. La case <strong>Tous lanceurs</strong> affiche les anneaux de tous les lanceurs ; décochée, seul le lanceur actif est affiché.
+        </div>
       </div>
 
       <div class="help-en">
@@ -622,8 +633,13 @@
             <tr><td>Parent C2</td><td>Hierarchically superior C2 node.</td><td>—</td></tr>
             <tr><td>Max C2 dist.</td><td>Maximum distance constraint to the C2. 0 = no constraint.</td><td>km</td></tr>
             <tr><td>Link</td><td>Fibre or Radio (same logic as for radars).</td><td>—</td></tr>
+            <tr><td>Missile type</td><td>Missile loaded on this launcher. Required for engagement computation. Two built-in configurations: <strong>Generic MSAM (Medium Range)</strong> (~10 km, max TOF 20 s) and <strong>Generic MSAM MK1 (Long Range)</strong> (~35 km, max TOF 120 s).</td><td>—</td></tr>
           </tbody>
         </table>
+        <div class="callout tip">
+          <strong>Missile range ring</strong>
+          The <strong>Missile range mark</strong> checkbox (TOOLS tab) displays a maximum-range circle around each armed launcher. The <strong>All launchers</strong> checkbox shows rings for all launchers; unchecked, only the active launcher's ring is shown.
+        </div>
       </div>
 
     </section>
@@ -643,6 +659,8 @@
             <tr><td>C2 parent</td><td>C2 hiérarchiquement supérieur. La détection de cycle est assurée — un nœud ne peut pas être son propre ancêtre.</td><td>—</td></tr>
             <tr><td>Dist. max C2</td><td>Contrainte de distance vers le C2 parent.</td><td>km</td></tr>
             <tr><td>Liaison</td><td>Fibre ou Radio.</td><td>—</td></tr>
+            <tr><td>Temps de réaction</td><td>Délai introduit par ce nœud dans la chaîne C2 pour transmettre la désignation d'objectif et émettre l'ordre de tir. Le délai cumulé de tous les nœuds jusqu'au premier décideur définit T+tir_min.</td><td>s</td></tr>
+            <tr><td>Décision engagement</td><td><strong>Oui</strong> : ce nœud possède l'autorité d'engagement et émettra l'ordre de tir. <strong>Non</strong> : nœud de transit uniquement. La chaîne est remontée jusqu'au premier C2 avec Décision = Oui.</td><td>—</td></tr>
           </tbody>
         </table>
         <h3>Liaisons C2 sur la carte</h3>
@@ -670,6 +688,8 @@
             <tr><td>Parent C2</td><td>Hierarchically superior C2. Cycle detection is enforced — a node cannot be its own ancestor.</td><td>—</td></tr>
             <tr><td>Max C2 dist.</td><td>Distance constraint to parent C2.</td><td>km</td></tr>
             <tr><td>Link</td><td>Fibre or Radio.</td><td>—</td></tr>
+            <tr><td>Reaction time</td><td>Delay introduced by this node in the C2 chain to forward target designation and issue the fire order. The cumulative delay up to the first decision-maker defines T+fire_min.</td><td>s</td></tr>
+            <tr><td>Engagement decision</td><td><strong>Yes</strong>: this node has engagement authority and will issue the fire order. <strong>No</strong>: transit node only. The chain is traversed upward until the first C2 with Decision = Yes is found.</td><td>—</td></tr>
           </tbody>
         </table>
         <h3>C2 links on the map</h3>
@@ -700,6 +720,8 @@
           <li><strong>Sol (AGL)</strong> — altitude au-dessus du sol local. Une cible à 0 m AGL correspond à la surface du terrain.</li>
           <li><strong>Mer (AMSL)</strong> — altitude au-dessus du niveau de la mer. Indépendante du relief local.</li>
         </ul>
+        <h3>SER cible</h3>
+        <p>Surface Équivalente Radar (en m²) de la cible. Ce paramètre corrige la portée de détection effective de chaque radar selon la loi R<sub>eff</sub> = min(R<sub>max</sub>, R<sub>calib</sub> × (SER / SER<sub>calib</sub>)<sup>¼</sup>). Une SER plus faible (cible furtive) réduit la portée de couverture calculée.</p>
         <h3>Altitudes cibles</h3>
         <p>Liste des altitudes pour lesquelles la couverture est calculée. Les valeurs par défaut sont 0, 5, 40 et 500 m. Chaque altitude génère une couleur distincte sur la carte, du rouge (basse altitude) au bleu (haute altitude). Il est possible d'ajouter, de modifier ou de supprimer des valeurs.</p>
         <div class="callout warn">
@@ -727,6 +749,8 @@
           <li><strong>Ground (AGL)</strong> — altitude above local ground level. A target at 0 m AGL corresponds to the terrain surface.</li>
           <li><strong>Sea level (AMSL)</strong> — altitude above mean sea level. Independent of local terrain.</li>
         </ul>
+        <h3>Target RCS</h3>
+        <p>Radar Cross Section (in m²) of the target. This parameter corrects each radar's effective detection range using R<sub>eff</sub> = min(R<sub>max</sub>, R<sub>calib</sub> × (RCS / RCS<sub>calib</sub>)<sup>¼</sup>). A smaller RCS (stealthy target) reduces the computed coverage range.</p>
         <h3>Target altitudes</h3>
         <p>List of altitudes for which coverage is computed. Default values are 0, 5, 40 and 500 m. Each altitude is assigned a distinct colour on the map, ranging from red (low altitude) to blue (high altitude). Values can be added, edited or deleted.</p>
         <div class="callout warn">
@@ -772,6 +796,7 @@
         <ul>
           <li><strong>Rapide</strong> — zoom terrain plafonné à 11 (résolution ~52 m en France). Calcul plus rapide, adapté aux grandes zones ou aux études préliminaires.</li>
           <li><strong>Haute Précision</strong> — zoom terrain plafonné à 12 (résolution ~26 m en France, proche de la résolution native SRTM). Recommandé pour les analyses finales et les courtes portées.</li>
+          <li><strong>Très haute précision</strong> — zoom terrain plafonné à 14 (résolution ~7 m en France). Réservé aux courtes portées et aux analyses ponctuelles ; le temps de calcul peut être significativement plus long.</li>
         </ul>
         <p>La résolution effective estimée pour le déploiement actuel est affichée sous le sélecteur.</p>
       </div>
@@ -795,6 +820,7 @@
         <ul>
           <li><strong>Fast</strong> — terrain zoom capped at 11 (~52 m resolution in France). Faster computation, suited to large areas or preliminary studies.</li>
           <li><strong>High Precision</strong> — terrain zoom capped at 12 (~26 m resolution in France, close to native SRTM resolution). Recommended for final analyses and short ranges.</li>
+          <li><strong>Very High Precision</strong> — terrain zoom capped at 14 (~7 m resolution in France). Reserved for short-range or spot analyses; computation time may be significantly longer.</li>
         </ul>
         <p>The estimated effective resolution for the current deployment is displayed below the selector.</p>
       </div>
@@ -1029,63 +1055,127 @@
 
       <div class="help-fr">
         <h2>Onglet — Engagement</h2>
-        <p>L'onglet Engagement permet de simuler la trajectoire d'une menace aérienne et de calculer la <strong>fenêtre d'engagement cinétique</strong> pour chaque paire (radar, lanceur) du déploiement.</p>
-
-        <h3>Définir la trajectoire</h3>
-        <ol>
-          <li>Cliquez <span class="ui-badge">Tracer la trajectoire</span> pour entrer en mode dessin.</li>
-          <li><strong>1er clic</strong> sur la carte : pose le point de départ A (cercle bleu).</li>
-          <li><strong>2e clic</strong> : pose le point d'arrivée B (cercle rouge). La trajectoire est affichée en gris.</li>
-          <li>Renseignez la <strong>vitesse</strong> (km/h) et l'<strong>altitude</strong> (m) pour chacun des deux points. La vitesse et l'altitude sont interpolées linéairement entre A et B.</li>
-        </ol>
-        <p>Les coordonnées des points peuvent aussi être saisies manuellement dans les champs Lat/Lon.</p>
-
-        <h3>Calculer</h3>
-        <p>Cliquez <span class="ui-badge">Calculer</span> pour lancer l'analyse séquentielle :</p>
-        <ul>
-          <li>Détection de la cible par chaque radar actif (calcul d'intervisibilité le long de la trajectoire).</li>
-          <li>Génération des <strong>ordres de tir</strong> (T+det + délai de chaîne C2).</li>
-          <li>Calcul des <strong>fenêtres d'engagement</strong> (t_tir_first → t_tir_last) et du <strong>Point d'Impact Prévu (PIP)</strong> pour chaque lanceur configuré.</li>
-        </ul>
-        <p>Les résultats s'affichent dans le panneau inférieur et sur la carte (marqueurs de tir, PIP, barre de progression colorée rouge/vert).</p>
-
-        <h3>Simulation</h3>
-        <p>Le player de simulation permet de rejouer la trajectoire en temps réel et d'observer l'évolution dynamique du PIP à mesure que le track radar est actualisé.</p>
+        <p>L'onglet Engagement fournit deux modes d'analyse cinétique complémentaires : la <strong>Trajectoire simple</strong> pour analyser un axe d'attaque précis, et l'<strong>Attaque point à défendre</strong> pour évaluer la protection d'un point sensible face à des menaces venant de toutes directions.</p>
 
         <div class="callout">
-          <strong>Pré-requis</strong>
-          Les lanceurs doivent avoir un <strong>type de missile</strong> configuré (onglet Déploiement) et être rattachés à un nœud C2 possédant le droit d'engagement (<em>Décision engagement : Oui</em>) pour générer une fenêtre.
+          <strong>Pré-requis communs</strong>
+          Les lanceurs doivent avoir un <strong>type de missile</strong> configuré (onglet DÉPLOIEMENT). Les radars doivent être rattachés à un nœud C2 avec <em>Décision engagement : Oui</em>. Sans ces deux conditions, aucun PIP ni fenêtre ne peut être calculé.
+        </div>
+
+        <h3>Les quatre instants d'engagement</h3>
+        <p>Pour chaque paire (radar, lanceur), l'analyse produit quatre instants clés mesurés depuis le début de la trajectoire (T+0) :</p>
+        <table class="param-table">
+          <thead><tr><th>Instant</th><th>Signification</th></tr></thead>
+          <tbody>
+            <tr><td>T+det</td><td>Premier échantillon de détection par un radar actif.</td></tr>
+            <tr><td>T+tir_min</td><td>T+det + délai cumulé de la chaîne C2 jusqu'au premier décideur. C'est la première date à laquelle un ordre de tir peut être émis.</td></tr>
+            <tr><td>T+tir_first</td><td>Premier instant de tir cinématiquement réalisable ≥ T+tir_min (le missile peut atteindre la cible dans son enveloppe).</td></tr>
+            <tr><td>T+tir_last</td><td>Dernier instant de tir avant sortie d'enveloppe ou fin de données de trajectoire. La durée T+tir_last − T+tir_first est la <strong>fenêtre d'engagement</strong>.</td></tr>
+          </tbody>
+        </table>
+
+        <hr class="light" style="margin:20px 0">
+
+        <h3>Mode 1 — Trajectoire simple (A→B)</h3>
+        <p>Analyse un axe d'attaque défini par deux waypoints.</p>
+        <ol>
+          <li>Cliquez <span class="ui-badge">Tracer la trajectoire</span> pour entrer en mode dessin.</li>
+          <li><strong>1er clic</strong> : pose le point de départ A. <strong>2e clic</strong> : pose le point d'arrivée B.</li>
+          <li>Renseignez la <strong>vitesse</strong> (km/h), l'<strong>altitude</strong> (m) et la <strong>SER</strong> (m²) de la cible. La vitesse et l'altitude sont interpolées linéairement entre A et B.</li>
+          <li>Cliquez <span class="ui-badge">Calculer</span>.</li>
+        </ol>
+        <p><strong>Résultats affichés</strong> dans le résumé et sur la carte :</p>
+        <ul>
+          <li>Trajectoire colorée <span style="color:#18753c;font-weight:700">vert</span> (détecté) / <span style="color:#ce0500;font-weight:700">rouge</span> (hors couverture).</li>
+          <li>Premier radar détectant, instant T+det et taux de couverture (% de la trajectoire détecté).</li>
+          <li>Pour chaque ordre de tir : T+tir, nœud C2 décideur, PIP avec distance et TDV (temps de vol missile).</li>
+          <li>Fenêtre d'engagement T+tir_first → T+tir_last avec durée et raison de clôture (<em>enveloppe</em> ou <em>fin de données</em>).</li>
+        </ul>
+
+        <hr class="light" style="margin:20px 0">
+
+        <h3>Mode 2 — Attaque point à défendre</h3>
+        <p>Calcule les zones de détection, de tir et de destruction pour toutes les directions d'attaque possibles vers un point sensible.</p>
+        <ol>
+          <li>Cliquez <span class="ui-badge">Placer le point à défendre</span> puis cliquez sur la carte pour poser le marqueur.</li>
+          <li>Renseignez la <strong>vitesse</strong>, l'<strong>altitude</strong> et la <strong>SER</strong> de la menace type.</li>
+          <li>Cliquez <span class="ui-badge">Calculer</span>.</li>
+        </ol>
+        <p>Le moteur balaye 360 directions d'approche et trace trois frontières sur la carte :</p>
+        <table class="param-table">
+          <thead><tr><th>Frontière</th><th>Couleur</th><th>Signification</th></tr></thead>
+          <tbody>
+            <tr><td>Détection</td><td><span style="color:#f90;font-weight:700">●</span> Orange</td><td>Position de la menace au moment de sa première détection radar (= T+det pour chaque azimut).</td></tr>
+            <tr><td>Tir</td><td><span style="color:#e33;font-weight:700">●</span> Rouge</td><td>Position de la menace au premier instant de tir cinématiquement réalisable (= T+tir_first).</td></tr>
+            <tr><td>Destruction</td><td><span style="color:#3b3;font-weight:700">●</span> Vert</td><td>Point d'interception prévu (PIP) pour ce premier tir — frontière à partir de laquelle le point est protégé.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout tip">
+          <strong>Lecture des frontières</strong>
+          Plus la frontière de destruction est éloignée du point à défendre, plus la protection est confortable. Un secteur sans frontière verte indique une direction non couverte par les lanceurs disponibles.
         </div>
       </div>
 
       <div class="help-en">
         <h2>Tab — Engagement</h2>
-        <p>The Engagement tab allows you to simulate an airborne threat trajectory and compute the <strong>kinematic engagement window</strong> for each (radar, launcher) pair in the deployment.</p>
-
-        <h3>Define the trajectory</h3>
-        <ol>
-          <li>Click <span class="ui-badge">Draw trajectory</span> to enter drawing mode.</li>
-          <li><strong>1st click</strong> on the map: places departure point A (blue circle).</li>
-          <li><strong>2nd click</strong>: places arrival point B (red circle). The trajectory is shown in grey.</li>
-          <li>Enter the <strong>speed</strong> (km/h) and <strong>altitude</strong> (m) for each of the two points. Speed and altitude are linearly interpolated between A and B.</li>
-        </ol>
-        <p>Point coordinates can also be entered manually in the Lat/Lon fields.</p>
-
-        <h3>Calculate</h3>
-        <p>Click <span class="ui-badge">Calculate</span> to run the sequential analysis:</p>
-        <ul>
-          <li>Target detection by each active radar (intervisibility along the trajectory).</li>
-          <li>Generation of <strong>fire orders</strong> (T+det + C2 chain delay).</li>
-          <li>Computation of <strong>engagement windows</strong> (t_fire_first → t_fire_last) and the <strong>Predicted Impact Point (PIP)</strong> for each configured launcher.</li>
-        </ul>
-        <p>Results are shown in the lower panel and on the map (fire markers, PIP, red/green colour-coded progress bar).</p>
-
-        <h3>Simulation</h3>
-        <p>The simulation player replays the trajectory in real time, showing the dynamic PIP update as the radar track is refreshed.</p>
+        <p>The Engagement tab provides two complementary kinematic analysis modes: <strong>Simple trajectory</strong> to analyse a specific attack axis, and <strong>Attack on defended point</strong> to assess the protection of a sensitive location against threats from all directions.</p>
 
         <div class="callout">
-          <strong>Requirements</strong>
-          Launchers must have a <strong>missile type</strong> configured (Deployment tab) and be attached to a C2 node with engagement authority (<em>Engagement decision: Yes</em>) to generate a window.
+          <strong>Common requirements</strong>
+          Launchers must have a <strong>missile type</strong> configured (DEPLOYMENT tab). Radars must be linked to a C2 node with <em>Engagement decision: Yes</em>. Without both conditions, no PIP or engagement window can be computed.
+        </div>
+
+        <h3>The four engagement instants</h3>
+        <p>For each (radar, launcher) pair, the analysis produces four key instants measured from the start of the trajectory (T+0):</p>
+        <table class="param-table">
+          <thead><tr><th>Instant</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>T+det</td><td>First detection sample from an active radar.</td></tr>
+            <tr><td>T+fire_min</td><td>T+det + cumulative C2 chain delay up to the first decision-maker. Earliest date at which a fire order can be issued.</td></tr>
+            <tr><td>T+fire_first</td><td>First kinematically feasible fire instant ≥ T+fire_min (missile can reach the target within its engagement envelope).</td></tr>
+            <tr><td>T+fire_last</td><td>Last feasible fire instant before envelope exit or end of trajectory data. The duration T+fire_last − T+fire_first is the <strong>engagement window</strong>.</td></tr>
+          </tbody>
+        </table>
+
+        <hr class="light" style="margin:20px 0">
+
+        <h3>Mode 1 — Simple trajectory (A→B)</h3>
+        <p>Analyses a specific attack axis defined by two waypoints.</p>
+        <ol>
+          <li>Click <span class="ui-badge">Draw trajectory</span> to enter drawing mode.</li>
+          <li><strong>1st click</strong>: places departure point A. <strong>2nd click</strong>: places arrival point B.</li>
+          <li>Enter the target's <strong>speed</strong> (km/h), <strong>altitude</strong> (m) and <strong>RCS</strong> (m²). Speed and altitude are linearly interpolated between A and B.</li>
+          <li>Click <span class="ui-badge">Calculate</span>.</li>
+        </ol>
+        <p><strong>Results</strong> shown in the summary and on the map:</p>
+        <ul>
+          <li>Trajectory coloured <span style="color:#18753c;font-weight:700">green</span> (detected) / <span style="color:#ce0500;font-weight:700">red</span> (not covered).</li>
+          <li>First detecting radar, T+det instant, and coverage rate (% of trajectory detected).</li>
+          <li>For each fire order: T+fire, deciding C2 node, PIP with distance and TOF (missile time of flight).</li>
+          <li>Engagement window T+fire_first → T+fire_last with duration and closing reason (<em>envelope</em> or <em>data end</em>).</li>
+        </ul>
+
+        <hr class="light" style="margin:20px 0">
+
+        <h3>Mode 2 — Attack on defended point</h3>
+        <p>Computes detection, fire and destruction zones for all possible approach directions toward a sensitive point.</p>
+        <ol>
+          <li>Click <span class="ui-badge">Place the defended point</span>, then click on the map to set the marker.</li>
+          <li>Enter the threat's <strong>speed</strong>, <strong>altitude</strong> and <strong>RCS</strong>.</li>
+          <li>Click <span class="ui-badge">Calculate</span>.</li>
+        </ol>
+        <p>The engine sweeps 360 approach directions and draws three frontiers on the map:</p>
+        <table class="param-table">
+          <thead><tr><th>Frontier</th><th>Colour</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Detection</td><td><span style="color:#f90;font-weight:700">●</span> Orange</td><td>Threat position at the moment of first radar detection (T+det for each azimuth).</td></tr>
+            <tr><td>Fire</td><td><span style="color:#e33;font-weight:700">●</span> Red</td><td>Threat position at the first kinematically feasible fire instant (T+fire_first).</td></tr>
+            <tr><td>Destruction</td><td><span style="color:#3b3;font-weight:700">●</span> Green</td><td>Predicted intercept point (PIP) for that first shot — the frontier beyond which the point is protected.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout tip">
+          <strong>Reading the frontiers</strong>
+          The further the destruction frontier is from the defended point, the more comfortable the protection margin. A sector with no green frontier indicates a direction not covered by available launchers.
         </div>
       </div>
 
@@ -1119,9 +1209,14 @@
             <tr><td>Raycast</td><td>Technique de calcul consistant à émettre des rayons depuis un point source et à détecter les intersections avec le terrain. Utilisée par France Sol-Air pour calculer l'empreinte de couverture radar.</td></tr>
             <tr><td>Réfraction (k)</td><td>Facteur correctif modélisant la courbure des ondes radio dans l'atmosphère. k = 4/3 est la valeur standard ; k = 1,6 modélise une surréfraction qui augmente la portée.</td></tr>
             <tr><td>Site</td><td>Angle d'élévation dans le plan vertical (positif vers le haut, négatif vers le bas). Définit la limite basse et haute du faisceau radar.</td></tr>
+            <tr><td>Fenêtre d'engagement</td><td>Intervalle de temps [T+tir_first ; T+tir_last] pendant lequel un tir de missile est cinématiquement réalisable contre une cible détectée. Une fenêtre courte ou absente indique une contrainte cinétique ou une enveloppe trop restrictive.</td></tr>
+            <tr><td>Frontière de destruction</td><td>En mode Attaque point à défendre, ligne reliant les Points d'Impact Prévus (PIP) calculés pour chaque azimut d'approche. Indique à partir de quelle distance le point défendu est protégé.</td></tr>
+            <tr><td>PIP</td><td><em>Point d'Impact Prévu</em> — point géographique où le missile est calculé pour intercepter la cible. Calculé par résolution numérique de l'équation cinématique de rencontre missile–cible.</td></tr>
+            <tr><td>SER</td><td><em>Surface Équivalente Radar</em> (en m²) — grandeur qui quantifie la détectabilité d'une cible. Dans France Sol-Air, la portée de détection effective est corrigée selon R<sub>eff</sub> = min(R<sub>max</sub>, R<sub>calib</sub> × (SER / SER<sub>calib</sub>)<sup>¼</sup>). Une SER faible représente une cible furtive.</td></tr>
             <tr><td>SPM</td><td>Namespace propriétaire (<code>spm:</code>) utilisé dans les fichiers KML exportés par France Sol-Air pour stocker les paramètres spécifiques de chaque unité (portée, secteur, réfraction…).</td></tr>
             <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — mission spatiale NASA (2000) ayant produit un MNT mondial à résolution ~30 m. Source des données d'élévation utilisées par AWS Terrarium.</td></tr>
             <tr><td>Surréfraction</td><td>Phénomène atmosphérique (inversion de température, forte humidité) courbant les ondes radio au-delà de la normale, augmentant la portée horizon. Modélisé par k = 1,6 dans France Sol-Air.</td></tr>
+            <tr><td>TDV</td><td><em>Temps De Vol</em> — durée de vol du missile entre le lancement et l'interception de la cible au PIP.</td></tr>
             <tr><td>Terrarium</td><td>Format de tuile d'élévation distribué par AWS, encodant l'altitude dans les canaux RGB d'une image PNG. Résolution ~30 m (SRTM). Utilisé pour tous les calculs d'élévation de France Sol-Air.</td></tr>
           </tbody>
         </table>
@@ -1150,10 +1245,15 @@
             <tr><td>Raycast</td><td>Computation technique that emits rays from a source point and detects intersections with terrain. Used by France Sol-Air to calculate the radar coverage footprint.</td></tr>
             <tr><td>Refraction (k)</td><td>Correction factor modelling the curvature of radio waves in the atmosphere. k = 4/3 is the standard value; k = 1.6 models super-refraction, which increases range.</td></tr>
             <tr><td>Site / Elevation angle</td><td>Angle in the vertical plane (positive upward, negative downward). Defines the lower and upper limits of the radar beam.</td></tr>
+            <tr><td>Destruction frontier</td><td>In Attack on defended point mode, the line connecting the Predicted Intercept Points (PIP) computed for each approach azimuth. Indicates from what range the defended point is protected.</td></tr>
+            <tr><td>Engagement window</td><td>Time interval [T+fire_first ; T+fire_last] during which a missile shot is kinematically feasible against a detected target. A short or absent window indicates a kinematic constraint or a too-restrictive envelope.</td></tr>
+            <tr><td>PIP</td><td><em>Predicted Impact Point</em> — geographic point where the missile is computed to intercept the target. Solved numerically from the missile–target kinematic rendezvous equation.</td></tr>
+            <tr><td>RCS</td><td><em>Radar Cross Section</em> (in m²) — quantity measuring the detectability of a target. In France Sol-Air, the effective detection range is corrected as R<sub>eff</sub> = min(R<sub>max</sub>, R<sub>calib</sub> × (RCS / RCS<sub>calib</sub>)<sup>¼</sup>). A low RCS represents a stealthy target.</td></tr>
             <tr><td>SPM</td><td>Proprietary namespace (<code>spm:</code>) used in KML files exported by France Sol-Air to store unit-specific parameters (range, sector, refraction…).</td></tr>
             <tr><td>SRTM</td><td><em>Shuttle Radar Topography Mission</em> — NASA space mission (2000) that produced a global DEM at ~30 m resolution. Source of the elevation data used by AWS Terrarium.</td></tr>
             <tr><td>Super-refraction</td><td>Atmospheric phenomenon (temperature inversion, high humidity) that bends radio waves beyond normal, increasing horizon range. Modelled by k = 1.6 in France Sol-Air.</td></tr>
             <tr><td>Terrarium</td><td>Elevation tile format distributed by AWS, encoding altitude in the RGB channels of a PNG image. Resolution ~30 m (SRTM). Used for all elevation computations in France Sol-Air.</td></tr>
+            <tr><td>TOF</td><td><em>Time of Flight</em> — missile flight duration from launch to intercept of the target at the PIP.</td></tr>
           </tbody>
         </table>
       </div>
