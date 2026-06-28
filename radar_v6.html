@@ -1849,7 +1849,7 @@ async function tileDBSize() {
 /* =========================================================================
    Initialisation Carte Leaflet
    ========================================================================= */
-const map = L.map('map',{zoomControl:true, wheelPxPerZoomLevel:120}).setView([48.8566,2.3522], 9);
+const map = L.map('map',{zoomControl:true, wheelPxPerZoomLevel:200, zoomDelta:0.5, zoomSnap:0.5}).setView([48.8566,2.3522], 9);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('nePane');
 map.getPane('nePane').style.zIndex = '195'; // sous tilePane (200), au-dessus de rien
